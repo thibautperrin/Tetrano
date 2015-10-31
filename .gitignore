@@ -1,0 +1,14 @@
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.idea/gradle.xml
+.idea/modules.xml
+Tetrano.iml
+app/app.iml
+.idea/misc.xml
+.idea/vcs.xml
+tetrano_git.iml
