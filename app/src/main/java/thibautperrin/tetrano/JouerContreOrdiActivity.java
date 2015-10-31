@@ -1,8 +1,8 @@
 package thibautperrin.tetrano;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
@@ -24,7 +24,7 @@ import android.widget.TextView;
  * At the end, if the checkbox have been changed from its default value, we change the
  * value of the user having begun the game...
  */
-public class JouerContreOrdiActivity extends AppCompatActivity {
+public class JouerContreOrdiActivity extends Activity {
     private RadioButton radioButtonCommence;
     private RadioButton radioButtonNeCommencePas;
     private View boutonGauche;

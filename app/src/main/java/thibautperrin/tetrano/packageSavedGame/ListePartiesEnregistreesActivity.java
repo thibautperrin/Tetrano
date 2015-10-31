@@ -1,11 +1,11 @@
 package thibautperrin.tetrano.packageSavedGame;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +21,7 @@ import thibautperrin.tetrano.ApplicationTetrano;
 import thibautperrin.tetrano.R;
 import thibautperrin.tetrano.StaticFields;
 
-public class ListePartiesEnregistreesActivity extends AppCompatActivity {
+public class ListePartiesEnregistreesActivity extends Activity {
 
     private View buttonRename;
     private View buttonWatch;
@@ -98,7 +98,7 @@ public class ListePartiesEnregistreesActivity extends AppCompatActivity {
         private AlertDialog dialogConfirmDelete = null;
         private AlertDialog dialogRename = null;
 
-        public MyArrayAdapter(Context context,  ArrayList<String> strings) {
+        public MyArrayAdapter(Context context, ArrayList<String> strings) {
             super(context, R.layout.text_view_basic, strings);
             this.context = context;
             this.strings = strings;
@@ -132,7 +132,7 @@ public class ListePartiesEnregistreesActivity extends AppCompatActivity {
             if (itemSelected != -1) {
                 if (v == buttonWatch) {
                     lancerSuite(strings.get(itemSelected));
-                } else if (v == buttonDelete){
+                } else if (v == buttonDelete) {
                     if (dialogConfirmDelete == null) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(context);
                         builder.setMessage(getResources().getString(R.string.Sentence_Confirm_Delete_Game));
