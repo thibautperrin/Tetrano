@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="thibautperrin.tetrano.packageChallenge.ChallengeActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/textViewRingsUsed"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_above="@+id/textViewRingsUsed2"
+        android:text="@string/Rings_used"
+        android:background="@color/infoRingsNumber"
+        android:onClick="onClickNbRings"
+        android:clickable="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/textViewRingsUsed2"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/textViewRingsUsed"
+        android:layout_alignEnd="@+id/textViewRingsUsed"
+        android:background="@color/infoRingsNumber"
+        android:gravity="center_horizontal"
+        android:onClick="onClickNbRings"
+        android:clickable="true" />
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_above="@+id/textViewRingsUsed">
+        <view
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            class="thibautperrin.tetrano.packageSurfaceGraphView.SurfaceGraphView"
+            android:id="@+id/surfaceGraphViewChallenge"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Abandon_Challenge"
+        android:id="@+id/buttonRestartChallenge"
+        android:layout_alignTop="@+id/textViewRingsUsed"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:textSize="@dimen/three_bottom_buttons"
+        android:singleLine="false"
+        android:background="@color/buttonGiveUp"
+        android:textStyle="bold|italic"
+        android:paddingLeft="@dimen/Tres_petite_marge"
+        android:paddingRight="@dimen/Tres_petite_marge" />
+</RelativeLayout>

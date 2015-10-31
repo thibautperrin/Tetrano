@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="Long_Sentence_About">Application développée par Thibaut Perrin à partir du jeu de plateau inventé en 2004 par Maxime Vial.</string>
+
+    <string name="Long_Sentence_Rules">Тетрано-это игра для двоих.\n
+        Последовательно игроки распологаються на кольце на сетке,цель собрать серию из четырёх колец одно цвета.\n
+        Эта серия может быть :\n
+        -концентрической : 4 кольца различного размера находятся в одной клетке\n
+        -линейной : 4 кольца либо одинакового размера либо расположенны в порядке увеличения или в порядке уменьшения размера находятся на одной линии, колонке, диагонали.\n
+        Игра заканчивается когда один из участников получает серию из четырёх колец цвета,которой он выбрал в начале.\n
+        Чтобы сыграть в кольцо,нажмите на это кольцо,потом на клетку,на которую вы желаете его поставить.\n
+        Удачи!\n
+    </string>
+    <string name="action_settings">настройки</string>
+    <string name="Play_Again">Играть снова</string>
+    <string name="Sentence_End_Lost">Вы потеряли.</string>
+    <string name="Sentence_End_Win">Вы выиграли!</string>
+    <string name="Sentence_End_Null">Игра закончилась. Нет победителем.</string>
+    <string name="Sentence_Begin_Start">Начиная: Вы можете начать играть.</string>
+    <string name="User">пользователь</string>
+    <string name="Computer">компьютер</string>
+    <string name="About">кстати</string>
+    <string name="Play">играть</string>
+    <string name="Internal_Error">Внутренняя ошибка. Извините.</string>
+    <string name="Cancel">отменить</string>
+    <string name="Joueur1">игрок1</string>
+    <string name="Joueur2">игрок2</string>
+    <string name="Two_Players">2 игроков</string>
+    <string name="Joueur1_Name">имя игрока1</string>
+    <string name="Joueur2_Name">имя игрока2</string>
+    <string name="Your_Turn">Это ваша очередь.</string>
+    <string name="Winner">Победитель</string>
+    <string name="Rules_Of_Game">Правила игры</string>
+    <string name="Sentence_Computer_Work">Компьютер играет</string>
+    <string name="Who_Begins">Кто начнет?</string>
+    <string name="Winning_Situation_Example">Победа примеры ситуации</string>
+    <string name="Level">уровень</string>
+    <string name="Mot_Clignoter">мигать</string>
+    <string name="Be_Discoverable">Будьте обнаружения</string>
+    <string name="Confirm">подтвердить</string>
+    <string name="Connection_Failed">Подключение не удалось</string>
+    <string name="Connecting">соединяющий</string>
+    <string name="Bluetooth_Adversary">Bluetooth противник</string>
+    <string name="Adversary_Color">противник цвет</string>
+    <string name="User_Color">цвет пользователя</string>
+    <string name="User_Name">Имя пользователя</string>
+    <string name="Sentence_Bluetooth_Not_Supported">Bluetooth не поддерживается на вашем телефоне.</string>
+    <string name="Sentence_Version_Bluetooth">Вы не имеете в ту же версию Tetrano. Ошибки могут случиться.</string>
+    <string name="You_Are_Discoverable">Вы видимости.</string>
+    <string name="You_Can_Start">, Вы можете начать.</string>
+    <string name="button_scan">Ищете противника</string>
+    <string name="scanning">сканирования для устройств…</string>
+    <string name="title_activity_connexion_bluetooth">окно соединения</string>
+    <string name="Settings_Saved">Параметры сохраняются</string>
+    <string name="Is_Thinking">думает</string>
+    <string name="Accept">принимать</string>
+    <string name="Refuse">отказываться</string>
+    <string name="Sentence_Ask_Restart">просит вас, чтобы перезапустить игру.</string>
+    <string name="Sentence_Ask_Cancel">просит вас право аннулировать свой ход.</string>
+    <string name="Sentence_Version_Internet">Новая версия доступна. Вы должны установить его.</string>
+    <string name="Searching_Adversary">Поиск противника…</string>
+    <string name="One_Player">1 игрок</string>
+    <string name="Sentence_Internet_Connection_Problem">Проблема подключение к Интернету.\nПроверьте подключение к сети.\nПроблема может также исходить от сервера…</string>
+    <string name="Saved_Games">сохраненные игры</string>
+    <string name="Game_Of">Часть</string>
+    <string name="Delete">удалить</string>
+    <string name="Rename">переименовать</string>
+    <string name="Connection_Succeeded">Подключение удалось</string>
+    <string name="Enter_A_Name">Введите имя</string>
+    <string name="Rename_A_Saved_Game">Переименовать сохраненную игру</string>
+    <string name="Save_The_Game">Сохранить игру</string>
+    <string name="Watch">Визуализируйте</string>
+    <string name="Sentence_Confirm_Delete_Game">Действительно удалить сохраненную игру?</string>
+    <string name="Challenge">вызов</string>
+    <string name="Ring">кольцо</string>
+    <string name="Rings_used">Кольца используются</string>
+    <string name="Abandon_Challenge">сдаваться</string>
+    <string name="Quit">Выйти</string>
+    <string name="Abandoned">заброшенный</string>
+    <string name="Try_Again">Попробуй еще раз</string>
+    <string name="Go_To_Next_Level">Перейти на следующий уровень</string>
+    <string name="You_Lost_At_Level">Вы потеряли на уровне </string>
+    <string name="Computer_Won_Before">Компьютер выиграл перед вами!</string>
+    <string name="Sentence_Number_Rings">Вы не сумели использовать выделенное количество колец.</string>
+    <string name="You_Passed_Level">Вы прошли уровень</string>
+    <string name="Explanation_Rings_Number">В режиме вызова, вы должны выиграть, используя ограниченное количество колец.</string>
+    <string name="In_This_Level">В этом уровне:</string>
+    <string name="Number_Of_Rings_Allowed">Уполномоченный количество колец:</string>
+    <string name="Next">Следующий</string>
+    <string name="Explanations">Пояснения</string>
+    <string name="Explanations_Challenge1">Добро пожаловать в режиме Challenge,\n\nВ этом режиме, вы начинаете с начавшейся игре, и вы можете использовать только ограниченное количество колец, чтобы выиграть. Если вы не выиграть игру с этого ограниченного числа, вы проиграете. Если вы выиграли игру, используя большое количество колец, вы выиграете и вы можете перейти к следующему уровню.\n\nБудьте осторожны, если вы потеряете два раза подряд, реклама будет появляться!</string>
+    <string name="Explanations_Challenge2">Если уровень кажется слишком трудным, вы можете передать его. Для этого вам нужно использовать одну из ваших звезд.</string>
+    <string name="Sentence_No_Saved_Game">Вы не имеют никаких сохраненных игр.</string>
+    <string name="Continue_In_Two_Players_Mode">Продолжить партию в 2 игрока режиме</string>
+    <string name="Continue_Against_Computer">Продолжить игру против компьютера</string>
+    <string name="Connecting_To_Server">Подключение к серверу…</string>
+    <string name="All_Levels_Passed">Вам удалось все уровни. Вы закончили режим вызов!</string>
+    <string name="Explanation_Star">Вы можете использовать звезду в режиме вызов для намека, когда вы заблокированы.</string>
+    <string name="New_Star_Bluetooth">Вы заработали новую звезду, потому вы играли Bluetooth с новым противником.</string>
+    <string name="No_More_Stars">Вы не должны звезд больше.\n\nЧтобы заработать новые звезды, вы можете играть в Bluetooth против новых противников, например.</string>
+    <string name="Sentence_Confirm_Use_Star">Вы действительно хотите использовать один из ваших звезд, чтобы получить ключ?</string>
+    <string name="Use_Star">Используйте звезду, чтобы получить ключ</string>
+    <string name="Star_Won_Against_Computer">Вы выигрываете звезду, потому что вы играли %1$d игр против компьютера.</string>
+    <string name="Star_Won_All_Games">Вы выигрываете звезду, потому что вы пытались все 4 основных режима игры.</string>
+    <string name="Star_Won_Bluetooth">Вы выигрываете звезду, потому что вы играли %1$d игр в Bluetooth.</string>
+    <string name="Star_Won_Online">Вы выигрываете звезду, потому что вы играли %1$d игр онлайн.</string>
+    <string name="Star_Won_Two_Players">Вы выигрываете звезду, потому что вы играли %1$d игр в режиме 2 игрока.</string>
+    <string name="Star_Won_Win_Against_Computer">Вы выигрываете звезду, потому что вы победили %1$d партий против компьютера (с уровнем верхней, чем 30).</string>
+    <string name="Next_Time_Ad">Будьте осторожны: если вы потеряете на следующей попытке, рекламу появятся!</string>
+    <string name="Ad_Displayed">Вы видите объявление, потому что вы потеряли два раза подряд. Вы можете потреблять звезду, чтобы получить ключ, если вы чувствуете, это уровень слишком сложно.</string>
+    <string name="No_Internet_Connection">Нет соединения с интернетом</string>
+</resources>

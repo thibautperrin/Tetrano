@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="thibautperrin.tetrano.JouerContreOrdiActivity"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/Who_Begins"
+        android:id="@+id/textViewQuiCommence"
+        android:textSize="@dimen/Taille_titre_2" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/User"
+        android:id="@+id/radioButtonCommencer"
+        android:checked="true"
+        android:clickable="true"
+        android:textSize="@dimen/Taille_titre_3"
+        android:layout_marginLeft="@dimen/Grosse_marge"
+        android:layout_marginStart="@dimen/Grosse_marge"
+        android:textColor="#ff0000ff" />
+
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Computer"
+        android:id="@+id/radioButtonNePasCommencer"
+        android:clickable="true"
+        android:textSize="@dimen/Taille_titre_3"
+        android:layout_marginLeft="@dimen/Grosse_marge"
+        android:layout_marginStart="@dimen/Grosse_marge"
+        android:textColor="#ff0000ff" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/Level"
+            android:id="@+id/textNiveau"
+            android:textSize="@dimen/Taille_titre_2"
+            android:singleLine="true" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:id="@+id/TextNiveauPourcent"
+            android:layout_gravity="end"
+            android:textSize="@dimen/Taille_titre_2"
+            android:singleLine="true" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <thibautperrin.tetrano.ButtonNextPrevious
+            android:layout_width="@dimen/Moyenne_marge"
+            android:layout_height="wrap_content"
+            android:id="@+id/boutonGauche"
+            custom:next="false"
+            custom:ratioWidthOnHeight="1.2"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"/>
+
+
+        <SeekBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBarLevel"
+            android:layout_gravity="center_vertical"
+            android:layout_toRightOf="@+id/boutonGauche"
+            android:layout_toEndOf="@+id/boutonGauche"
+            android:layout_toLeftOf="@+id/boutonDroit"
+            android:layout_toStartOf="@+id/boutonDroit"
+            android:layout_centerVertical="true" />
+
+
+        <thibautperrin.tetrano.ButtonNextPrevious
+            android:layout_width="@dimen/Moyenne_marge"
+            android:layout_height="wrap_content"
+            android:id="@+id/boutonDroit"
+            custom:next="true"
+            custom:ratioWidthOnHeight="1.2"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/Play"
+            android:id="@+id/buttonJouer"
+            android:layout_gravity="center_vertical"
+            android:textSize="@dimen/Taille_titre_2"
+            android:background="#beffff32"
+            android:textColor="#ff0000ff"
+            android:textStyle="bold|italic"/>
+    </FrameLayout>
+
+</LinearLayout>

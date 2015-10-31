@@ -9,6 +9,7 @@
 .idea/modules.xml
 Tetrano.iml
 app/app.iml
+app/app-release.apk
 .idea/misc.xml
 .idea/vcs.xml
 tetrano_git.iml

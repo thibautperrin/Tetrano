@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="thibautperrin.tetrano" >
+
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".ApplicationTetrano"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/mybackupscheme"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/Tetrano"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/Tetrano" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".JouerActivity"
+            android:label="@string/Play"
+            android:theme="@android:style/Theme.Black.NoTitleBar" >
+        </activity>
+        <activity
+            android:name=".JouerContreOrdiActivity"
+            android:label="@string/One_Player" >
+        </activity>
+        <activity
+            android:name=".JeuActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/Tetrano" >
+        </activity>
+        <activity
+            android:name=".JouerDeuxJoueurActivity"
+            android:label="@string/Two_Players" >
+        </activity>
+        <activity
+            android:name=".reglesDuJeu.ExamplesActivity"
+            android:label="@string/Winning_Situation_Example" >
+        </activity>
+        <activity
+            android:name=".reglesDuJeu.NoticeFormelleActivity"
+            android:label="@string/Rules_Of_Game" >
+        </activity>
+        <activity
+            android:name=".packageConnexions.packageBluetooth.ConnexionBluetoothActivity"
+            android:label="@string/title_activity_connexion_bluetooth" >
+        </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/action_settings" >
+        </activity>
+        <activity
+            android:name=".packageSavedGame.WatchSavedGameActivity"
+            android:label="@string/Saved_Games" >
+        </activity>
+        <activity
+            android:name=".packageSavedGame.ListePartiesEnregistreesActivity"
+            android:label="@string/Saved_Games" >
+        </activity>
+        <activity
+            android:name=".packageChallenge.ChallengeActivity"
+            android:configChanges="orientation|screenSize" >
+        </activity>
+        <activity android:name="com.purplebrain.adbuddiz.sdk.AdBuddizActivity"
+            android:theme="@android:style/Theme.Translucent" />
+    </application>
+
+</manifest>

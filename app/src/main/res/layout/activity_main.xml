@@ -1,0 +1,40 @@
+    <ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context=".MainActivity"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/fond_inverse">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+        <Button
+            style="@style/button_texte_style"
+        android:text="@string/Play"
+        android:id="@+id/BoutonJouer" />
+
+    <Button
+        style="@style/button_texte_style"
+        android:text="@string/Rules_Of_Game"
+        android:id="@+id/BoutonCommentJouer"/>
+
+        <Button
+            style="@style/button_texte_style"
+            android:text="@string/action_settings"
+            android:id="@+id/BoutonReglages"/>
+
+        <Button
+            style="@style/button_texte_style"
+        android:id="@+id/BoutonAPropos"
+        android:text="@string/About" />
+
+        </LinearLayout>
+    </ScrollView>

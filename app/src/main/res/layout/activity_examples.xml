@@ -1,0 +1,66 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="thibautperrin.tetrano.reglesDuJeu.ExamplesActivity"
+    android:layout_margin="1dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/scrollView3">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <view
+                class="thibautperrin.tetrano.reglesDuJeu.GrilleView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/grilleView1" />
+
+            <view
+                class="thibautperrin.tetrano.reglesDuJeu.GrilleView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/grilleView2" />
+
+            <view
+                class="thibautperrin.tetrano.reglesDuJeu.GrilleView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/grilleView3" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <view
+                class="thibautperrin.tetrano.reglesDuJeu.GrilleView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/grilleView4" />
+
+            <view
+                class="thibautperrin.tetrano.reglesDuJeu.GrilleView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/grilleView5" />
+
+            <view
+                class="thibautperrin.tetrano.reglesDuJeu.GrilleView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/grilleView6" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

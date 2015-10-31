@@ -1,0 +1,32 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '23.0.1'
+    compileOptions.encoding = 'UTF8'
+    defaultConfig {
+        applicationId "thibautperrin.tetrano"
+        minSdkVersion 8
+        targetSdkVersion 23
+        versionCode 17
+        versionName "4.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.purplebrain.adbuddiz.sdk:AdBuddiz-Java:3.1.2'
+}
+
+repositories {
+    maven {
+        url 'http://repository.adbuddiz.com/maven'
+    }
+}

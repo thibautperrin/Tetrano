@@ -1,0 +1,48 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="thibautperrin.tetrano.packageSavedGame.WatchSavedGameActivity">
+
+
+    <thibautperrin.tetrano.packageSurfaceGraphView.SurfaceGraphView
+        android:id="@+id/surfaceGraphViewWatchSavedGame"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true" />
+
+    <thibautperrin.tetrano.ButtonNextPrevious
+        android:id="@+id/boutonPrecedent"
+        android:layout_width="@dimen/Grosse_marge"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/surfaceGraphViewWatchSavedGame"
+        custom:next="false"
+        custom:ratioWidthOnHeight="1.2" />
+
+    <thibautperrin.tetrano.ButtonNextPrevious
+        android:id="@+id/boutonSuivant"
+        android:layout_width="@dimen/Grosse_marge"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/surfaceGraphViewWatchSavedGame"
+        custom:next="true"
+        custom:ratioWidthOnHeight="1.2" />
+
+    <TextView
+        android:id="@+id/textDescriptionAnneau"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/boutonPrecedent"
+        android:layout_below="@+id/surfaceGraphViewWatchSavedGame"
+        android:layout_toEndOf="@+id/boutonPrecedent"
+        android:layout_toLeftOf="@+id/boutonSuivant"
+        android:layout_toRightOf="@+id/boutonPrecedent"
+        android:layout_toStartOf="@+id/boutonSuivant"
+        android:gravity="center"
+        android:textSize="@dimen/Taille_titre_3" />
+
+</RelativeLayout>

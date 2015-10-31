@@ -1,0 +1,18 @@
+<resources>
+    <dimen name="activity_horizontal_margin">20dp</dimen>
+    <dimen name="activity_vertical_margin">20dp</dimen>
+    <dimen name="Grosse_marge">100dp</dimen>
+    <dimen name="Moyenne_marge">56dp</dimen>
+    <dimen name="marge">38dp</dimen>
+    <dimen name="Petite_marge">25dp</dimen>
+    <dimen name="Tres_petite_marge">12dp</dimen>
+    <dimen name="Demi_tres_petite_marge">6dp</dimen>
+
+    <dimen name="Taille_titre_1">75sp</dimen>
+    <dimen name="Taille_titre_2">45sp</dimen>
+    <dimen name="Taille_titre_3">34sp</dimen>
+    <dimen name="Taille_Corps">25sp</dimen>
+
+    <dimen name="winning_situation_examples_button">28sp</dimen>
+    <dimen name="three_bottom_buttons">20sp</dimen>
+</resources>
