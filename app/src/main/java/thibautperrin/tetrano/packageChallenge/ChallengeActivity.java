@@ -220,7 +220,7 @@ public class ChallengeActivity extends AppCompatActivity implements InterfaceGam
             if (challenge.gameFinished()) {
                 surfaceGraphView.jouerAdversaireAnimer(ringComputer, (byte) 2, (byte) 0, 1200, 40);
                 blinkLine(1200);
-                displayDialogEnd(memVars.getLevelChallenge() + 1, SITUATION_COMPUTER_WINS, 2200);
+                displayDialogEnd(memVars.getLevelChallenge(), SITUATION_COMPUTER_WINS, 2200);
                 memVars.nextLevelChallenge(false);
             } else {
                 surfaceGraphView.jouerAdversaireAnimer(ringComputer, (byte) 2, (byte) 1, 1200, 40);
