@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="noir">#ff000000</color>
-    <color name="blanc">#ffffffff</color>
     <color name="gris">#ff777777</color>
     <color name="rouge">#ffff0000</color>
     <color name="vert">#ff00cc00</color>

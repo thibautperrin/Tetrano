@@ -47,7 +47,6 @@
     <string name="User_Name">Nom d’utilisateur</string>
     <string name="User_Color">Couleur utilisateur</string>
     <string name="Adversary_Color">Couleur adversaire</string>
-    <string name="Sentence_Version_Bluetooth">Vous n’avez pas la même version du Tetrano. Des bugs peuvent arriver.</string>
     <string name="Connecting">Connexion en cours…</string>
     <string name="Connection_Failed">Échec de connexion</string>
     <string name="scanning">Recherche d’adversaire en cours…</string>

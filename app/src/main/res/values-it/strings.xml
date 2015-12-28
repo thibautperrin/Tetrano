@@ -36,7 +36,6 @@
     <string name="User_Color">Colore utente</string>
     <string name="User_Name">nome utente</string>
     <string name="Sentence_Bluetooth_Not_Supported">Bluetooth non è supportato sul telefono.</string>
-    <string name="Sentence_Version_Bluetooth">Tu non hai la stessa versione del Tetrano. Bugs potrebbe accadere.</string>
     <string name="You_Are_Discoverable">Sei rilevabile.</string>
     <string name="You_Can_Start">, Si può iniziare.</string>
     <string name="button_scan">Cerchi un avversario</string>

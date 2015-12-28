@@ -3,13 +3,9 @@
     <dimen name="activity_vertical_margin">12dp</dimen>
     <dimen name="Grosse_marge">45dp</dimen>
     <dimen name="Moyenne_marge">28dp</dimen>
-    <dimen name="marge">18dp</dimen>
     <dimen name="Petite_marge">12dp</dimen>
     <dimen name="Tres_petite_marge">6dp</dimen>
-    <dimen name="Demi_tres_petite_marge">3dp</dimen>
 
-
-    <dimen name="Taille_titre_1">40sp</dimen>
     <dimen name="Taille_titre_2">23sp</dimen>
     <dimen name="Taille_titre_3">20sp</dimen>
     <dimen name="Taille_Corps">16sp</dimen>

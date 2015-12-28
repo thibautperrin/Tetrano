@@ -30,7 +30,6 @@
     <string name="Bluetooth_Adversary">Bluetooth-Gegner</string>
     <string name="User_Name">Benutzername</string>
     <string name="Sentence_Bluetooth_Not_Supported">die Bluetooth-Verbindung ist unterbrochen </string>
-    <string name="Sentence_Version_Bluetooth">Du spielst nicht mit der neuesten Version von Tetrano. Bugs könnte passieren.</string>
     <string name="You_Can_Start">, du kannst anfangen.</string>
     <string name="button_scan">Auf der Suche nach einem Gegner</string>
     <string name="scanning">Scannen für Geräte…</string>

@@ -46,7 +46,6 @@
     <string name="User_Color">цвет пользователя</string>
     <string name="User_Name">Имя пользователя</string>
     <string name="Sentence_Bluetooth_Not_Supported">Bluetooth не поддерживается на вашем телефоне.</string>
-    <string name="Sentence_Version_Bluetooth">Вы не имеете в ту же версию Tetrano. Ошибки могут случиться.</string>
     <string name="You_Are_Discoverable">Вы видимости.</string>
     <string name="You_Can_Start">, Вы можете начать.</string>
     <string name="button_scan">Ищете противника</string>
