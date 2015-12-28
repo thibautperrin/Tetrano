@@ -81,7 +81,7 @@
     <string name="Number_Of_Rings_Allowed">Autorisierte Anzahl der Ringe:</string>
     <string name="Next">Weiter</string>
     <string name="Explanations">Erläuterungen</string>
-    <string name="Explanations_Challenge1">Willkommen in der Challenge-Modus,\n\nin diesem Modus starten Sie von einem Spiel bereits begonnen, und Sie können nur eine begrenzte Anzahl von Ringen zu verwenden, um zu gewinnen. Wenn Sie das Spiel mit dieser begrenzten Anzahl nicht gewinnen, verlieren Sie. Wenn Sie das Spiel mit dem guten Anzahl von Ringen gewinnen, gewinnen Sie und Sie können auf die nächste Ebene zu gehen.\n\nSeien Sie vorsichtig, wenn Sie zweimal hintereinander verlieren, wird eine Anzeige angezeigt!</string>
+    <string name="Explanations_Challenge1">Willkommen in der Challenge-Modus,\n\nin diesem Modus starten Sie von einem Spiel bereits begonnen, und Sie können nur eine begrenzte Anzahl von Ringen zu verwenden, um zu gewinnen. Wenn Sie das Spiel mit dieser begrenzten Anzahl nicht gewinnen, verlieren Sie. Wenn Sie das Spiel mit dem guten Anzahl von Ringen gewinnen, gewinnen Sie und Sie können auf die nächste Ebene zu gehen.</string>
     <string name="Explanations_Challenge2">Wenn der Pegel zu schwierig erscheint, können Sie es übergeben. Dafür benötigen Sie einen Ihrer Sterne verwenden.</string>
     <string name="Sentence_No_Saved_Game">Sie haben keine gespeicherten Spiele.</string>
     <string name="Continue_In_Two_Players_Mode">Fahren Sie mit der Partei im 2-Spieler-Modus</string>
@@ -99,7 +99,5 @@
     <string name="Star_Won_Online">Sie gewinnen einen Stern, weil Sie %1$d Spiele gespielt haben, online.</string>
     <string name="Star_Won_Two_Players">Sie gewinnen einen Stern, weil Sie %1$d Spiele in 2-Spieler-Modus gespielt.</string>
     <string name="Star_Won_Win_Against_Computer">Sie gewinnen einen Stern, weil Sie %1$d Spielen gegen den Computer (mit Niveau oberen als 30) gewonnen zu haben.</string>
-    <string name="Next_Time_Ad">Seien Sie vorsichtig: Wenn Sie beim nächsten Versuch zu verlieren, wird eine Anzeige angezeigt!</string>
-    <string name="Ad_Displayed">Sie sehen eine Anzeige, weil Sie zweimal hintereinander verloren haben. Sie können einen Stern zu konsumieren, um einen Anhaltspunkt zu bekommen, wenn Sie dieses Niveau zu hart anfühlt.</string>
     <string name="No_Internet_Connection">Keine Internetverbindung</string>
 </resources>

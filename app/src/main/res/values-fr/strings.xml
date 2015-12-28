@@ -88,7 +88,7 @@
     <string name="Number_Of_Rings_Allowed">Nombre d’anneaux autorisés:</string>
     <string name="Next">Suivant</string>
     <string name="Explanations">Explications</string>
-    <string name="Explanations_Challenge1">Bienvenue dans le mode challenge,\n\ndans ce mode de jeu, vous partez d’une partie déjà commencée, et vous avez droit à un certain nombre d’anneaux pour gagner. Ainsi, si vous dépassez le nombre d’anneaux prévu, vous avez perdu. Si vous réussissez, vous passez au niveau suivant.\n\nAttention, si vous perdez deux fois de suite, une publicité s’affichera !</string>
+    <string name="Explanations_Challenge1">Bienvenue dans le mode challenge,\n\ndans ce mode de jeu, vous partez d’une partie déjà commencée, et vous avez droit à un certain nombre d’anneaux pour gagner. Ainsi, si vous dépassez le nombre d’anneaux prévu, vous avez perdu. Si vous réussissez, vous passez au niveau suivant.</string>
     <string name="Explanations_Challenge2">Si un niveau vous semble trop difficile, vous pouvez le passer. Pour cela, vous devez utiliser une de vos étoiles. </string>
     <string name="Sentence_No_Saved_Game">Vous n’avez pas encore de parties sauvegardées.</string>
     <string name="Continue_In_Two_Players_Mode">Continuer la partie en mode 2 joueurs</string>
@@ -106,7 +106,5 @@
     <string name="Explanation_Star">Vous pouvez utiliser une étoile dans le mode challenge pour obtenir un indice lorsque vous êtes bloqué.</string>
     <string name="All_Levels_Passed">Vous avez réussi tous les niveaux. Vous avez fini le mode challenge!</string>
     <string name="New_Star_Bluetooth">Vous gagnez une étoile car vous avez fait une partie en Bluetooth contre un nouvel adversaire.</string>
-    <string name="Next_Time_Ad">Attention: si vous perdez à nouveau au prochain essai, vous verrez une publicité!</string>
-    <string name="Ad_Displayed">Vous voyez une publicité parce que vous avez perdu deux fois consécutivement. Vous pouvez utiliser une étoile pour obtenir un indice si ce niveau vous parait trop difficile.</string>
     <string name="No_Internet_Connection">Pas de connexion internet</string>
 </resources>

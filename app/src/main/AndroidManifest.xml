@@ -69,8 +69,6 @@
             android:name=".packageChallenge.ChallengeActivity"
             android:configChanges="orientation|screenSize" >
         </activity>
-        <activity android:name="com.purplebrain.adbuddiz.sdk.AdBuddizActivity"
-            android:theme="@android:style/Theme.Translucent" />
     </application>
 
 </manifest>

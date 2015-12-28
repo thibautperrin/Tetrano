@@ -87,7 +87,7 @@
     <string name="Explanation_Rings_Number">In challenge mode, you have to win using a limited number of rings.</string>
     <string name="In_This_Level">In this level:</string>
     <string name="Number_Of_Rings_Allowed">Allowed rings number:</string>
-    <string name="Explanations_Challenge1">Welcome in the Challenge mode,\n\nin this mode, you start from an already begun game, and you can use only a limited number of rings to win. If you don’t win the game with this limited number, you lose. If you win the game using the good number of rings, you win and you can go to the next level.\n\nBe careful, if you lose twice consecutively, an advertisement will appear!</string>
+    <string name="Explanations_Challenge1">Welcome in the Challenge mode,\n\nin this mode, you start from an already begun game, and you can use only a limited number of rings to win. If you don’t win the game with this limited number, you lose. If you win the game using the good number of rings, you win and you can go to the next level.</string>
     <string name="Explanations_Challenge2">If a level seems too difficult, you can by-pass it. To do that, you need to consume one of your stars.</string>
     <string name="Next">Next</string>
     <string name="Explanations">Explanations</string>
@@ -107,7 +107,5 @@
     <string name="Star_Won_Win_Against_Computer">You win a star because you have won %1$d games against the computer (with level upper than 30).</string>
     <string name="Explanation_Star">A star can be consumed to get a clue when you are blocked  in the challenge mode.</string>
     <string name="All_Levels_Passed">You have passed all the levels. You have finished the challenge mode.</string>
-    <string name="Next_Time_Ad">Be Careful: if you lose at the next try, an advert will appear!</string>
-    <string name="Ad_Displayed">You see an advert because you have lost twice consecutively. You can consume a star to get a clue if you feel this level too hard.</string>
     <string name="No_Internet_Connection">No internet connection</string>
 </resources>

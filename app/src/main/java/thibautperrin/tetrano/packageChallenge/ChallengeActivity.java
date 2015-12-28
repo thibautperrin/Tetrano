@@ -15,10 +15,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.purplebrain.adbuddiz.sdk.AdBuddiz;
-import com.purplebrain.adbuddiz.sdk.AdBuddizDelegate;
-import com.purplebrain.adbuddiz.sdk.AdBuddizError;
-
 import thibautperrin.tetrano.ApplicationTetrano;
 import thibautperrin.tetrano.R;
 import thibautperrin.tetrano.SettingsActivity;
@@ -74,7 +70,6 @@ public class ChallengeActivity extends AppCompatActivity implements InterfaceGam
             if (memVars.getLevelChallenge() == 1) {
                 displayExplanations(true);
             }
-            doAdBudizStuff();
         } catch (ChallengeModeFinishedException e) {
             endDueToNoMoreLevels();
         }
@@ -84,34 +79,6 @@ public class ChallengeActivity extends AppCompatActivity implements InterfaceGam
         Toast.makeText(this, res.getString(R.string.All_Levels_Passed), Toast.LENGTH_LONG).show();
         finish();
     }
-
-    private void doAdBudizStuff() {
-        // OPTIONAL, to get more info about the SDK behavior
-        AdBuddiz.setDelegate(new AdBuddizDelegate() {
-            @Override
-            public void didCacheAd() {
-            }
-
-            @Override
-            public void didShowAd() {
-            }
-
-            @Override
-            public void didFailToShowAd(AdBuddizError adBuddizError) {
-            }
-
-            @Override
-            public void didClick() {
-                //Toast.makeText(ChallengeActivity.this,res.getString(R.string.Message_On_Ad_Click), Toast.LENGTH_SHORT).show();
-                // TODO one day: display a message inviting the user to download the app.
-            }
-
-            @Override
-            public void didHideAd() {
-            }
-        });
-    }
-
 
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
@@ -291,13 +258,6 @@ public class ChallengeActivity extends AppCompatActivity implements InterfaceGam
     }
 
     private void displayDialogEnd(int level, byte situation) {
-        boolean adShown = false;
-        if ((situation == SITUATION_ABANDONED ||
-                situation == SITUATION_COMPUTER_WINS ||
-                situation == SITUATION_RINGS_NUMBER_PASSED) && memVars.tryAdvert() && AdBuddiz.isReadyToShowAd(this)) {
-            AdBuddiz.showAd(this);
-            adShown = true;
-        }
         if (dialogEnd == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("nothing");
@@ -335,8 +295,6 @@ public class ChallengeActivity extends AppCompatActivity implements InterfaceGam
                 dialogEnd.setTitle(res.getString(R.string.Sentence_End_Lost));
                 s = res.getString(R.string.You_Lost_At_Level) + " " + level
                         + "\n" + res.getString(R.string.Computer_Won_Before);
-                s += "\n\n" + (adShown ? res.getString(R.string.Ad_Displayed)
-                        : res.getString(R.string.Next_Time_Ad));
                 dialogEnd.setMessage(s);
                 buttonPositive.setText(res.getString(R.string.Try_Again));
                 break;
@@ -344,16 +302,12 @@ public class ChallengeActivity extends AppCompatActivity implements InterfaceGam
                 dialogEnd.setTitle(res.getString(R.string.Sentence_End_Lost));
                 s = res.getString(R.string.You_Lost_At_Level) + " " + level
                         + "\n" + res.getString(R.string.Sentence_Number_Rings);
-                s += "\n\n" + (adShown ? res.getString(R.string.Ad_Displayed)
-                        : res.getString(R.string.Next_Time_Ad));
                 dialogEnd.setMessage(s);
                 buttonPositive.setText(res.getString(R.string.Try_Again));
                 break;
             case SITUATION_ABANDONED:
                 dialogEnd.setTitle(res.getString(R.string.Abandoned));
                 s = res.getString(R.string.You_Lost_At_Level) + " " + level;
-                s += "\n\n" + (adShown ? res.getString(R.string.Ad_Displayed)
-                        : res.getString(R.string.Next_Time_Ad));
                 dialogEnd.setMessage(s);
                 buttonPositive.setText(res.getString(R.string.Try_Again));
         }

@@ -89,7 +89,7 @@
     <string name="Number_Of_Rings_Allowed">Número autorizado de los anillos:</string>
     <string name="Next">Siguiente</string>
     <string name="Explanations">Explicaciones</string>
-    <string name="Explanations_Challenge1">Bienvenido en el modo Desafío, \n\nen este modo, se parte de un juego ya empezado, y se puede utilizar sólo un número limitado de anillos para ganar. Si no ganas el juego con este número limitado, se pierde. Si usted gana el juego utilizando el buen número de anillos, usted gana y usted puede ir al siguiente nivel.\n\nTen cuidado, si pierdes dos veces consecutivas, aparecerá un anuncio!</string>
+    <string name="Explanations_Challenge1">Bienvenido en el modo Desafío, \n\nen este modo, se parte de un juego ya empezado, y se puede utilizar sólo un número limitado de anillos para ganar. Si no ganas el juego con este número limitado, se pierde. Si usted gana el juego utilizando el buen número de anillos, usted gana y usted puede ir al siguiente nivel.</string>
     <string name="Explanations_Challenge2">Si el nivel parece demasiado difícil, puede pasar. Para ello, tiene que utilizar una de sus estrellas.</string>
     <string name="Sentence_No_Saved_Game">Usted no tiene ningún juego guardados.</string>
     <string name="Continue_In_Two_Players_Mode">Siga el partido en el modo de 2 jugadores</string>
@@ -107,7 +107,5 @@
     <string name="Star_Won_Online">Usted gana una estrella, ya que han jugado %1$d juegos en línea.</string>
     <string name="Star_Won_Two_Players">Usted gana una estrella, ya que jugó %1$d partidos en el modo de 2 jugadores.</string>
     <string name="Star_Won_Win_Against_Computer">Usted gana una estrella, ya que han ganado %1$d partidos contra la computadora (con nivel superior a 30).</string>
-    <string name="Next_Time_Ad">Tenga cuidado: si pierde en la próxima prueba, aparecerá un anuncio!</string>
-    <string name="Ad_Displayed">Usted ve un anuncio porque ha perdido dos veces consecutivas. Usted puede consumir una estrella para conseguir una pista si siente este nivel demasiado duro.</string>
     <string name="No_Internet_Connection">Sin conexión a Internet</string>
 </resources>

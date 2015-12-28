@@ -9,8 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-import com.purplebrain.adbuddiz.sdk.AdBuddiz;
-
 import thibautperrin.tetrano.reglesDuJeu.NoticeFormelleActivity;
 
 
@@ -23,10 +21,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        AdBuddiz.setPublisherKey(StaticFields.PUBLISHER_KEY_ADBUDDIZ);
-        AdBuddiz.cacheAds(this);
-        //AdBuddiz.setTestModeActive();  //TODO to delete before submitting to store
 
         Button buttonJouer = (Button) findViewById(R.id.BoutonJouer);
         Button buttonCommentJouer = (Button) findViewById(R.id.BoutonCommentJouer);
@@ -42,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
         builderAPropos.setMessage(getResources().getString(R.string.Long_Sentence_About));
         builderAPropos.setTitle(getResources().getString(R.string.About));
         dialogAPropos = builderAPropos.create();
-
-
     }
 
     // Quand on clique sur le bouton Jouer:
