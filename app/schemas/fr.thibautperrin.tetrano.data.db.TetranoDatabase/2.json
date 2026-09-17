@@ -1,0 +1,107 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "2744a3bc1b07f995b42fa2bba0168248",
+    "entities": [
+      {
+        "tableName": "saved_games",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`name` TEXT NOT NULL, `rings` BLOB NOT NULL, `user_begins` INTEGER NOT NULL, `user_color` INTEGER NOT NULL, `adversary_color` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`name`))",
+        "fields": [
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rings",
+            "columnName": "rings",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userBegins",
+            "columnName": "user_begins",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userColor",
+            "columnName": "user_color",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adversaryColor",
+            "columnName": "adversary_color",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "name"
+          ]
+        }
+      },
+      {
+        "tableName": "challenge_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `level` INTEGER NOT NULL, `symmetry` INTEGER NOT NULL, `normally_played` BLOB, `played_by_stars` BLOB, `next_time_advert` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symmetry",
+            "columnName": "symmetry",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "normallyPlayed",
+            "columnName": "normally_played",
+            "affinity": "BLOB"
+          },
+          {
+            "fieldPath": "playedByStars",
+            "columnName": "played_by_stars",
+            "affinity": "BLOB"
+          },
+          {
+            "fieldPath": "nextTimeAdvert",
+            "columnName": "next_time_advert",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2744a3bc1b07f995b42fa2bba0168248')"
+    ]
+  }
+}

@@ -53,6 +53,13 @@ android {
         }
     }
 
+    // Room schema history, used by MigrationTestHelper (see
+    // app/src/androidTest and docs/PLAN.md P4) to test every migration,
+    // including future ones, against its actual starting schema.
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
     lint {
         disable += "PropertyEscape"
         // local.properties is machine-generated, gitignored, and not part of
