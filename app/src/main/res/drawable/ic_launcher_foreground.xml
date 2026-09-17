@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Placeholder launcher foreground (P1 bootstrap): a simple concentric-rings
+  motif standing in for the real vector identity redrawn in phase P9 from
+  the legacy ic_launcher.png (see seed_assets/README.md).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#FF2196F3"
+        android:strokeWidth="6"
+        android:pathData="M54,30 a24,24 0 1,0 0.1,0 z" />
+    <path
+        android:strokeColor="#FFE53935"
+        android:strokeWidth="6"
+        android:pathData="M54,42 a12,12 0 1,0 0.1,0 z" />
+</vector>

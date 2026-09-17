@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Placeholder launch theme (P1 bootstrap). The real Material 3 Compose
+      theme (light + dark, colors ported from the legacy colors.xml) is
+      built in phase P7 — see docs/PLAN.md.
+    -->
+    <style name="Theme.Tetrano" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
