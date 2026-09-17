@@ -221,7 +221,7 @@ class Ai(
                 bestRing = ring
                 bestOrder = opponentOrder
             }
-            progress?.onProgress(i, size)
+            progress?.onProgress(AiSearchPhase.BLOCKING_FORK, i, size)
         }
         return bestRing
     }
@@ -264,7 +264,7 @@ class Ai(
                 bestRing = ring1
                 if (res == 0) break
             }
-            progress?.onProgress(i, count)
+            progress?.onProgress(AiSearchPhase.SEARCHING_FORK, i, count)
         }
         for (table in memo) table.clear()
         return bestRing
