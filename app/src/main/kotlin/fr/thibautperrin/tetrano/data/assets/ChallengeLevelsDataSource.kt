@@ -19,7 +19,7 @@ import javax.inject.Singleton
  * Android `Context`.
  */
 @Singleton
-class ChallengeLevelsDataSource @Inject constructor(@ApplicationContext context: Context) {
+class ChallengeLevelsDataSource @Inject constructor(@ApplicationContext context: Context) : ChallengeLevels {
 
     private val data: ByteArray = context.resources.openRawResource(R.raw.challenge).use { it.readBytes() }
 
@@ -29,14 +29,14 @@ class ChallengeLevelsDataSource @Inject constructor(@ApplicationContext context:
         }
     }
 
-    val levelCount: Int get() = ChallengeLevelsCodec.NUMBER_CHALLENGE_LEVELS
+    override val levelCount: Int get() = ChallengeLevelsCodec.NUMBER_CHALLENGE_LEVELS
 
     /** The board signature for [level] (1..[levelCount]). Ports `getSignature`. */
-    fun signature(level: Int): ByteArray = ChallengeLevelsCodec.signature(data, level)
+    override fun signature(level: Int): ByteArray = ChallengeLevelsCodec.signature(data, level)
 
     /** How many forced pairs the built-in fork for [level] needs. Ports `getForkOrder`. */
-    fun forkOrder(level: Int): Int = ChallengeLevelsCodec.forkOrder(data, level)
+    override fun forkOrder(level: Int): Int = ChallengeLevelsCodec.forkOrder(data, level)
 
     /** True iff the computer played first on [level] (so the user isn't player 1 from ring 0). Ports `isInvertPlayer`. */
-    fun isInvertPlayer(level: Int): Boolean = ChallengeLevelsCodec.isInvertPlayer(data, level)
+    override fun isInvertPlayer(level: Int): Boolean = ChallengeLevelsCodec.isInvertPlayer(data, level)
 }

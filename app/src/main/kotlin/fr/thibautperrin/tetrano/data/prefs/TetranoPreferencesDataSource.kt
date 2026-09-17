@@ -49,6 +49,14 @@ class TetranoPreferencesDataSource @Inject constructor(
     val gamesPlayedOnline: Flow<Int> = intFlow(Keys.GAMES_ONLINE, 0)
     val gamesPlayedBluetooth: Flow<Int> = intFlow(Keys.GAMES_BLUETOOTH, 0)
 
+    /**
+     * True once Challenge mode has been attempted at least once. Bluetooth
+     * is gone and online isn't implemented yet (see docs/PLAN.md §10), so
+     * [StarService]'s "tried every mode" star uses this instead of the two
+     * counters above — see docs/PLAN.md P6 for that adjustment.
+     */
+    val hasTriedChallenge: Flow<Boolean> = dataStore.data.map { it[Keys.HAS_TRIED_CHALLENGE] == true }
+
     /** True once the one-time import from the legacy 2015 data has completed. See docs/PLAN.md P5. */
     val legacyImportDone: Flow<Boolean> = dataStore.data.map { it[Keys.LEGACY_IMPORT_DONE] == true }
 
@@ -69,6 +77,10 @@ class TetranoPreferencesDataSource @Inject constructor(
     suspend fun setGamesWonAgainstComputer(count: Int) = setInt(Keys.GAMES_WON_COMPUTER, count)
     suspend fun setGamesPlayedOnline(count: Int) = setInt(Keys.GAMES_ONLINE, count)
     suspend fun setGamesPlayedBluetooth(count: Int) = setInt(Keys.GAMES_BLUETOOTH, count)
+
+    suspend fun setHasTriedChallenge(tried: Boolean) {
+        dataStore.edit { it[Keys.HAS_TRIED_CHALLENGE] = tried }
+    }
 
     suspend fun setLegacyImportDone(done: Boolean) {
         dataStore.edit { it[Keys.LEGACY_IMPORT_DONE] = done }
@@ -109,6 +121,7 @@ class TetranoPreferencesDataSource @Inject constructor(
         val GAMES_WON_COMPUTER = intPreferencesKey("games_won_against_computer")
         val GAMES_ONLINE = intPreferencesKey("games_online")
         val GAMES_BLUETOOTH = intPreferencesKey("games_bluetooth")
+        val HAS_TRIED_CHALLENGE = booleanPreferencesKey("has_tried_challenge")
         val LEGACY_IMPORT_DONE = booleanPreferencesKey("legacy_import_done")
     }
 
