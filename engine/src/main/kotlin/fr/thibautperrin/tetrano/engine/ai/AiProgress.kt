@@ -17,13 +17,23 @@ enum class AiSearchPhase {
 }
 
 /**
- * Reports incremental progress of a long-running [Ai] search: [current] of
- * [total] candidates examined so far, for the given [phase]. Used to drive
- * a progress indicator (e.g. an arc on the UI) at high AI levels, where a
- * single move can take a noticeable time to compute. Ports the
- * `Handler`-based progress messages of the legacy `IA` class — see
- * docs/PLAN.md §6.3.
+ * Reports incremental progress of a long-running [Ai] search, and lets the
+ * caller ask it to stop. Used to drive a progress indicator (e.g. an arc
+ * on the UI) and to make an in-progress search cancellable at high AI
+ * levels, where a single move can take a noticeable time to compute.
+ * Ports the `Handler`-based progress messages of the legacy `IA` class —
+ * see docs/PLAN.md §6.2/§6.3.
+ *
+ * [Ai] has no dependency on coroutines (or anything else outside the
+ * plain JVM): [isCancelled] is checked at exactly the points [onProgress]
+ * is reported, so a caller that does use coroutines (see
+ * `AiService` in the `:app` module) can back it with
+ * `!currentCoroutineContext().isActive` without `:engine` needing to know
+ * that coroutines exist.
  */
 fun interface AiProgress {
     fun onProgress(phase: AiSearchPhase, current: Int, total: Int)
+
+    /** Checked right after each [onProgress] call; true aborts the search early. */
+    fun isCancelled(): Boolean = false
 }

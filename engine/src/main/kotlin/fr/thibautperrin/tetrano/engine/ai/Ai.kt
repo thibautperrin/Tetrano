@@ -222,6 +222,7 @@ class Ai(
                 bestOrder = opponentOrder
             }
             progress?.onProgress(AiSearchPhase.BLOCKING_FORK, i, size)
+            if (progress?.isCancelled() == true) break
         }
         return bestRing
     }
@@ -265,6 +266,7 @@ class Ai(
                 if (res == 0) break
             }
             progress?.onProgress(AiSearchPhase.SEARCHING_FORK, i, count)
+            if (progress?.isCancelled() == true) break
         }
         for (table in memo) table.clear()
         return bestRing
