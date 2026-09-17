@@ -5,17 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
+import fr.thibautperrin.tetrano.ui.components.TetranoBackground
+import fr.thibautperrin.tetrano.ui.navigation.TetranoNavHost
+import fr.thibautperrin.tetrano.ui.theme.TetranoTheme
 
 /**
- * Single activity hosting the whole app. Navigation between screens is
- * handled entirely in Compose (see docs/PLAN.md P7 for the navigation
- * graph); this bootstrap placeholder is replaced once that graph exists.
+ * Single activity hosting the whole app; navigation between screens is
+ * entirely in Compose (see docs/PLAN.md P7, [TetranoNavHost]).
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -23,16 +22,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            TetranoBootstrapScreen()
+            TetranoApp()
         }
     }
 }
 
 @Composable
-private fun TetranoBootstrapScreen() {
-    MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Text(text = "Hello Tetrano")
+private fun TetranoApp() {
+    TetranoTheme {
+        TetranoBackground(modifier = Modifier.fillMaxSize()) {
+            TetranoNavHost()
         }
     }
 }
