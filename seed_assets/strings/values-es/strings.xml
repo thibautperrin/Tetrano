@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="Long_Sentence_About">Este juego fue inventado por Maxime Vial en 2004, y la aplicación  asociada fue desarrollada por Thibaut Perrin.</string>
+
+    <string name="Long_Sentence_Rules">El Tetrano es un juego en el que se enfrentan dos jugadores.\n
+        Los jugadores ponen por turnos un aro sobre el tablero de juego con el propósito de llevar a cabo un continuo de cuatros aros del mismo color.\n
+        Estos continuos pueden ser :\n
+        - concéntricos : cuatros aros con tamaños distintos en la misma casilla,\n
+        - o lineales : cuatros aros del mismo tamaño, o ordenados por orden creciente o decreciente, sobre la misma línea o columna, o diagonal.\n
+        El juego se acaba cuando uno de los dos jugadores consigue en hacer un continuo de cuatros aros en el color que ha elegido al principio.\n
+        Para colocar un aro sobre el tablero de juego, cliquee en el aro y cliquee en la casilla en la que quiera ponerlo.\n
+        ¡Disfruta !
+    </string>
+    <string name="action_settings">ajustes</string>
+    <string name="Play_Again">jugar otra vez</string>
+    <string name="Sentence_End_Lost">Has perdido.</string>
+    <string name="Sentence_End_Win">Te has ganado!</string>
+    <string name="Sentence_End_Null">Juego terminó. Ningún ganador.</string>
+    <string name="Sentence_Begin_Start">Principio: Usted puede comenzar a jugar.</string>
+    <string name="User">usuario</string>
+    <string name="Computer">computadora</string>
+    <string name="About">Acerca</string>
+    <string name="Play">Jugar</string>
+    <string name="Internal_Error">Error interno. Lo siento.</string>
+    <string name="Cancel">Cancelar</string>
+    <string name="Joueur1">Jugador1</string>
+    <string name="Joueur2">Jugador2</string>
+    <string name="Two_Players">2 jugadores</string>
+    <string name="Joueur1_Name">Nombre jugador1</string>
+    <string name="Joueur2_Name">Nombre jugador2</string>
+    <string name="Your_Turn">es su turno.</string>
+    <string name="Winner">Ganador</string>
+    <string name="Rules_Of_Game">reglas del juego</string>
+    <string name="Sentence_Computer_Work">Ordenador está jugando.</string>
+    <string name="Who_Begins">Quién empezar?</string>
+    <string name="Winning_Situation_Example">Ganar ejemplos situación</string>
+    <string name="Level">nivel</string>
+    <string name="Mot_Clignoter">Parpadear</string>
+    <string name="Be_Discoverable">Ser localizable</string>
+    <string name="Confirm">Confirmar</string>
+    <string name="Connection_Failed">Error de conexión</string>
+    <string name="Connecting">Conexión…</string>
+    <string name="Bluetooth_Adversary">Adversario Bluetooth</string>
+    <string name="Adversary_Color">Color adversario</string>
+    <string name="User_Color">Color de usuario</string>
+    <string name="User_Name">Nombre de usuario</string>
+    <string name="Sentence_Bluetooth_Not_Supported">Bluetooth no es compatible con el teléfono.</string>
+    <string name="You_Are_Discoverable">Usted es detectable.</string>
+    <string name="You_Can_Start">, usted puede comenzar.</string>
+    <string name="button_scan">Buscando un adversario</string>
+    <string name="scanning">Oponente Búsqueda…</string>
+    <string name="title_activity_connexion_bluetooth">ventana de conexión</string>
+    <string name="Settings_Saved">Ajustes guardados</string>
+    <string name="Is_Thinking">piensa…</string>
+    <string name="Accept">Aceptar</string>
+    <string name="Refuse">Rechazar</string>
+    <string name="Sentence_Ask_Restart">ofrece usted comience el juego.</string>
+    <string name="Sentence_Ask_Cancel">pide permiso para cancelar su golpe.</string>
+    <string name="Sentence_Version_Internet">Una nueva versión está disponible. Usted debe instalarlo.</string>
+    <string name="Searching_Adversary">Buscando un adversario…</string>
+    <string name="One_Player">1 jugador</string>
+    <string name="Sentence_Internet_Connection_Problem">Problema de conexión a Internet.\nCompruebe la conexión.\nEl problema también puede ser el servidor…</string>
+    <string name="Saved_Games">Respaldos</string>
+    <string name="Game_Of">Parte de</string>
+    <string name="Delete">Remover</string>
+    <string name="Connection_Succeeded">Conexión sucedió</string>
+    <string name="Enter_A_Name">Introduzca el nombre del partido</string>
+    <string name="Rename">Reelegir</string>
+    <string name="Rename_A_Saved_Game">Cambiar el nombre de una partida guardada</string>
+    <string name="Save_The_Game">Guardar el juego</string>
+    <string name="Watch">Visualizar</string>
+    <string name="Sentence_Confirm_Delete_Game">Realmente borrar la partida guardada?</string>
+    <string name="Challenge">Desafío</string>
+    <string name="Ring">Anillo</string>
+    <string name="Rings_used">Anillos usados:</string>
+    <string name="Abandon_Challenge">Renunciar</string>
+    <string name="Quit">Dejar</string>
+    <string name="Abandoned">Abandonado</string>
+    <string name="Try_Again">Inténtalo de nuevo</string>
+    <string name="Go_To_Next_Level">Ir al siguiente nivel</string>
+    <string name="You_Lost_At_Level">Has perdido en el Nivel</string>
+    <string name="You_Passed_Level">Has ganado en el Nivel</string>
+    <string name="Computer_Won_Before">El ordenador ha ganado antes!</string>
+    <string name="Sentence_Number_Rings">No ha logrado utilizar el número asignado de anillos.</string>
+    <string name="Explanation_Rings_Number">En el modo de desafío, usted tiene que ganar utilizando un número limitado de los anillos.</string>
+    <string name="In_This_Level">En este nivel:</string>
+    <string name="Number_Of_Rings_Allowed">Número autorizado de los anillos:</string>
+    <string name="Next">Siguiente</string>
+    <string name="Explanations">Explicaciones</string>
+    <string name="Explanations_Challenge1">Bienvenido en el modo Desafío, \n\nen este modo, se parte de un juego ya empezado, y se puede utilizar sólo un número limitado de anillos para ganar. Si no ganas el juego con este número limitado, se pierde. Si usted gana el juego utilizando el buen número de anillos, usted gana y usted puede ir al siguiente nivel.</string>
+    <string name="Explanations_Challenge2">Si el nivel parece demasiado difícil, puede pasar. Para ello, tiene que utilizar una de sus estrellas.</string>
+    <string name="Sentence_No_Saved_Game">Usted no tiene ningún juego guardados.</string>
+    <string name="Continue_In_Two_Players_Mode">Siga el partido en el modo de 2 jugadores</string>
+    <string name="Continue_Against_Computer">Continuar el juego contra la computadora</string>
+    <string name="Connecting_To_Server">Conexión con el servidor …</string>
+    <string name="All_Levels_Passed">Se las arregló todos los niveles. Ha terminado el modo desafío!</string>
+    <string name="Explanation_Star">Usted puede usar una estrella en el modo de desafío para una pista cuando está bloqueado.</string>
+    <string name="New_Star_Bluetooth">Usted ganó una nueva estrella en Porque jugaste Bluetooth con un nuevo adversario.</string>
+    <string name="No_More_Stars">Usted no tiene estrellas más.\n\nPara ganar nuevas estrellas, puede jugar en Bluetooth contra nuevos adversarios, por ejemplo.</string>
+    <string name="Sentence_Confirm_Use_Star">¿Realmente desea utilizar una de sus estrellas para conseguir una pista?</string>
+    <string name="Use_Star">Utilice una estrella para conseguir una pista</string>
+    <string name="Star_Won_Against_Computer">Usted gana una estrella, ya que han jugado %1$d partidos contra el ordenador.</string>
+    <string name="Star_Won_All_Games">Usted gana una estrella, ya que han intentado todos los 4 modos de juego principales.</string>
+    <string name="Star_Won_Bluetooth">Usted gana una estrella, ya que han jugado %1$d partidos en Bluetooth.</string>
+    <string name="Star_Won_Online">Usted gana una estrella, ya que han jugado %1$d juegos en línea.</string>
+    <string name="Star_Won_Two_Players">Usted gana una estrella, ya que jugó %1$d partidos en el modo de 2 jugadores.</string>
+    <string name="Star_Won_Win_Against_Computer">Usted gana una estrella, ya que han ganado %1$d partidos contra la computadora (con nivel superior a 30).</string>
+    <string name="No_Internet_Connection">Sin conexión a Internet</string>
+</resources>
