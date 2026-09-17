@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Placeholder monochrome launcher layer (P1 bootstrap), used by themed icons
+  on Android 13+. The system tints this to a single color, so only the
+  silhouette (not the colors) matters. Redrawn alongside the rest of the
+  launcher icon in phase P9.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="6"
+        android:pathData="M54,30 a24,24 0 1,0 0.1,0 z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="6"
+        android:pathData="M54,42 a12,12 0 1,0 0.1,0 z" />
+</vector>

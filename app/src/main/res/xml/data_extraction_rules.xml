@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  No exclusions for now: saved games, challenge progress and settings are
+  all safe (and desirable) to include in backups/device transfer. Revisit
+  once the Room database and DataStore files exist (see docs/PLAN.md P4).
+-->
+<data-extraction-rules>
+    <cloud-backup />
+    <device-transfer />
+</data-extraction-rules>
