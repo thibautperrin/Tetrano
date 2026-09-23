@@ -2,12 +2,18 @@ package fr.thibautperrin.tetrano.domain.service
 
 import fr.thibautperrin.tetrano.domain.model.AiProgressState
 import fr.thibautperrin.tetrano.domain.model.GameMode
+import fr.thibautperrin.tetrano.domain.model.GameSessionEvent
 import fr.thibautperrin.tetrano.domain.model.GameSessionState
+import fr.thibautperrin.tetrano.domain.model.UndoneMove
 import fr.thibautperrin.tetrano.engine.Game
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -15,23 +21,31 @@ import javax.inject.Inject
 
 /**
  * Orchestrates a single game in progress: turn order, playing/undoing
- * moves, and — in [GameMode.VS_COMPUTER] — kicking off the AI's reply.
+ * moves, and — in [GameMode.VS_COMPUTER] — running the computer's reply.
  * Ports `GestionJeu`/`GestionJeu2Joueurs`/`GestionJeuContreOrdinateur` (see
  * docs/GLOSSARY.md, docs/PLAN.md P6). Bluetooth and online play are out of
  * scope (see docs/PLAN.md §10) — [Factory.create] rejects those modes.
  *
- * Deliberately **not** this class's job: recording finished-game stats
- * and awarding stars (`GestionJeu`'s `logGame`/`GameLog` in the legacy
- * app) — the caller (a ViewModel, in P8) observes [state] for the
- * finishing transition and drives [StarService] itself, and likewise for
- * persisting a save via [SavedGameService] using [playedRings]/
- * [startingPlayer]. Keeping this class to game mechanics only avoids
- * tangling it up with the database and preferences layers.
+ * Deliberately **not** this class's job: animations, recording
+ * finished-game stats and awarding stars (`GestionJeu`'s `logGame`/`GameLog`
+ * in the legacy app), and persisting a save via [SavedGameService] using
+ * [playedRings]/[startingPlayer] — the caller (the game ViewModel) does
+ * those. Keeping this class to game mechanics only avoids tangling it up
+ * with the database and preferences layers.
+ *
+ * The computer (always player 2) starts searching as soon as it's its turn
+ * — after [start], a human move or a [restart] — and its answer is applied
+ * to the game at once: [state] then holds the new position and [events]
+ * reports [GameSessionEvent.ComputerPlayed] so the caller can animate it.
+ * [undo] and [restart] are accepted while it searches: they cancel the
+ * search, and an answer for a position that has changed is dropped (the
+ * legacy signature check of `onOrdinateurAJoue`).
  *
  * One instance is scoped to a single game screen's lifetime: create it
  * with [Factory], passing a `CoroutineScope` tied to that screen (e.g. a
- * ViewModel's `viewModelScope`) so an in-progress AI search is cancelled
- * if the screen goes away mid-move.
+ * ViewModel's `viewModelScope`, whose main-thread dispatcher every method
+ * here must be called on) so an in-progress AI search is cancelled if the
+ * screen goes away mid-move.
  */
 class GameSessionService private constructor(
     private val aiService: AiService,
@@ -40,18 +54,31 @@ class GameSessionService private constructor(
     private val aiLevel: Int,
     private val game: Game,
 ) {
+    private var aiJob: Job? = null
+    private val aiThinking: Boolean get() = aiJob?.isActive == true
+
     private val _state = MutableStateFlow(snapshot())
     val state: StateFlow<GameSessionState> = _state.asStateFlow()
 
-    private var aiJob: Job? = null
+    private val _events = MutableSharedFlow<GameSessionEvent>(extraBufferCapacity = EVENT_BUFFER)
+    val events: SharedFlow<GameSessionEvent> = _events.asSharedFlow()
 
-    init {
+    /**
+     * Lets the computer play if the game (new or resumed) is its turn —
+     * `GestionJeuContreOrdinateur.begin()`. Call once, after subscribing to
+     * [events].
+     */
+    fun start() {
         triggerAiMoveIfNeeded()
     }
 
-    /** Plays [ring] for the current player. False if busy, [ring] is taken, or the game is already over. */
+    /**
+     * Plays [ring] for the human player whose turn it is. False if it's
+     * the computer's turn, [ring] is taken or out of range, or the game is
+     * already over (`userTriedPlaying`).
+     */
     fun play(ring: Int): Boolean {
-        if (_state.value.isBusy || ring !in 0 until 64 || !game.isRingFree(ring)) return false
+        if (isComputerTurn() || ring !in 0 until RING_COUNT || !game.isRingFree(ring)) return false
         if (!game.play(ring)) return false
         publish()
         triggerAiMoveIfNeeded()
@@ -59,40 +86,45 @@ class GameSessionService private constructor(
     }
 
     /**
-     * Undoes move(s) so it's the human player's turn to decide again: 1
-     * move in [GameMode.TWO_PLAYERS]; in [GameMode.VS_COMPUTER], 2 moves
-     * if the computer already replied, or 1 if it's the computer's own
-     * unanswered opening move — and nothing at all if the computer's
-     * opening move is the *only* move played (there is then no human move
-     * to return to). Ports `cliqueAnnuler` exactly, including that last
-     * quirk. False if busy or nothing has been played yet.
+     * Undoes move(s) so it's a human player's turn to decide again, and
+     * returns them, most recent first (empty if nothing was undone): 1 move
+     * in [GameMode.TWO_PLAYERS]; in [GameMode.VS_COMPUTER], 2 moves if the
+     * computer played last, or 1 if the user did (the computer may still be
+     * searching its reply: the search is cancelled) — and nothing at all if
+     * the computer's opening move is the *only* move played (there is then
+     * no human move to return to). Ports `cliqueAnnuler` exactly, including
+     * that last quirk.
      */
-    fun undo(): Boolean {
-        if (_state.value.isBusy || game.board.playedCount == 0) return false
-        when (mode) {
-            GameMode.TWO_PLAYERS -> game.undo()
-            GameMode.VS_COMPUTER -> {
-                val lastPlayer = game.winner().takeIf { it != -1 } ?: (3 - game.nextPlayer)
-                if (lastPlayer == COMPUTER_PLAYER) {
-                    if (game.board.playedCount < 2) return false
-                    game.undo()
-                    game.undo()
-                } else {
-                    game.undo()
-                }
+    fun undo(): List<UndoneMove> {
+        val played = game.board.playedCount
+        if (played == 0) return emptyList()
+        // The last player to have moved: GestionJeuContreOrdinateur's
+        // `lastJoueur` (the winner of a won game is always its last mover).
+        val lastPlayer = 3 - game.nextPlayer
+        val count = when (mode) {
+            GameMode.TWO_PLAYERS -> 1
+            GameMode.VS_COMPUTER -> when {
+                lastPlayer != COMPUTER_PLAYER -> 1
+                played >= 2 -> 2
+                else -> return emptyList()
             }
             else -> error("unsupported mode $mode")
         }
+        cancelAi()
+        val undone = List(count) {
+            val player = 3 - game.nextPlayer
+            UndoneMove(ring = game.undo(), player = player)
+        }
         publish()
-        return true
+        return undone
     }
 
     /**
-     * Restarts from an empty board.
+     * Restarts from an empty board, cancelling any search in progress.
      * @see Game.restart for the exact [changingBeginner] semantics.
      */
     fun restart(changingBeginner: Boolean) {
-        aiJob?.cancel()
+        cancelAi()
         game.restart(changingBeginner)
         publish()
         triggerAiMoveIfNeeded()
@@ -106,27 +138,64 @@ class GameSessionService private constructor(
     /** Which player (1 or 2) made the first move — for [SavedGameService] to persist. */
     fun startingPlayer(): Int = game.startingPlayer()
 
+    private fun isComputerTurn(): Boolean =
+        mode == GameMode.VS_COMPUTER && !game.isFinished() && game.nextPlayer == COMPUTER_PLAYER
+
     private fun triggerAiMoveIfNeeded() {
-        if (mode != GameMode.VS_COMPUTER || game.isFinished() || game.nextPlayer != COMPUTER_PLAYER) return
-        aiJob = scope.launch {
-            _state.update { it.copy(isBusy = true, aiProgress = null) }
-            val ring = aiService.chooseRing(game.playedRings(), aiLevel) { phase, current, total ->
-                _state.update { it.copy(aiProgress = AiProgressState(phase, current, total)) }
+        if (!isComputerTurn()) return
+        val position = game.playedRings()
+        val job = scope.launch {
+            val ring = try {
+                aiService.chooseRing(position, aiLevel) { phase, current, total ->
+                    // Called from the search's own thread: may land after a
+                    // cancellation, hence the guard.
+                    _state.update {
+                        if (it.isAiThinking) it.copy(aiProgress = AiProgressState(phase, current, total)) else it
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                failAiMove()
+                return@launch
             }
-            game.play(ring)
+            // onOrdinateurAJoue's signature check: an answer for a position
+            // that has changed since (undo/restart) is dropped.
+            if (!game.playedRings().contentEquals(position)) return@launch
+            aiJob = null
+            if (!game.isRingFree(ring) || !game.play(ring)) {
+                failAiMove()
+                return@launch
+            }
+            publish()
+            _events.tryEmit(GameSessionEvent.ComputerPlayed(ring))
+        }
+        if (job.isActive) {
+            aiJob = job
             publish()
         }
     }
 
+    private fun failAiMove() {
+        aiJob = null
+        publish()
+        _events.tryEmit(GameSessionEvent.InternalError)
+    }
+
+    private fun cancelAi() {
+        aiJob?.cancel()
+        aiJob = null
+    }
+
     private fun publish() {
-        _state.update { snapshot() }
+        _state.value = snapshot()
     }
 
     private fun snapshot(): GameSessionState = GameSessionState(
         rings = game.board.rings.copyOf(),
         nextPlayer = game.nextPlayer,
         playedCount = game.board.playedCount,
-        isBusy = false,
+        isAiThinking = aiThinking,
         isFinished = game.isFinished(),
         isDraw = game.isDraw(),
         winner = game.winner().takeIf { it != -1 },
@@ -138,11 +207,10 @@ class GameSessionService private constructor(
     class Factory @Inject constructor(private val aiService: AiService) {
         /**
          * @param initialMoves rings already played, in order — empty for a
-         *   brand new game.
-         * @param startingPlayer who played [initialMoves]'s first ring;
-         *   ignored if [initialMoves] is empty (a brand new game always
-         *   has player 1 start — flip with [GameSessionService.restart]
-         *   afterwards if that's not what's wanted).
+         *   brand new game. Replay stops at the first invalid ring (a
+         *   corrupt save) rather than corrupting the board.
+         * @param startingPlayer who plays [initialMoves]'s first ring — or
+         *   the first move of a brand new game.
          * @param aiLevel ignored outside [GameMode.VS_COMPUTER].
          */
         fun create(
@@ -160,7 +228,8 @@ class GameSessionService private constructor(
                 game.restart(changingBeginner = true)
             }
             for (ring in initialMoves) {
-                game.play(ring.toInt())
+                val index = ring.toInt()
+                if (index !in 0 until RING_COUNT || !game.isRingFree(index) || !game.play(index)) break
             }
             return GameSessionService(aiService, scope, mode, aiLevel, game)
         }
@@ -168,5 +237,7 @@ class GameSessionService private constructor(
 
     private companion object {
         const val COMPUTER_PLAYER = 2
+        const val RING_COUNT = 64
+        const val EVENT_BUFFER = 8
     }
 }

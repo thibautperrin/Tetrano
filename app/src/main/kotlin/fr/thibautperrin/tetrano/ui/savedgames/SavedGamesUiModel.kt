@@ -1,11 +1,21 @@
 package fr.thibautperrin.tetrano.ui.savedgames
 
-import fr.thibautperrin.tetrano.domain.model.SavedGameSummary
-
-/** Everything [SavedGamesScreen] needs. Ports `ListePartiesEnregistreesActivity`'s list + its 2 dialogs. */
+/**
+ * Everything [SavedGamesScreen] needs. Ports `ListePartiesEnregistreesActivity`'s
+ * list (`MyArrayAdapter`, its `itemSelected`) and its 3 dialogs.
+ */
 data class SavedGamesUiModel(
-    val isLoading: Boolean = true,
-    val games: List<SavedGameSummary> = emptyList(),
+    /** Saved game names, in insertion order. */
+    val names: List<String> = emptyList(),
+    /** The highlighted row (`itemSelected`) the 3 bottom buttons act on; null when none. */
+    val selected: String? = null,
+    /**
+     * True when the screen was opened with no saved game at all: shows
+     * `Sentence_No_Saved_Game`, whose dismissal closes the screen
+     * (`displayDialogNoSavedGame`). Deleting the last game afterwards
+     * doesn't show it (the legacy check only ran in `onCreate`).
+     */
+    val noSavedGame: Boolean = false,
     val renameTarget: String? = null,
     val renameDraft: String = "",
     /** True when [renameDraft] is already taken by another saved game. */
@@ -14,9 +24,9 @@ data class SavedGamesUiModel(
 )
 
 sealed interface SavedGamesAction {
+    /** A row tap: selects it, or deselects it if it was already selected (`MyArrayAdapter.select`). */
+    data class GameClicked(val name: String) : SavedGamesAction
     data class WatchClicked(val name: String) : SavedGamesAction
-    data class ContinueTwoPlayersClicked(val name: String) : SavedGamesAction
-    data class ContinueAgainstComputerClicked(val name: String) : SavedGamesAction
     data class RenameClicked(val name: String) : SavedGamesAction
     data class RenameDraftChanged(val draft: String) : SavedGamesAction
     data object RenameConfirmed : SavedGamesAction

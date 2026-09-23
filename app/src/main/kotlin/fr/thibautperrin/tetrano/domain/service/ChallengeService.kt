@@ -3,6 +3,7 @@ package fr.thibautperrin.tetrano.domain.service
 import fr.thibautperrin.tetrano.data.assets.ChallengeLevels
 import fr.thibautperrin.tetrano.data.db.ChallengeProgressDao
 import fr.thibautperrin.tetrano.data.db.ChallengeProgressEntity
+import fr.thibautperrin.tetrano.di.DefaultDispatcher
 import fr.thibautperrin.tetrano.domain.model.ChallengeHintResult
 import fr.thibautperrin.tetrano.domain.model.ChallengeMoveResult
 import fr.thibautperrin.tetrano.domain.model.ChallengeState
@@ -10,6 +11,8 @@ import fr.thibautperrin.tetrano.engine.BoardState
 import fr.thibautperrin.tetrano.engine.BoardTables
 import fr.thibautperrin.tetrano.engine.LineOps
 import fr.thibautperrin.tetrano.engine.ai.Ai
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
@@ -25,19 +28,27 @@ import kotlin.random.Random
  * A single instance tracks the *current* attempt; [startCurrentLevel]
  * (re)loads it from persisted progress, so it's safe to keep this
  * `@Singleton` across screen visits (unlike [GameSessionService], which is
- * per-screen).
+ * per-screen). Once an attempt ends, its final position stays readable
+ * through [snapshot]/[blinkingRings] (for the end-of-level animation) while
+ * the *next* attempt is already persisted (`nextLevelChallenge`); further
+ * moves, hints or give-ups are refused until [startCurrentLevel] runs again.
+ *
+ * The computer's searches run on [aiDispatcher] (the legacy ran them on the
+ * UI thread). Callers must not call into this class concurrently.
  */
 @Singleton
 class ChallengeService @Inject constructor(
     private val levels: ChallengeLevels,
     private val progressDao: ChallengeProgressDao,
     private val starService: StarService,
+    @param:DefaultDispatcher private val aiDispatcher: CoroutineDispatcher,
 ) {
     private lateinit var board: BoardState
     private lateinit var ai: Ai
     private var level: Int = 1
     private var symmetry: Int = 0
     private var forkOrder: Int = 0
+    private var isOver: Boolean = false
 
     /** Rings played "normally" (not via a star hint) this attempt, in order. Ports `Challenge.ringsPlayed`. */
     private var ringsPlayedNormally = mutableListOf<Int>()
@@ -57,6 +68,7 @@ class ChallengeService @Inject constructor(
         forkOrder = levels.forkOrder(level)
         board = BoardState(levels.signature(level), symmetry.toByte(), levels.isInvertPlayer(level))
         ai = Ai(board)
+        isOver = false
 
         ringsPlayedByStars = mutableListOf()
         progress?.playedByStars?.let { replay(it, onto = ringsPlayedByStars) }
@@ -70,10 +82,11 @@ class ChallengeService @Inject constructor(
         rings = board.rings.copyOf(),
         usedRings = usedRings(),
         authorizedRings = authorizedRings(),
-        canAbandon = numberUserRings() > 0 && usedRings() != authorizedRings(),
+        canAbandon = !isOver && numberUserRings() > 0 && usedRings() != authorizedRings(),
+        isOver = isOver,
     )
 
-    /** The winning line, or the single ring last played if the level was lost on ring budget. Ports `getBlinkingRings`. */
+    /** The winning line (the user's, else the computer's), or nothing if no line is complete. Ports `getBlinkingRings`. */
     fun blinkingRings(): ByteArray = when {
         board.lineSets[4].length() > 0 -> BoardTables.copyLineRings(board.lineSets[4].next(-1).toInt())
         board.lineSets[8].length() > 0 -> BoardTables.copyLineRings(board.lineSets[8].next(-1).toInt())
@@ -82,23 +95,29 @@ class ChallengeService @Inject constructor(
 
     /**
      * Plays [ring] for the user, then — unless that already finished the
-     * level — the computer's reply. Ports `postRingPlayedByUser`.
+     * level — the computer's reply. Ports `userTriedPlaying` +
+     * `postRingPlayedByUser`.
      */
     suspend fun playUserRing(ring: Int): ChallengeMoveResult {
-        if (ring !in 0 until BoardTables.RING_COUNT || board.rings[ring] != EMPTY || isFinished()) {
+        if (isOver || ring !in 0 until BoardTables.RING_COUNT || board.rings[ring] != EMPTY || isFinished()) {
             return ChallengeMoveResult.InvalidMove
         }
         board.play(ring, USER)
         ringsPlayedNormally.add(ring)
         if (isFinished()) {
-            return finishAttempt(won = isWonByUser(), computerWon = false)
+            return if (isWonByUser()) {
+                ChallengeMoveResult.LevelPassed(level, allModesTriedAward = finishAttempt(won = true))
+            } else {
+                ChallengeMoveResult.LevelFailed(level, allModesTriedAward = finishAttempt(won = false))
+            }
         }
 
-        val computerRing = ai.playChallenge(forkOrder, usedRings())
+        val computerRing = withContext(aiDispatcher) { ai.playChallenge(forkOrder, usedRings()) }
         board.play(computerRing, COMPUTER)
         ringsPlayedNormally.add(computerRing)
         if (isFinished()) {
-            return finishAttempt(won = false, computerWon = board.lineSets[8].length() > 0)
+            // Legacy: any end right after the computer's reply is SITUATION_COMPUTER_WINS.
+            return ChallengeMoveResult.LevelFailed(level, computerRing, allModesTriedAward = finishAttempt(won = false))
         }
 
         persistProgress()
@@ -112,6 +131,7 @@ class ChallengeService @Inject constructor(
      * the AI for one more forced pair towards a fork. Ports `useAStar`.
      */
     suspend fun useStarHint(): ChallengeHintResult {
+        if (isOver) return ChallengeHintResult.LevelOver
         if (!starService.useStar()) return ChallengeHintResult.NoStarsAvailable
 
         var boardBeforeHint: ByteArray? = null
@@ -129,11 +149,9 @@ class ChallengeService @Inject constructor(
             val line = board.lineSets[3].next(-1).toInt()
             val ringForUser = LineOps.lastRemainingRing(board, line).toInt()
             board.play(ringForUser, USER)
-            val completedLevel = level
-            finishAttempt(won = true, computerWon = false)
-            ChallengeHintResult.LevelWon(ringForUser, completedLevel)
+            ChallengeHintResult.LevelWon(ringForUser, level, allModesTriedAward = finishAttempt(won = true))
         } else {
-            val move = ai.playStar(forkOrder, ringsPlayedByStars.size / 2)
+            val move = withContext(aiDispatcher) { ai.playStar(forkOrder, ringsPlayedByStars.size / 2) }
             ringsPlayedByStars.add(move.ringForUser)
             ringsPlayedByStars.add(move.ringForComputer)
             persistProgress()
@@ -141,23 +159,33 @@ class ChallengeService @Inject constructor(
         }
     }
 
-    /** Gives up on the current level (counts as a loss). Ports the "abandon" menu action. */
-    suspend fun abandon(): ChallengeMoveResult.LevelFailed =
-        finishAttempt(won = false, computerWon = false) as ChallengeMoveResult.LevelFailed
+    /** Gives up on the current level (counts as a loss); null if the attempt is already over. Ports `buttonAbandon`'s click listener. */
+    suspend fun abandon(): ChallengeMoveResult.LevelFailed? {
+        if (isOver) return null
+        return ChallengeMoveResult.LevelFailed(level, allModesTriedAward = finishAttempt(won = false))
+    }
 
-    private suspend fun finishAttempt(won: Boolean, computerWon: Boolean): ChallengeMoveResult {
-        starService.recordChallengeAttempted()
-        val completedLevel = level
-        return if (won) {
-            level++
-            symmetry = Random.nextInt(BoardState.SYMMETRY_COUNT)
-            ringsPlayedByStars = mutableListOf()
-            progressDao.upsert(emptyProgress())
-            ChallengeMoveResult.LevelPassed(completedLevel)
-        } else {
-            progressDao.upsert(emptyProgress(keepStars = true))
-            ChallengeMoveResult.LevelFailed(completedLevel, computerWon)
-        }
+    /**
+     * Ends the attempt and persists the next one — ports
+     * `MemoryVarsChallenge.nextLevelChallenge(passed)`: a pass moves to the
+     * next level under a new symmetry and forgets the star rings; a failure
+     * keeps the level, symmetry and star rings. The in-memory position is
+     * left as is. Returns whether this also earned the "every main mode
+     * tried" star.
+     */
+    private suspend fun finishAttempt(won: Boolean): Boolean {
+        isOver = true
+        val award = starService.recordChallengeAttempted() != null
+        progressDao.upsert(
+            ChallengeProgressEntity(
+                level = if (won) level + 1 else level,
+                symmetry = if (won) Random.nextInt(BoardState.SYMMETRY_COUNT) else symmetry,
+                normallyPlayed = null,
+                playedByStars = if (won) null else ringsPlayedByStars.toByteArrayOrNull(),
+                nextTimeAdvert = false,
+            ),
+        )
+        return award
     }
 
     private suspend fun persistProgress() {
@@ -171,14 +199,6 @@ class ChallengeService @Inject constructor(
             ),
         )
     }
-
-    private fun emptyProgress(keepStars: Boolean = false) = ChallengeProgressEntity(
-        level = level,
-        symmetry = symmetry,
-        normallyPlayed = null,
-        playedByStars = if (keepStars) ringsPlayedByStars.toByteArrayOrNull() else null,
-        nextTimeAdvert = false,
-    )
 
     private fun replay(rings: ByteArray, onto: MutableList<Int>) {
         var player = USER

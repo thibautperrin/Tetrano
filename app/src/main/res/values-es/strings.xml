@@ -47,9 +47,8 @@
     <string name="Star_Won_Two_Players">Usted gana una estrella, ya que jugó %1$d partidos en el modo de 2 jugadores.</string>
     <string name="Star_Won_Against_Computer">Usted gana una estrella, ya que han jugado %1$d partidos contra el ordenador.</string>
     <string name="Star_Won_Win_Against_Computer">Usted gana una estrella, ya que han ganado %1$d partidos contra la computadora (con nivel superior a 30).</string>
-    <string name="Star_Won_All_Games">Usted gana una estrella, ya que han intentado todos los 4 modos de juego principales.</string>
+    <string name="Star_Won_All_Games">Usted gana una estrella, ya que han intentado todos los 3 modos de juego principales.</string>
     <string name="Mot_Clignoter">Parpadear</string>
-    <string name="OK" translatable="false">OK</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-es/strings.xml (P8 challenge/saved-games screens). -->
     <string name="Abandon_Challenge">Renunciar</string>
@@ -86,21 +85,13 @@
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="online_coming_soon">En línea (próximamente)</string>
-    <string name="player1_name_label">Nombre del jugador 1</string>
-    <string name="player2_name_label">Nombre del jugador 2</string>
-    <string name="undo">Deshacer</string>
-    <string name="restart">Reiniciar</string>
-    <string name="i_begin">Empiezo yo</string>
-    <string name="computer_begins">Empieza la computadora</string>
     <string name="previous">Anterior</string>
     <string name="name_already_used">Ya existe una partida guardada con este nombre.</string>
 
-    <!-- WinningExamplesScreen captions (docs/PLAN.md P8): no legacy string
-         existed for these; vocabulary matches Long_Sentence_Rules above. -->
-    <string name="winning_example_concentric">Concéntrico: 4 aros de tamaños diferentes en la misma casilla</string>
-    <string name="winning_example_row_constant_size">Fila: 4 aros del mismo tamaño en una fila</string>
-    <string name="winning_example_column_constant_size">Columna: 4 aros del mismo tamaño en una columna</string>
-    <string name="winning_example_diagonal_constant_size">Diagonal: 4 aros del mismo tamaño en una diagonal</string>
-    <string name="winning_example_column_increasing_size">Columna: 4 aros de tamaño creciente en una columna</string>
-    <string name="winning_example_diagonal_increasing_size">Diagonal: 4 aros de tamaño creciente en una diagonal</string>
+    <!-- Restored from the 2015 app. -->
+    <string name="Play_Again">jugar otra vez</string>
+    <string name="Internal_Error">Error interno. Lo siento.</string>
+    <string name="Joueur1_Name">Nombre jugador1</string>
+    <string name="Joueur2_Name">Nombre jugador2</string>
+    <string name="Game_Of">Parte de</string>
 </resources>

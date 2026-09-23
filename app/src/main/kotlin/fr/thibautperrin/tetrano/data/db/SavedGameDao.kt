@@ -9,7 +9,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SavedGameDao {
 
-    @Query("SELECT * FROM saved_games ORDER BY created_at DESC, name ASC")
+    /**
+     * Every saved game in insertion order, like `DAOSavedGame.getSavedGameNames`
+     * (an unordered query, i.e. SQLite's `rowid` order). Ordering by the
+     * implicit `rowid` rather than [SavedGameEntity.createdAt] keeps the
+     * legacy rows (all migrated with `created_at = 0`, in their original
+     * order) first, and a rename (an `UPDATE`) doesn't move a game.
+     */
+    @Query("SELECT * FROM saved_games ORDER BY rowid ASC")
     fun observeAll(): Flow<List<SavedGameEntity>>
 
     @Query("SELECT * FROM saved_games WHERE name = :name")

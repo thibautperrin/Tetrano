@@ -1,12 +1,12 @@
 package fr.thibautperrin.tetrano.ui.navigation
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import fr.thibautperrin.tetrano.domain.model.GameMode
 import fr.thibautperrin.tetrano.ui.challenge.ChallengeRoute
 import fr.thibautperrin.tetrano.ui.game.GameRoute
@@ -21,9 +21,13 @@ import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
 import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
 
 /**
- * Wires every [TetranoRoute] to its screen (see docs/PLAN.md P8) — the
- * last of the P8 screens, [TetranoRoute.Settings], [TetranoRoute.Rules]
- * and [TetranoRoute.WinningExamples], land in this commit.
+ * Wires every [TetranoRoute] to its screen (see docs/PLAN.md P8), with the
+ * legacy back stack:
+ * - a fresh game keeps its setup screen underneath (back from the game
+ *   returns to it, like the legacy `startActivity` chain);
+ * - a game resumed from a save returns straight to the Play menu (the
+ *   legacy `RESULT_CODE_LEAVE` chain closed the saved-games list, the
+ *   viewer and the setup screen).
  */
 @Composable
 fun TetranoNavHost(
@@ -40,17 +44,18 @@ fun TetranoNavHost(
         }
         composable<TetranoRoute.PlayMenu> {
             PlayMenuRoute(
-                onNavigateToTwoPlayersSetup = { navController.navigate(TetranoRoute.TwoPlayersSetup) },
+                onNavigateToTwoPlayersSetup = { navController.navigate(TetranoRoute.TwoPlayersSetup()) },
                 onNavigateToComputerSetup = { navController.navigate(TetranoRoute.ComputerSetup()) },
                 onNavigateToSavedGames = { navController.navigate(TetranoRoute.SavedGames) },
                 onNavigateToChallenge = { navController.navigate(TetranoRoute.Challenge) },
             )
         }
-        composable<TetranoRoute.TwoPlayersSetup> {
+        composable<TetranoRoute.TwoPlayersSetup> { backStackEntry ->
+            val route = backStackEntry.toRoute<TetranoRoute.TwoPlayersSetup>()
             TwoPlayersSetupRoute(
                 onNavigateToGame = {
-                    navController.navigate(TetranoRoute.TwoPlayersGame()) {
-                        popUpTo(TetranoRoute.TwoPlayersSetup) { inclusive = true }
+                    navController.navigate(TetranoRoute.TwoPlayersGame(route.savedGameName, route.ringCount)) {
+                        if (route.savedGameName != null) popUpTo(TetranoRoute.PlayMenu)
                     }
                 },
             )
@@ -59,8 +64,8 @@ fun TetranoNavHost(
             val route = backStackEntry.toRoute<TetranoRoute.ComputerSetup>()
             ComputerSetupRoute(
                 onNavigateToGame = {
-                    navController.navigate(TetranoRoute.ComputerGame(route.savedGameName)) {
-                        popUpTo(TetranoRoute.ComputerSetup(route.savedGameName)) { inclusive = true }
+                    navController.navigate(TetranoRoute.ComputerGame(route.savedGameName, route.ringCount)) {
+                        if (route.savedGameName != null) popUpTo(TetranoRoute.PlayMenu)
                     }
                 },
             )
@@ -70,6 +75,7 @@ fun TetranoNavHost(
             GameRoute(
                 mode = GameMode.TWO_PLAYERS,
                 savedGameName = route.savedGameName,
+                ringCount = route.ringCount,
                 onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
                 onExit = { navController.popBackStack() },
             )
@@ -79,6 +85,7 @@ fun TetranoNavHost(
             GameRoute(
                 mode = GameMode.VS_COMPUTER,
                 savedGameName = route.savedGameName,
+                ringCount = route.ringCount,
                 onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
                 onExit = { navController.popBackStack() },
             )
@@ -92,12 +99,20 @@ fun TetranoNavHost(
         composable<TetranoRoute.SavedGames> {
             SavedGamesRoute(
                 onWatch = { name -> navController.navigate(TetranoRoute.SavedGameViewer(name)) },
-                onContinueTwoPlayers = { name -> navController.navigate(TetranoRoute.TwoPlayersGame(name)) },
-                onContinueAgainstComputer = { name -> navController.navigate(TetranoRoute.ComputerSetup(name)) },
+                onExit = { navController.popBackStack() },
             )
         }
-        composable<TetranoRoute.SavedGameViewer> { SavedGameViewerRoute() }
-        composable<TetranoRoute.Settings> { SettingsRoute() }
+        composable<TetranoRoute.SavedGameViewer> {
+            SavedGameViewerRoute(
+                onContinueTwoPlayers = { name, ringCount ->
+                    navController.navigate(TetranoRoute.TwoPlayersSetup(name, ringCount))
+                },
+                onContinueAgainstComputer = { name, ringCount ->
+                    navController.navigate(TetranoRoute.ComputerSetup(name, ringCount))
+                },
+            )
+        }
+        composable<TetranoRoute.Settings> { SettingsRoute(onDone = { navController.popBackStack() }) }
         composable<TetranoRoute.Rules> {
             RulesRoute(
                 onNavigateToWinningExamples = { navController.navigate(TetranoRoute.WinningExamples) },

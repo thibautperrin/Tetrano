@@ -39,9 +39,8 @@
     <string name="Star_Won_Two_Players">Si vince una stella perché hai giocato %1$d partite in 2 modalità giocatore.</string>
     <string name="Star_Won_Against_Computer">Si vince una stella perché hai giocato %1$d partite contro il computer.</string>
     <string name="Star_Won_Win_Against_Computer">Si vince una stella perché hai vinto %1$d partite contro il computer (con livello superiore a 30).</string>
-    <string name="Star_Won_All_Games">Si vince una stella perché avete provato tutte le 4 modalità di gioco principali.</string>
+    <string name="Star_Won_All_Games">Si vince una stella perché avete provato tutte le 3 modalità di gioco principali.</string>
     <string name="Mot_Clignoter">Lampeggiare</string>
-    <string name="OK" translatable="false">OK</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-it/strings.xml (P8 challenge/saved-games screens). -->
     <string name="Abandon_Challenge">Rinunciare</string>
@@ -78,21 +77,13 @@
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="online_coming_soon">Online (prossimamente)</string>
-    <string name="player1_name_label">Nome giocatore 1</string>
-    <string name="player2_name_label">Nome giocatore 2</string>
-    <string name="undo">Annullare</string>
-    <string name="restart">Ricomincia</string>
-    <string name="i_begin">Comincio io</string>
-    <string name="computer_begins">Comincia il computer</string>
     <string name="previous">Precedente</string>
     <string name="name_already_used">Esiste già una partita salvata con questo nome.</string>
 
-    <!-- WinningExamplesScreen captions (docs/PLAN.md P8): no legacy string
-         existed for these; vocabulary matches Long_Sentence_Rules above. -->
-    <string name="winning_example_concentric">Concentrico: 4 anelli di dimensioni diverse nella stessa casella</string>
-    <string name="winning_example_row_constant_size">Riga: 4 anelli della stessa dimensione in una riga</string>
-    <string name="winning_example_column_constant_size">Colonna: 4 anelli della stessa dimensione in una colonna</string>
-    <string name="winning_example_diagonal_constant_size">Diagonale: 4 anelli della stessa dimensione su una diagonale</string>
-    <string name="winning_example_column_increasing_size">Colonna: 4 anelli di dimensione crescente in una colonna</string>
-    <string name="winning_example_diagonal_increasing_size">Diagonale: 4 anelli di dimensione crescente su una diagonale</string>
+    <!-- Restored from the 2015 app. -->
+    <string name="Play_Again">Nuovo gioco</string>
+    <string name="Internal_Error">Errore interno. Scusate</string>
+    <string name="Joueur1_Name">Nome giocatore1?</string>
+    <string name="Joueur2_Name">Nome giocatore2?</string>
+    <string name="Game_Of">Parte del</string>
 </resources>

@@ -11,23 +11,31 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 import fr.thibautperrin.tetrano.domain.model.GameMode
+import fr.thibautperrin.tetrano.domain.model.GameSessionEvent
 import fr.thibautperrin.tetrano.domain.model.GameSessionState
 import fr.thibautperrin.tetrano.domain.service.GameSessionService
 import fr.thibautperrin.tetrano.domain.service.SavedGameService
 import fr.thibautperrin.tetrano.domain.service.StarService
 import fr.thibautperrin.tetrano.ui.components.MovingRing
 import fr.thibautperrin.tetrano.ui.setup.PendingComputerGameSetup
+import fr.thibautperrin.tetrano.ui.setup.PendingTwoPlayersGameSetup
+import fr.thibautperrin.tetrano.ui.setup.keepFirst
 import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.DateFormat
-import java.util.Date
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Backs [GameScreen] for both [GameMode.TWO_PLAYERS] and
@@ -38,48 +46,66 @@ import java.util.Date
  * one per route, rather than read from a route argument — the two routes
  * only differ in which screen led here.
  *
- * Drives the two animations [GameScreen] itself can't own (see
- * docs/PLAN.md P7.5/§6.3): the AI's move animating in from the tray
- * ([MOVE_IN_DURATION_MS], [MOVE_IN_STEPS] frames — the legacy
- * `jouerAdversaireAnimer`'s own numbers) and the blink cycle
- * ([BLINK_CYCLES] × [BLINK_PERIOD_MS] — `cliquerClignoter`). The
- * undo/restart fly-out animation described in docs/PLAN.md P7.5 is out of
- * this commit's scope (only the two above are asked for) — undo and
- * restart apply instantly here.
+ * Drives the board's animations with the legacy `SurfaceGraphView` timings:
+ * - the computer's ring flying in from the tray ([COMPUTER_FLIGHT_MS],
+ *   [COMPUTER_FLIGHT_FRAMES] — `jouerAdversaireAnimer`), tray in the
+ *   computer's color and no drag meanwhile, then that ring (or the
+ *   winning line) blinking;
+ * - Cancel flying the undone ring(s) back to the tray: one ring over
+ *   [UNDO_ONE_MS]/[UNDO_ONE_FRAMES], two rings (the computer's reply,
+ *   then the user's move) over 2 × [UNDO_TWO_MS]/[UNDO_TWO_FRAMES]
+ *   (`cliqueAnnuler`);
+ * - while the computer searches, the tray drawn as a partial arc in its
+ *   color ([fr.thibautperrin.tetrano.domain.model.AiProgressState.trayAngleDegrees],
+ *   `HandlerIntelligence`);
+ * - blinking: [BLINK_CYCLES] × ([BLINK_HALF_PERIOD_MS] hidden + as long
+ *   shown) — `cliquerClignoter(ring, 5, 400, …)` — in its own job, so it
+ *   never delays input or dialogs.
+ *
+ * The buttons are never disabled: Cancel/Play again tapped during a ring
+ * flight wait for it to end ([animationLock] — the legacy `occuped` flag and
+ * its 100 ms retries), and are applied at once while the computer is only
+ * searching (the search is cancelled, see [GameSessionService]).
+ *
+ * Stars are recorded only when leaving a finished game — Play again or Back
+ * (`GestionJeu.cliqueRecommencer`/`sortir` → `logGame`), once per game
+ * ([KEY_GAME_RECORDED], which survives process death).
+ *
+ * In [GameMode.VS_COMPUTER] the user's name and both colors follow
+ * [TetranoPreferencesDataSource] live, so coming back from Settings applies
+ * them (`actualiserReglages`).
  *
  * Process-death survival (docs/PLAN.md P8, acceptance criterion A6): unlike
- * [ChallengeViewModel], which delegates to the already-persisted
+ * [fr.thibautperrin.tetrano.ui.challenge.ChallengeViewModel], which
+ * delegates to the already-persisted
  * [fr.thibautperrin.tetrano.domain.service.ChallengeService], this
  * ViewModel's [session] is purely in-memory ([GameSessionService] isn't
  * backed by storage until an explicit [GameAction.SaveConfirmed]), so an
  * in-progress game — including moves played past whatever [savedGameName]
  * pointed at — would otherwise vanish if the process is killed while
- * backgrounded. [savedStateHandle] mirrors [GameSessionService.playedRings]/
- * [GameSessionService.startingPlayer] on every session state change
- * ([persistSessionState]); [resolveSetup] prefers that mirror over
- * [savedGameName]/[PendingComputerGameSetup] when present, exactly the way
- * the legacy `SauvegardePartie` `Parcelable` reconstructed a game from its
- * move list. Player colors/names still come from
- * [TetranoPreferencesDataSource]/[savedGameService] on restore, same as a
- * fresh screen entry — for a role-swapped [GameMode.VS_COMPUTER] resume,
- * this matches [PendingComputerGameSetup]'s own documented degrade on
- * process death (falls back to the preference defaults), rather than
- * inventing a second persistence path for that edge case.
+ * backgrounded. [savedStateHandle] mirrors the moves, the starting player
+ * and the two colors after every change ([persistSessionState]);
+ * [resolveSetup] prefers that mirror over [savedGameName]/
+ * [PendingComputerGameSetup]/[PendingTwoPlayersGameSetup] when present,
+ * exactly the way the legacy `SauvegardePartie` `Parcelable` and the
+ * activity's intent extras rebuilt a game.
  */
 @HiltViewModel(assistedFactory = GameViewModel.Factory::class)
 class GameViewModel @AssistedInject constructor(
     @Assisted private val mode: GameMode,
     @Assisted private val savedGameName: String?,
+    @Assisted private val ringCount: Int,
     private val savedStateHandle: SavedStateHandle,
     private val gameSessionFactory: GameSessionService.Factory,
     private val savedGameService: SavedGameService,
     private val starService: StarService,
     private val preferences: TetranoPreferencesDataSource,
     private val pendingComputerGameSetup: PendingComputerGameSetup,
+    private val pendingTwoPlayersGameSetup: PendingTwoPlayersGameSetup,
 ) : ViewModel() {
     @AssistedFactory
     interface Factory {
-        fun create(mode: GameMode, savedGameName: String?): GameViewModel
+        fun create(mode: GameMode, savedGameName: String?, ringCount: Int): GameViewModel
     }
 
     private val _uiState = MutableStateFlow(GameUiModel())
@@ -90,7 +116,10 @@ class GameViewModel @AssistedInject constructor(
     private var player2Color: Color = TetranoRingColors.Blue
     private var player1Name: String = ""
     private var player2Name: String = ""
-    private var animationJob: Job? = null
+
+    /** Held for a whole ring flight: `GestionJeu.occuped`. */
+    private val animationLock = Mutex()
+    private var blinkJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -106,34 +135,48 @@ class GameViewModel @AssistedInject constructor(
                 initialMoves = setup.initialMoves,
                 startingPlayer = setup.startingPlayer,
             )
-            observeSession()
+            persistSessionState()
+            render(session.state.value)
+            // Subscribed before start(), so the computer's first move can't be missed.
+            launch(start = CoroutineStart.UNDISPATCHED) { session.events.collect(::onSessionEvent) }
+            launch(start = CoroutineStart.UNDISPATCHED) { session.state.collect(::onSessionState) }
+            if (mode == GameMode.VS_COMPUTER) launch { followSettings() }
+            session.start()
         }
     }
 
     fun onAction(action: GameAction) {
         when (action) {
-            is GameAction.RingDropped -> if (::session.isInitialized) session.play(action.ring)
-            GameAction.RestartClicked -> restart()
-            GameAction.UndoClicked -> undo()
-            GameAction.BlinkClicked -> manualBlink()
-            GameAction.SaveClicked -> openSaveDialog()
-            is GameAction.SaveNameChanged -> _uiState.update { it.copy(saveNameDraft = action.name) }
-            GameAction.SaveConfirmed -> save()
-            GameAction.SaveDismissed -> _uiState.update { it.copy(showSaveDialog = false) }
-            GameAction.StarAwardsDismissed -> _uiState.update { it.copy(starAwards = emptyList()) }
-            GameAction.SavedNameAcknowledged -> _uiState.update { it.copy(lastSavedName = null) }
+            is GameAction.RingDropped -> ifReady { onRingDropped(action.ring) }
+            GameAction.PlayAgainClicked -> ifReady { restart() }
+            GameAction.CancelClicked -> ifReady { undo() }
+            GameAction.BlinkClicked -> ifReady { startBlink(session.blinkingRings()) }
+            is GameAction.SaveConfirmed -> ifReady { save(action.name) }
+            GameAction.StarDialogDismissed -> _uiState.update { it.copy(starDialogs = it.starDialogs.drop(1)) }
+            GameAction.InternalErrorShown -> _uiState.update { it.copy(showInternalError = false) }
+            GameAction.BackPressed -> back()
         }
+    }
+
+    private fun ifReady(block: () -> Unit) {
+        if (::session.isInitialized) block()
     }
 
     private suspend fun resolveSetup(): ResolvedSetup {
         val base = when (mode) {
             GameMode.TWO_PLAYERS -> {
+                val pending = pendingTwoPlayersGameSetup.consume()
                 val saved = savedGameName?.let { savedGameService.get(it) }
+                // Legacy WatchSavedGameActivity.playTwoPlayers + GestionJeu2Joueurs:
+                // the resumed game replays from a fresh Partie, so player 1 is
+                // always whoever began the save, and gets that side's color.
+                val firstMoverColor = saved?.let { if (it.userBegins) it.userColor else it.adversaryColor }
+                val secondMoverColor = saved?.let { if (it.userBegins) it.adversaryColor else it.userColor }
                 ResolvedSetup(
-                    initialMoves = saved?.ringsPlayed ?: ByteArray(0),
-                    startingPlayer = if (saved == null || saved.userBegins) 1 else 2,
-                    player1Color = saved?.userColor ?: preferences.player1Color.first(),
-                    player2Color = saved?.adversaryColor ?: preferences.player2Color.first(),
+                    initialMoves = saved?.ringsPlayed?.keepFirst(ringCount) ?: ByteArray(0),
+                    startingPlayer = 1,
+                    player1Color = pending.player1Color ?: firstMoverColor ?: preferences.player1Color.first(),
+                    player2Color = pending.player2Color ?: secondMoverColor ?: preferences.player2Color.first(),
                     player1Name = preferences.player1Name.first(),
                     player2Name = preferences.player2Name.first(),
                     aiLevel = 0,
@@ -143,7 +186,7 @@ class GameViewModel @AssistedInject constructor(
                 val pending = pendingComputerGameSetup.consume()
                 val saved = savedGameName?.let { savedGameService.get(it) }
                 ResolvedSetup(
-                    initialMoves = saved?.ringsPlayed ?: ByteArray(0),
+                    initialMoves = saved?.ringsPlayed?.keepFirst(ringCount) ?: ByteArray(0),
                     startingPlayer = if (pending.userBegins) 1 else 2,
                     player1Color = pending.userColor ?: preferences.userColor.first(),
                     player2Color = pending.adversaryColor ?: preferences.adversaryColor.first(),
@@ -156,148 +199,281 @@ class GameViewModel @AssistedInject constructor(
         }
         // Recovering from process death: the moves actually played this
         // session (possibly more than what savedGameName/PendingComputerGameSetup
-        // knows about) take priority — see this class's KDoc.
+        // knows about) and the colors in use take priority — see this class's KDoc.
         val restoredMoves = savedStateHandle.get<ByteArray>(KEY_PLAYED_RINGS)
         val restoredStartingPlayer = savedStateHandle.get<Int>(KEY_STARTING_PLAYER)
-        return if (restoredMoves != null && restoredStartingPlayer != null) {
-            base.copy(initialMoves = restoredMoves, startingPlayer = restoredStartingPlayer)
-        } else {
-            base
-        }
+        return base.copy(
+            initialMoves = restoredMoves ?: base.initialMoves,
+            startingPlayer = restoredStartingPlayer.takeIf { restoredMoves != null } ?: base.startingPlayer,
+            player1Color = savedStateHandle.get<Int>(KEY_PLAYER1_COLOR) ?: base.player1Color,
+            player2Color = savedStateHandle.get<Int>(KEY_PLAYER2_COLOR) ?: base.player2Color,
+        )
     }
 
     private fun persistSessionState() {
-        if (!::session.isInitialized) return
         savedStateHandle[KEY_PLAYED_RINGS] = session.playedRings()
         savedStateHandle[KEY_STARTING_PLAYER] = session.startingPlayer()
+        savedStateHandle[KEY_PLAYER1_COLOR] = player1Color.toArgb()
+        savedStateHandle[KEY_PLAYER2_COLOR] = player2Color.toArgb()
     }
 
-    private fun observeSession() {
-        viewModelScope.launch {
-            var previous: GameSessionState? = null
-            session.state.collect { state ->
-                persistSessionState()
-                val aiJustMoved = mode == GameMode.VS_COMPUTER &&
-                    previous?.isBusy == true &&
-                    !state.isBusy &&
-                    state.playedCount == (previous?.playedCount ?: 0) + 1
-                val justFinished = state.isFinished && previous?.isFinished != true
-                previous = state
+    /** While the computer searches: the progress arc (the other states are rendered by the actions themselves). */
+    private fun onSessionState(state: GameSessionState) {
+        if (state.isAiThinking) render(state)
+    }
 
-                animationJob?.cancel()
-                animationJob = launch {
-                    if (aiJustMoved && state.lastRing != null) {
-                        animateMoveIn(state, state.lastRing)
-                    } else {
-                        publish(state)
-                    }
-                    if (justFinished) onGameFinished(state)
-                    if (aiJustMoved || justFinished) {
-                        state.blinkingRings?.let { blink(it) }
-                    }
+    private fun onSessionEvent(event: GameSessionEvent) {
+        when (event) {
+            is GameSessionEvent.ComputerPlayed -> {
+                persistSessionState()
+                viewModelScope.launch {
+                    animationLock.withLock { animateComputerMove(event.ring) }
                 }
+            }
+            GameSessionEvent.InternalError -> {
+                showInternalError()
+                render(session.state.value)
             }
         }
     }
 
-    private suspend fun animateMoveIn(state: GameSessionState, ring: Int) {
-        for (step in 0..MOVE_IN_STEPS) {
-            val progress = step / MOVE_IN_STEPS.toFloat()
-            publish(state, movingRing = MovingRing(ringNumber = ring, player = COMPUTER_PLAYER, progress = progress))
-            if (step < MOVE_IN_STEPS) delay(MOVE_IN_DURATION_MS / MOVE_IN_STEPS)
+    /** `GestionJeu.postAnneauJoueParAdversaire`. */
+    private suspend fun animateComputerMove(ring: Int) {
+        val state = session.state.value
+        // Already taken back by a Cancel that got the lock first.
+        if (state.lastRing != ring) return
+        // The title changes at once, except for a winning/last move: it
+        // only changes once the ring has landed (finPartie(1500)).
+        flyRing(ring, COMPUTER_PLAYER, placing = true, COMPUTER_FLIGHT_MS, COMPUTER_FLIGHT_FRAMES) { moving ->
+            render(
+                state,
+                trayPlayer = COMPUTER_PLAYER,
+                dragEnabled = false,
+                trayAngleDegrees = FULL_RING,
+                movingRing = moving,
+                updateTitle = !state.isFinished,
+            )
         }
-        publish(state)
+        render(state)
+        startBlink(state.blinkingRings)
     }
 
-    private suspend fun blink(ringsToBlink: ByteArray) {
-        val hidden = ringsToBlink.map { it.toInt() }.toSet()
-        repeat(BLINK_CYCLES) {
-            _uiState.update { it.copy(board = it.board.copy(hiddenRings = hidden)) }
-            delay(BLINK_PERIOD_MS)
-            _uiState.update { it.copy(board = it.board.copy(hiddenRings = emptySet())) }
-            delay(BLINK_PERIOD_MS)
+    /** `SurfaceGraphView.onTouchEvent` → `userTriedPlaying`/`postRingPlayedByUser`. */
+    private fun onRingDropped(ring: Int) {
+        if (animationLock.isLocked) return
+        val played = guarded { session.play(ring) } ?: return
+        if (!played) return
+        persistSessionState()
+        val state = session.state.value
+        render(state)
+        if (state.isFinished) startBlink(state.blinkingRings)
+    }
+
+    /** `cliqueAnnuler`. */
+    private fun undo() {
+        viewModelScope.launch {
+            animationLock.withLock {
+                val undone = guarded { session.undo() }
+                if (undone.isNullOrEmpty()) return@withLock
+                persistSessionState()
+                cancelBlink()
+                val state = session.state.value
+                // Each ring stays on the board until its own flight back starts.
+                val displayed = state.rings.copyOf()
+                undone.forEach { displayed[it.ring] = it.player.toByte() }
+                val (duration, frames) = if (undone.size == 1) UNDO_ONE_MS to UNDO_ONE_FRAMES else UNDO_TWO_MS to UNDO_TWO_FRAMES
+                for (move in undone) {
+                    displayed[move.ring] = 0
+                    val rings = displayed.copyOf()
+                    flyRing(move.ring, move.player, placing = false, duration, frames) { moving ->
+                        render(state, rings = rings, trayPlayer = move.player, dragEnabled = false, movingRing = moving)
+                    }
+                }
+                render(state)
+            }
         }
     }
 
-    private suspend fun onGameFinished(state: GameSessionState) {
-        val won = state.winner == 1
-        val awards = starService.recordGameFinished(mode, won)
-        if (awards.isNotEmpty()) {
-            _uiState.update { it.copy(starAwards = it.starAwards + awards) }
+    /** `cliqueRecommencer`: logs a finished game, then always changes who starts. */
+    private fun restart() {
+        viewModelScope.launch {
+            animationLock.withLock {
+                recordFinishedGame()
+                cancelBlink()
+                session.restart(changingBeginner = true)
+                savedStateHandle[KEY_GAME_RECORDED] = false
+                persistSessionState()
+                render(session.state.value)
+            }
         }
     }
 
-    private fun publish(
+    /** `GestionJeu.sortir()`: logs a finished game, then leaves (once its star dialogs are dismissed). */
+    private fun back() {
+        viewModelScope.launch {
+            if (::session.isInitialized) recordFinishedGame()
+            _uiState.update { it.copy(exitRequested = true) }
+        }
+    }
+
+    /** `logGame()` → `GameLog.addGame`, at most once per finished game. */
+    private suspend fun recordFinishedGame() {
+        val state = session.state.value
+        if (!state.isFinished || savedStateHandle.get<Boolean>(KEY_GAME_RECORDED) == true) return
+        savedStateHandle[KEY_GAME_RECORDED] = true
+        val awards = starService.recordGameFinished(mode, won = state.winner == 1)
+        if (awards.isEmpty()) return
+        // Each dialog's title shows the star count just after its own award.
+        val total = starService.numberStars.first()
+        val dialogs = awards.mapIndexed { index, award -> StarDialog(award, total - (awards.size - 1 - index)) }
+        _uiState.update { it.copy(starDialogs = it.starDialogs + dialogs) }
+    }
+
+    /** `cliquerClignoter`: hidden, then shown, [BLINK_CYCLES] times. Restarts any blink in progress. */
+    private fun startBlink(rings: ByteArray?) {
+        cancelBlink()
+        if (rings == null) return
+        val hidden = rings.map { it.toInt() }.toSet()
+        blinkJob = viewModelScope.launch {
+            repeat(BLINK_CYCLES) {
+                setHiddenRings(hidden)
+                delay(BLINK_HALF_PERIOD_MS)
+                setHiddenRings(emptySet())
+                delay(BLINK_HALF_PERIOD_MS)
+            }
+        }
+    }
+
+    private fun cancelBlink() {
+        blinkJob?.cancel()
+        blinkJob = null
+        setHiddenRings(emptySet())
+    }
+
+    private fun setHiddenRings(rings: Set<Int>) {
+        _uiState.update { it.copy(board = it.board.copy(hiddenRings = rings)) }
+    }
+
+    /**
+     * `SurfaceGraphView.afficherDeplacementAnneau`: frame `i` of [frames],
+     * at `i`·[durationMs]/[frames], shows the ring `i/frames` of the way
+     * from the tray to its cell — or back, when not [placing].
+     */
+    private suspend fun flyRing(
+        ring: Int,
+        player: Int,
+        placing: Boolean,
+        durationMs: Long,
+        frames: Int,
+        showFrame: (MovingRing) -> Unit,
+    ) {
+        for (i in 0 until frames) {
+            val fraction = i.toFloat() / frames
+            showFrame(MovingRing(ringNumber = ring, player = player, progress = if (placing) fraction else 1f - fraction))
+            delay((i + 1) * durationMs / frames - i * durationMs / frames)
+        }
+    }
+
+    /**
+     * Shows [state]. By default the tray is at rest: the next human player's
+     * color and draggable; while the computer searches, its color drawn as
+     * the progress arc (grey until the first progress report, like the
+     * legacy `joueurAnneauSelection = 0` after a drop); grey once finished.
+     */
+    private fun render(
         state: GameSessionState,
-        hiddenRings: Set<Int> = emptySet(),
+        rings: ByteArray = state.rings,
+        trayPlayer: Int = restingTrayPlayer(state),
+        dragEnabled: Boolean = mode == GameMode.TWO_PLAYERS || trayPlayer != COMPUTER_PLAYER,
+        trayAngleDegrees: Float = state.aiProgress?.trayAngleDegrees ?: FULL_RING,
         movingRing: MovingRing? = null,
+        updateTitle: Boolean = true,
     ) {
         _uiState.update { current ->
             current.copy(
                 isLoading = false,
                 board = current.board.copy(
-                    rings = state.rings,
+                    rings = rings,
                     player1Color = player1Color,
                     player2Color = player2Color,
-                    hiddenRings = hiddenRings,
+                    trayPlayer = trayPlayer,
+                    dragEnabled = dragEnabled,
+                    trayAngleDegrees = trayAngleDegrees,
                     movingRing = movingRing,
-                    trayPlayer = trayPlayerFor(state),
                 ),
                 player1Name = player1Name,
                 player2Name = player2Name,
-                nextPlayer = state.nextPlayer,
-                playedCount = state.playedCount,
-                isBusy = state.isBusy,
-                isFinished = state.isFinished,
-                isDraw = state.isDraw,
-                winner = state.winner,
-                canUndo = state.playedCount > 0 && !state.isBusy,
-                canBlink = state.blinkingRings != null,
+                title = if (updateTitle) state.toTitle() else current.title,
             )
         }
     }
 
-    private fun trayPlayerFor(state: GameSessionState): Int = when {
-        state.isBusy || state.isFinished -> 0
+    private fun restingTrayPlayer(state: GameSessionState): Int = when {
+        state.isFinished -> 0
         mode == GameMode.TWO_PLAYERS -> state.nextPlayer
         state.nextPlayer == 1 -> 1
+        state.aiProgress != null -> COMPUTER_PLAYER
         else -> 0
     }
 
-    private fun restart() {
-        animationJob?.cancel()
-        // GestionJeu.cliqueRecommencer(): always changes who starts.
-        session.restart(changingBeginner = true)
+    private fun GameSessionState.toTitle() = GameTitleState(
+        nextPlayer = nextPlayer,
+        playedCount = playedCount,
+        isFinished = isFinished,
+        isDraw = isDraw,
+        winner = winner,
+    )
+
+    /**
+     * `actualiserReglages`: the user's name and colors, when changed in
+     * Settings. The first value is skipped: it's what [resolveSetup] already
+     * applied — or deliberately overrode, for a resumed game's own colors.
+     */
+    private suspend fun followSettings() {
+        combine(preferences.userName, preferences.userColor, preferences.adversaryColor, ::Triple)
+            .distinctUntilChanged()
+            .drop(1)
+            .collect { (name, userColor, adversaryColor) ->
+                player1Name = name
+                player1Color = Color(userColor)
+                player2Color = Color(adversaryColor)
+                persistSessionState()
+                _uiState.update {
+                    it.copy(
+                        player1Name = name,
+                        board = it.board.copy(player1Color = player1Color, player2Color = player2Color),
+                    )
+                }
+            }
     }
 
-    private fun undo() {
-        animationJob?.cancel()
-        session.undo()
-    }
-
-    private fun manualBlink() {
-        val rings = session.blinkingRings() ?: return
-        animationJob?.cancel()
-        animationJob = viewModelScope.launch { blink(rings) }
-    }
-
-    private fun openSaveDialog() {
-        val defaultName = DateFormat.getDateInstance().format(Date())
-        _uiState.update { it.copy(showSaveDialog = true, saveNameDraft = defaultName) }
-    }
-
-    private fun save() {
-        val name = _uiState.value.saveNameDraft
+    /** `sauvegarderPartiePourPlusTard`: silent, a taken name gets a " (n)" suffix. */
+    private fun save(name: String) {
         viewModelScope.launch {
-            val savedName = savedGameService.save(
-                name = name,
-                ringsPlayed = session.playedRings(),
-                userBegins = session.startingPlayer() == 1,
-                userColor = player1Color.toArgb(),
-                adversaryColor = player2Color.toArgb(),
-            )
-            _uiState.update { it.copy(showSaveDialog = false, lastSavedName = savedName) }
+            guarded {
+                savedGameService.save(
+                    name = name,
+                    ringsPlayed = session.playedRings(),
+                    userBegins = session.startingPlayer() == 1,
+                    userColor = player1Color.toArgb(),
+                    adversaryColor = player2Color.toArgb(),
+                )
+            }
         }
+    }
+
+    /** Runs [block]; an exception shows `Internal_Error` (`afficheErreurInterne`) and yields null. */
+    private inline fun <T> guarded(block: () -> T): T? = try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        showInternalError()
+        null
+    }
+
+    private fun showInternalError() {
+        _uiState.update { it.copy(showInternalError = true) }
     }
 
     private data class ResolvedSetup(
@@ -312,11 +488,19 @@ class GameViewModel @AssistedInject constructor(
 
     private companion object {
         const val COMPUTER_PLAYER = 2
-        const val MOVE_IN_DURATION_MS = 1500L
-        const val MOVE_IN_STEPS = 40
+        const val FULL_RING = 360f
+        const val COMPUTER_FLIGHT_MS = 1500L
+        const val COMPUTER_FLIGHT_FRAMES = 40
+        const val UNDO_ONE_MS = 1200L
+        const val UNDO_ONE_FRAMES = 30
+        const val UNDO_TWO_MS = 800L
+        const val UNDO_TWO_FRAMES = 20
         const val BLINK_CYCLES = 5
-        const val BLINK_PERIOD_MS = 400L
+        const val BLINK_HALF_PERIOD_MS = 200L
         const val KEY_PLAYED_RINGS = "game_played_rings"
         const val KEY_STARTING_PLAYER = "game_starting_player"
+        const val KEY_PLAYER1_COLOR = "game_player1_color"
+        const val KEY_PLAYER2_COLOR = "game_player2_color"
+        const val KEY_GAME_RECORDED = "game_recorded"
     }
 }

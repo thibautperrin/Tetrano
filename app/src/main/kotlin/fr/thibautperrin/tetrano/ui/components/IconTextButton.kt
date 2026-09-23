@@ -1,32 +1,34 @@
 package fr.thibautperrin.tetrano.ui.components
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
+import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 
 /**
- * A full-width play-menu button: a translucent yellow panel with a
- * full-bleed icon and an optional centered label. Ports `BoutonsJouer`
- * (see docs/GLOSSARY.md) — [icon] replaces the legacy PNG (`bouton_*`,
- * see docs/PLAN.md P9) with a vector drawable/icon.
+ * A play-menu button. Ports `BoutonsJouer` (see docs/GLOSSARY.md) exactly:
+ * a 2:1 translucent yellow panel, the 2:1 artwork ([icon], the vectorized
+ * `bouton_*` PNGs) stretched over it, and an optional black label whose
+ * width is always 60% of the button's (`setTextSizeForWidth(height * 1.2)`)
+ * with its baseline at 35% of the height — so the label scales with the
+ * button and can never overflow it.
  *
- * Text auto-sizing-to-fit-width isn't reproduced (Compose has no direct
- * equivalent, and it isn't worth one for a menu label) — a fixed style
- * achieves the same look closely enough.
+ * @param enabled false greys the button out and makes it inert (the
+ *   postponed online mode).
  */
 @Composable
 fun IconTextButton(
@@ -34,33 +36,35 @@ fun IconTextButton(
     text: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentDescription: String? = text,
 ) {
-    Box(
+    val textMeasurer = rememberTextMeasurer()
+    Canvas(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(2f)
-            .background(BUTTON_BACKGROUND)
-            .clickable(onClick = onClick),
+            .alpha(if (enabled) 1f else 0.4f)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { if (contentDescription != null) this.contentDescription = contentDescription },
     ) {
-        Image(
-            painter = icon,
-            contentDescription = text,
-            modifier = Modifier.fillMaxSize(),
-        )
+        drawRect(LegacyColors.PlayModeButton)
+        with(icon) { draw(size) }
         if (text != null) {
-            Text(
-                text = text,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 4.dp)
-                    .fillMaxWidth(),
+            val probe = textMeasurer.measure(text, TextStyle(fontSize = PROBE_SIZE, color = Color.Black))
+            val targetWidth = size.height * 1.2f
+            val scale = if (probe.size.width > 0) targetWidth / probe.size.width else 1f
+            val layout = textMeasurer.measure(
+                text,
+                TextStyle(fontSize = PROBE_SIZE * scale, color = Color.Black),
+            )
+            val baseline = size.height * 0.35f
+            drawText(
+                layout,
+                topLeft = Offset((size.width - layout.size.width) / 2f, baseline - layout.firstBaseline),
             )
         }
     }
 }
 
-// 0xdbffff32, unchanged.
-private val BUTTON_BACKGROUND = Color(0xDBFFFF32)
+private val PROBE_SIZE = 70.sp

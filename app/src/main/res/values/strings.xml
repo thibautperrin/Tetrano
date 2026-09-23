@@ -48,7 +48,7 @@
     <string name="Star_Won_Two_Players">You win a star because you played %1$d games in 2 player mode.</string>
     <string name="Star_Won_Against_Computer">You win a star because you have played %1$d games against the computer.</string>
     <string name="Star_Won_Win_Against_Computer">You win a star because you have won %1$d games against the computer (with level upper than 30).</string>
-    <string name="Star_Won_All_Games">You win a star because you have tried all the 4 main game modes.</string>
+    <string name="Star_Won_All_Games">You win a star because you have tried all the 3 main game modes.</string>
     <string name="Mot_Clignoter">Blink</string>
     <string name="OK" translatable="false">OK</string>
 
@@ -87,22 +87,13 @@
 
     <!-- New in the rewrite: no legacy equivalent. -->
     <string name="online_coming_soon">Online (coming soon)</string>
-    <string name="player1_name_label">Player 1 name</string>
-    <string name="player2_name_label">Player 2 name</string>
-    <string name="undo">Undo</string>
-    <string name="restart">Restart</string>
-    <string name="i_begin">I begin</string>
-    <string name="computer_begins">Computer begins</string>
     <string name="previous">Previous</string>
     <string name="name_already_used">A saved game already has this name.</string>
 
-    <!-- WinningExamplesScreen captions (docs/PLAN.md P8): no legacy string
-         existed for these, ExamplesActivity's 6 boards had no on-screen
-         label beyond the shared Winning_Situation_Example title. -->
-    <string name="winning_example_concentric">Concentric: 4 rings of different sizes in the same square</string>
-    <string name="winning_example_row_constant_size">Row: 4 rings of the same size in a row</string>
-    <string name="winning_example_column_constant_size">Column: 4 rings of the same size in a column</string>
-    <string name="winning_example_diagonal_constant_size">Diagonal: 4 rings of the same size on a diagonal</string>
-    <string name="winning_example_column_increasing_size">Column: 4 rings of increasing size in a column</string>
-    <string name="winning_example_diagonal_increasing_size">Diagonal: 4 rings of increasing size on a diagonal</string>
+    <!-- Restored from the 2015 app. -->
+    <string name="Play_Again">Play again</string>
+    <string name="Internal_Error">Internal Error. Sorry.</string>
+    <string name="Joueur1_Name">Joueur 1 name ?</string>
+    <string name="Joueur2_Name">Joueur 2 name ?</string>
+    <string name="Game_Of">Game of</string>
 </resources>

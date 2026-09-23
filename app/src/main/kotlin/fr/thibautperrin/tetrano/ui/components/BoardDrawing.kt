@@ -107,9 +107,8 @@ internal object BoardDrawing {
         }
     }
 
-    /** The 4 tray rings a player can pick up, tinted [color] (or not drawn at all if [color] is null). Ports `dessineAnneauASaisir`. */
-    fun DrawScope.drawTray(side: Float, color: Color?, vertical: Boolean, angleDegrees: Float = 360f) {
-        if (color == null) return
+    /** The 4 tray rings a player can pick up, tinted [color]. Ports `dessineAnneauASaisir`. */
+    fun DrawScope.drawTray(side: Float, color: Color, vertical: Boolean, angleDegrees: Float = 360f) {
         for (ringSize in 0 until 4) {
             val center = trayRingCenter(side, ringSize, vertical)
             drawRing(side, color, center.x, center.y, ringSize, angleDegrees)

@@ -7,9 +7,8 @@
       paints windowSplashScreenBackground/Icon until
       installSplashScreen() — called in MainActivity.onCreate before
       super.onCreate/setContent — hands off to postSplashScreenTheme.
-      windowSplashScreenBackground is qualified for dark mode in
-      values-night/colors.xml; the actual Material 3 theming (light + dark)
-      lives in Compose (ui/theme/Theme.kt, P7), so postSplashScreenTheme
+      The actual Material 3 theming (light only, like the 2015 app) lives
+      in Compose (ui/theme/Theme.kt, P7), so postSplashScreenTheme
       only needs to be a valid, minimal window host until setContent runs.
     -->
     <style name="Theme.Tetrano" parent="Theme.SplashScreen">

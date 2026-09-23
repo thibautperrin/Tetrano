@@ -16,6 +16,7 @@ import javax.inject.Singleton
 class SavedGameService @Inject constructor(
     private val savedGameDao: SavedGameDao,
 ) {
+    /** Every saved game, in insertion order (the legacy list's order, see [SavedGameDao.observeAll]). */
     fun observeAll(): Flow<List<SavedGameSummary>> =
         savedGameDao.observeAll().map { entities -> entities.map { it.toSummary() } }
 
@@ -34,7 +35,7 @@ class SavedGameService @Inject constructor(
         userColor: Int,
         adversaryColor: Int,
     ): String {
-        val truncatedName = if (name.length > MAX_NAME_LENGTH) name.substring(0, MAX_NAME_LENGTH) else name
+        val truncatedName = name.take(MAX_NAME_LENGTH)
         var candidateName = truncatedName
         var suffix = 2
         while (true) {
@@ -52,9 +53,19 @@ class SavedGameService @Inject constructor(
         }
     }
 
-    /** False if [newName] is already taken by another saved game (a rename never overwrites). */
-    suspend fun rename(previousName: String, newName: String): Boolean =
-        savedGameDao.rename(previousName, newName) == 1
+    /**
+     * Ports `DAOSavedGame.rename`. False if [newName] is blank or already
+     * taken by another saved game: a rename never overwrites — checked
+     * here because [SavedGameDao.rename]'s raw `UPDATE` would throw on the
+     * primary-key collision instead of returning 0. [newName] is truncated
+     * like [save]'s.
+     */
+    suspend fun rename(previousName: String, newName: String): Boolean {
+        val truncatedName = newName.take(MAX_NAME_LENGTH)
+        if (truncatedName == previousName) return savedGameDao.getByName(previousName) != null
+        if (truncatedName.isBlank() || savedGameDao.getByName(truncatedName) != null) return false
+        return savedGameDao.rename(previousName, truncatedName) == 1
+    }
 
     suspend fun delete(name: String): Boolean = savedGameDao.delete(name) == 1
 

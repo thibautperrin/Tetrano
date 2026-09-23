@@ -1,27 +1,32 @@
 package fr.thibautperrin.tetrano.ui.challenge
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,14 +34,39 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.BoardCanvas
 import fr.thibautperrin.tetrano.ui.components.BoardOrientation
+import fr.thibautperrin.tetrano.ui.components.FitText
+import fr.thibautperrin.tetrano.ui.components.LegacyButton
+import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
+import fr.thibautperrin.tetrano.ui.components.StarBadge
+import fr.thibautperrin.tetrano.ui.theme.LegacyColors
+import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
+import fr.thibautperrin.tetrano.ui.theme.isLandscape
+
+/** `?android:attr/textAppearanceLarge`, the legacy rings counter's text size (an upper bound here). */
+private val LargeTextSize = 22.sp
+
+/** The narrowest the landscape side panel (counter + give-up button) may get before the board shrinks for it. */
+private val MinSidePanelWidth = 120.dp
+
+/** The narrowest the portrait give-up button may get before the counter shrinks for it (`Widget.Button`'s min width). */
+private val MinGiveUpButtonWidth = 88.dp
 
 /** Wires [ChallengeViewModel] to the stateless [ChallengeScreen]. */
 @Composable
@@ -59,89 +89,217 @@ fun ChallengeRoute(
     ChallengeScreen(uiModel = uiModel, onAction = viewModel::onAction, onNavigateToSettings = onNavigateToSettings)
 }
 
-/** Ports `ChallengeActivity` (see docs/GLOSSARY.md, docs/PLAN.md P8). */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Ports `ChallengeActivity` (see docs/GLOSSARY.md, docs/PLAN.md P8) and its
+ * `activity_challenge.xml` layouts: a white page under the dark action bar;
+ * portrait: the board above, the rings counter bottom-left and the give-up
+ * button bottom-right; landscape (`layout-land`): the board on the left,
+ * the counter top-right and the button bottom-right. The board always takes
+ * the largest size that fits beside/above them.
+ */
 @Composable
 fun ChallengeScreen(
     uiModel: ChallengeUiModel,
     onAction: (ChallengeAction) -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
     Scaffold(
+        containerColor = LegacyColors.Page,
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
-            TopAppBar(
+            LegacyTopBar(
                 // ChallengeActivity.updateTitle(): "%s      %s %d".
-                title = { Text("${stringResource(R.string.Challenge)}      ${stringResource(R.string.Level)} ${uiModel.level}") },
-                actions = {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
-                    }
-                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_settings)) },
-                            onClick = {
-                                menuExpanded = false
-                                onNavigateToSettings()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.Explanations)) },
-                            onClick = {
-                                menuExpanded = false
-                                onAction(ChallengeAction.ExplanationsMenuClicked)
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.Use_Star)) },
-                            onClick = {
-                                menuExpanded = false
-                                onAction(ChallengeAction.UseStarMenuClicked)
-                            },
-                        )
-                    }
-                },
+                title = "${stringResource(R.string.Challenge)}      ${stringResource(R.string.Level)} ${uiModel.level}",
+                actions = { ChallengeMenu(onAction = onAction, onNavigateToSettings = onNavigateToSettings) },
             )
         },
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            BoardCanvas(
-                state = uiModel.board,
-                orientation = BoardOrientation.PORTRAIT,
-                onRingDropped = { onAction(ChallengeAction.RingDropped(it)) },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                // updateTextAndButton()'s "%d / %d", tappable like onClickNbRings.
-                Text(
-                    text = "${uiModel.usedRings} / ${uiModel.authorizedRings}",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.clickable { onAction(ChallengeAction.RingsCounterClicked) },
-                )
-                if (uiModel.canAbandon) {
-                    Button(onClick = { onAction(ChallengeAction.AbandonClicked) }) {
-                        Text(stringResource(R.string.Abandon_Challenge))
-                    }
-                }
-            }
+        val onRingDropped: (Int) -> Unit = { onAction(ChallengeAction.RingDropped(it)) }
+        val onCounterClick = { onAction(ChallengeAction.RingsCounterClicked) }
+        val onGiveUp = { onAction(ChallengeAction.AbandonClicked) }
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+        if (isLandscape()) {
+            LandscapeContent(uiModel, onRingDropped, onCounterClick, onGiveUp, contentModifier)
+        } else {
+            PortraitContent(uiModel, onRingDropped, onCounterClick, onGiveUp, contentModifier)
         }
     }
 
+    ChallengeDialogs(uiModel, onAction)
+}
+
+/** `menu_challenge.xml`: Settings, Explanations, Use a star. */
+@Composable
+private fun ChallengeMenu(onAction: (ChallengeAction) -> Unit, onNavigateToSettings: () -> Unit) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    IconButton(onClick = { menuExpanded = true }) {
+        Icon(Icons.Default.MoreVert, contentDescription = null)
+    }
+    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.action_settings)) },
+            onClick = {
+                menuExpanded = false
+                onNavigateToSettings()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.Explanations)) },
+            onClick = {
+                menuExpanded = false
+                onAction(ChallengeAction.ExplanationsMenuClicked)
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.Use_Star)) },
+            onClick = {
+                menuExpanded = false
+                onAction(ChallengeAction.UseStarMenuClicked)
+            },
+        )
+    }
+}
+
+/** `layout/activity_challenge.xml`: the board centered above a bottom bar, no margins. */
+@Composable
+private fun PortraitContent(
+    uiModel: ChallengeUiModel,
+    onRingDropped: (Int) -> Unit,
+    onCounterClick: () -> Unit,
+    onGiveUp: () -> Unit,
+    modifier: Modifier,
+) {
+    Column(modifier) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            // No size modifier: BoardCanvas's aspect ratio picks the largest 4:5 box that fits.
+            BoardCanvas(state = uiModel.board, orientation = BoardOrientation.PORTRAIT, onRingDropped = onRingDropped)
+        }
+        PortraitBottomBar(uiModel, onCounterClick, onGiveUp)
+    }
+}
+
+/**
+ * The counter wraps its text on the left; the button takes the counter's
+ * height (legacy `alignTop` + `alignParentBottom`) and wraps its text on
+ * the right, never narrower than [MinGiveUpButtonWidth].
+ */
+@Composable
+private fun PortraitBottomBar(uiModel: ChallengeUiModel, onCounterClick: () -> Unit, onGiveUp: () -> Unit) {
+    Layout(
+        content = {
+            RingsCounter(uiModel.usedRings, uiModel.authorizedRings, onCounterClick)
+            GiveUpButton(visible = uiModel.canAbandon, onClick = onGiveUp)
+        },
+        modifier = Modifier.fillMaxWidth(),
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val reservedForButton = MinGiveUpButtonWidth.roundToPx().coerceAtMost(width / 2)
+        val counter = measurables[0].measure(Constraints(maxWidth = width - reservedForButton))
+        val height = counter.height
+        val remaining = width - counter.width
+        val button = measurables[1].measure(
+            Constraints(minWidth = reservedForButton, maxWidth = remaining, minHeight = height, maxHeight = height),
+        )
+        layout(width, height) {
+            counter.place(0, 0)
+            button.place(width - button.width, 0)
+        }
+    }
+}
+
+/** `layout-land/activity_challenge.xml`: the board top-left, a side panel with 10 dp margins on its right. */
+@Composable
+private fun LandscapeContent(
+    uiModel: ChallengeUiModel,
+    onRingDropped: (Int) -> Unit,
+    onCounterClick: () -> Unit,
+    onGiveUp: () -> Unit,
+    modifier: Modifier,
+) {
+    val margin = LocalLegacyDimens.current.tinyMargin
+    BoxWithConstraints(modifier) {
+        val boardWidth = min(maxHeight * 5f / 4f, maxWidth - MinSidePanelWidth).coerceAtLeast(0.dp)
+        Row(Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .width(boardWidth)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.TopStart,
+            ) {
+                BoardCanvas(state = uiModel.board, orientation = BoardOrientation.LANDSCAPE, onRingDropped = onRingDropped)
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(margin),
+            ) {
+                RingsCounter(uiModel.usedRings, uiModel.authorizedRings, onCounterClick, Modifier.fillMaxWidth())
+                Spacer(Modifier.weight(1f))
+                GiveUpButton(visible = uiModel.canAbandon, onClick = onGiveUp, modifier = Modifier.fillMaxWidth())
+            }
+        }
+    }
+}
+
+/**
+ * `textViewRingsUsed` ("Rings used:") above `textViewRingsUsed2` ("x / y",
+ * centered), on the InfoRings background; both open the rings info dialog
+ * (`onClickNbRings`).
+ */
+@Composable
+private fun RingsCounter(used: Int, authorized: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(LegacyColors.InfoRings)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        FitText(
+            text = stringResource(R.string.Rings_used),
+            maxFontSize = LargeTextSize,
+            color = Color.Black,
+            textAlign = TextAlign.Center,
+        )
+        // updateTextAndButton(): "%d / %d".
+        FitText(
+            text = "$used / $authorized",
+            maxFontSize = LargeTextSize,
+            color = Color.Black,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+/** `buttonRestartChallenge`: INVISIBLE (space kept) when giving up isn't allowed. */
+@Composable
+private fun GiveUpButton(visible: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    LegacyButton(
+        text = stringResource(R.string.Abandon_Challenge),
+        onClick = onClick,
+        modifier = if (visible) modifier else modifier.alpha(0f).clearAndSetSemantics {},
+        background = LegacyColors.ButtonCyan,
+        textColor = Color.Black,
+        fontSize = LocalLegacyDimens.current.bottomButtons,
+        enabled = visible,
+    )
+}
+
+@Composable
+private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeAction) -> Unit) {
     if (uiModel.showRingsInfoDialog) {
+        // onClickNbRings (legacy: no button, cancelable).
         AlertDialog(
             onDismissRequest = { onAction(ChallengeAction.RingsInfoDismissed) },
             text = {
-                Text(
+                DialogText(
                     stringResource(R.string.Explanation_Rings_Number) + "\n\n" +
                         stringResource(R.string.In_This_Level) + "\n\t" +
                         stringResource(R.string.Number_Of_Rings_Allowed) + " ${uiModel.authorizedRings}" + "\n\t" +
@@ -158,7 +316,7 @@ fun ChallengeScreen(
         1 -> AlertDialog(
             onDismissRequest = {},
             title = { Text("${stringResource(R.string.Explanations)} 1/2") },
-            text = { Text(stringResource(R.string.Explanations_Challenge1)) },
+            text = { DialogText(stringResource(R.string.Explanations_Challenge1)) },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.ExplanationsNextClicked) }) { Text(stringResource(R.string.Next)) }
             },
@@ -166,7 +324,7 @@ fun ChallengeScreen(
         2 -> AlertDialog(
             onDismissRequest = { onAction(ChallengeAction.ExplanationsDismissed) },
             title = { Text("${stringResource(R.string.Explanations)} 2/2") },
-            text = { Text(stringResource(R.string.Explanations_Challenge2)) },
+            text = { DialogText(stringResource(R.string.Explanations_Challenge2)) },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.ExplanationsDismissed) }) { Text(stringResource(R.string.Play)) }
             },
@@ -174,20 +332,20 @@ fun ChallengeScreen(
     }
 
     if (uiModel.showNoStarsMessage) {
-        AlertDialog(
-            onDismissRequest = { onAction(ChallengeAction.NoStarsAcknowledged) },
-            text = { Text(stringResource(R.string.No_More_Stars)) },
-            confirmButton = {
-                TextButton(onClick = { onAction(ChallengeAction.NoStarsAcknowledged) }) { Text(stringResource(R.string.OK)) }
-            },
+        // app.displayMessageStars(this, No_More_Stars).
+        StarMessageDialog(
+            numberStars = uiModel.numberStars,
+            message = stringResource(R.string.No_More_Stars),
+            onDismiss = { onAction(ChallengeAction.NoStarsAcknowledged) },
         )
     }
 
     if (uiModel.showConfirmUseStar) {
+        // askConfirmUseStar().
         AlertDialog(
             onDismissRequest = { onAction(ChallengeAction.UseStarDismissed) },
-            title = { Text("${uiModel.numberStars} ★") },
-            text = { Text(stringResource(R.string.Sentence_Confirm_Use_Star)) },
+            title = { StarBadge(uiModel.numberStars) },
+            text = { DialogText(stringResource(R.string.Sentence_Confirm_Use_Star)) },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.UseStarConfirmed) }) { Text(stringResource(R.string.OK)) }
             },
@@ -202,7 +360,7 @@ fun ChallengeScreen(
         AlertDialog(
             onDismissRequest = { onAction(ChallengeAction.EndDialogQuitClicked) },
             title = { Text(title) },
-            text = { Text(message) },
+            text = { DialogText(message) },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.EndDialogContinueClicked) }) { Text(positiveLabel) }
             },
@@ -213,15 +371,30 @@ fun ChallengeScreen(
     }
 
     if (uiModel.showAllModesTriedAward) {
-        AlertDialog(
-            onDismissRequest = { onAction(ChallengeAction.AllModesTriedAwardAcknowledged) },
-            title = { Text(stringResource(R.string.Explanation_Star)) },
-            text = { Text(stringResource(R.string.Star_Won_All_Games)) },
-            confirmButton = {
-                TextButton(onClick = { onAction(ChallengeAction.AllModesTriedAwardAcknowledged) }) { Text(stringResource(R.string.OK)) }
-            },
+        // Composed after the end dialog: shown on top of it.
+        StarMessageDialog(
+            numberStars = uiModel.numberStars,
+            message = stringResource(R.string.Star_Won_All_Games),
+            onDismiss = { onAction(ChallengeAction.AllModesTriedAwardAcknowledged) },
         )
     }
+}
+
+/**
+ * Ports `ApplicationTetrano.displayMessageStars`: the star count as title,
+ * [message] + "\n\n" + `Explanation_Star` as text, cancelable (plus an OK
+ * button the legacy dialog didn't have).
+ */
+@Composable
+private fun StarMessageDialog(numberStars: Int, message: String, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { StarBadge(numberStars) },
+        text = { DialogText(message + "\n\n" + stringResource(R.string.Explanation_Star)) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.OK)) }
+        },
+    )
 }
 
 // displayDialogEnd(level, situation), ported.
@@ -247,4 +420,10 @@ private fun endDialogTexts(dialog: ChallengeEndDialog): Triple<String, String, S
         "${stringResource(R.string.You_Lost_At_Level)} ${dialog.level}",
         stringResource(R.string.Try_Again),
     )
+}
+
+/** A dialog message that scrolls instead of being cut off (long explanations, landscape phones). */
+@Composable
+private fun DialogText(text: String) {
+    Text(text, modifier = Modifier.verticalScroll(rememberScrollState()))
 }
