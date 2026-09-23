@@ -39,6 +39,39 @@
     <string name="Mot_Clignoter">Blink</string>
     <string name="OK" translatable="false">OK</string>
 
+    <!-- Reused verbatim from seed_assets/strings/values/strings.xml (P8 challenge/saved-games screens). -->
+    <string name="Abandon_Challenge">Give up</string>
+    <string name="Quit">Quit</string>
+    <string name="Abandoned">Abandoned</string>
+    <string name="Try_Again">Try again</string>
+    <string name="Go_To_Next_Level">Go to next level</string>
+    <string name="You_Lost_At_Level">You lost at level</string>
+    <string name="You_Passed_Level">You passed level</string>
+    <string name="Computer_Won_Before">The computer has won before you!</string>
+    <string name="Sentence_Number_Rings">You have not managed to use the allotted number of rings.</string>
+    <string name="Explanation_Rings_Number">In challenge mode, you have to win using a limited number of rings.</string>
+    <string name="In_This_Level">In this level:</string>
+    <string name="Number_Of_Rings_Allowed">Allowed rings number:</string>
+    <string name="Rings_used">Rings used:</string>
+    <string name="Explanations_Challenge1">Welcome in the Challenge mode,\n\nin this mode, you start from an already begun game, and you can use only a limited number of rings to win. If you don’t win the game with this limited number, you lose. If you win the game using the good number of rings, you win and you can go to the next level.</string>
+    <string name="Explanations_Challenge2">If a level seems too difficult, you can by-pass it. To do that, you need to consume one of your stars.</string>
+    <string name="Next">Next</string>
+    <string name="Explanations">Explanations</string>
+    <string name="Use_Star">Use a star to get a clue</string>
+    <string name="No_More_Stars">You do not have any stars.\n\nTo earn new stars, play 2-player, vs-computer and Challenge games.</string>
+    <string name="Sentence_Confirm_Use_Star">Do you really want using one of your stars to get a piece of advice?</string>
+    <string name="All_Levels_Passed">You have passed all the levels. You have finished the challenge mode.</string>
+    <string name="Sentence_No_Saved_Game">You haven’t saved a game yet.</string>
+    <string name="Watch">Watch</string>
+    <string name="Delete">Delete</string>
+    <string name="Rename">Rename</string>
+    <string name="Confirm">Confirm</string>
+    <string name="Rename_A_Saved_Game">Rename a saved game</string>
+    <string name="Sentence_Confirm_Delete_Game">Do you really want to delete this saved game?</string>
+    <string name="Continue_In_Two_Players_Mode">Continue in 2 players mode</string>
+    <string name="Continue_Against_Computer">Continue against computer</string>
+    <string name="Ring">Ring</string>
+
     <!-- New in the rewrite: no legacy equivalent. -->
     <string name="online_coming_soon">Online (coming soon)</string>
     <string name="player1_name_label">Player 1 name</string>
@@ -47,4 +80,5 @@
     <string name="restart">Restart</string>
     <string name="i_begin">I begin</string>
     <string name="computer_begins">Computer begins</string>
+    <string name="previous">Previous</string>
 </resources>
