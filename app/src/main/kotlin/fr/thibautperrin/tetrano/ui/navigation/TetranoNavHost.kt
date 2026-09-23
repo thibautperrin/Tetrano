@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import fr.thibautperrin.tetrano.domain.model.GameMode
+import fr.thibautperrin.tetrano.ui.challenge.ChallengeRoute
 import fr.thibautperrin.tetrano.ui.game.GameRoute
 import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
@@ -83,7 +84,12 @@ fun TetranoNavHost(
                 onExit = { navController.popBackStack() },
             )
         }
-        composable<TetranoRoute.Challenge> { PlaceholderScreen("Challenge") }
+        composable<TetranoRoute.Challenge> {
+            ChallengeRoute(
+                onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
+                onExit = { navController.popBackStack() },
+            )
+        }
         composable<TetranoRoute.SavedGames> { PlaceholderScreen("Saved games") }
         composable<TetranoRoute.SavedGameViewer> { PlaceholderScreen("Saved game viewer") }
         composable<TetranoRoute.Settings> { PlaceholderScreen("Settings") }
