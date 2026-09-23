@@ -18,12 +18,33 @@
     <string name="Joueur2">Player2</string>
     <string name="Level">Level</string>
     <string name="Who_Begins">Who begins?</string>
+    <string name="Save_The_Game">Save the game</string>
+    <string name="Enter_A_Name">Enter a name</string>
+    <string name="Cancel">Cancel</string>
+    <string name="Settings_Saved">Settings saved</string>
+    <string name="Explanation_Star">A star can be consumed to get a clue when you are blocked  in the challenge mode.</string>
+    <string name="Sentence_End_Null">Game ended. No winner.</string>
+    <string name="Sentence_End_Win">Game ended. You won !</string>
+    <string name="Sentence_End_Lost">Game ended. You lost.</string>
+    <string name="Winner">Winner</string>
+    <string name="Sentence_Begin_Start">Beginning: You can start to play.</string>
+    <string name="Your_Turn">it’s your turn.</string>
+    <string name="Sentence_Computer_Work">Computer is playing.</string>
+    <string name="You_Can_Start">, you can start.</string>
+    <string name="Computer">Computer</string>
+    <string name="Star_Won_Two_Players">You win a star because you played %1$d games in 2 player mode.</string>
+    <string name="Star_Won_Against_Computer">You win a star because you have played %1$d games against the computer.</string>
+    <string name="Star_Won_Win_Against_Computer">You win a star because you have won %1$d games against the computer (with level upper than 30).</string>
+    <string name="Star_Won_All_Games">You win a star because you have tried all the 4 main game modes.</string>
+    <string name="Mot_Clignoter">Blink</string>
     <string name="OK" translatable="false">OK</string>
 
     <!-- New in the rewrite: no legacy equivalent. -->
     <string name="online_coming_soon">Online (coming soon)</string>
     <string name="player1_name_label">Player 1 name</string>
     <string name="player2_name_label">Player 2 name</string>
+    <string name="undo">Undo</string>
+    <string name="restart">Restart</string>
     <string name="i_begin">I begin</string>
     <string name="computer_begins">Computer begins</string>
 </resources>

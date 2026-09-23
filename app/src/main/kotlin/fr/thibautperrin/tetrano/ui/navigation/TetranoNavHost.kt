@@ -11,6 +11,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import fr.thibautperrin.tetrano.domain.model.GameMode
+import fr.thibautperrin.tetrano.ui.game.GameRoute
 import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
 import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
@@ -18,8 +20,9 @@ import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
 
 /**
  * Wires every [TetranoRoute] to its screen. [TetranoRoute.Home],
- * [TetranoRoute.PlayMenu], [TetranoRoute.TwoPlayersSetup] and
- * [TetranoRoute.ComputerSetup] land in this commit (see docs/PLAN.md P8);
+ * [TetranoRoute.PlayMenu], [TetranoRoute.TwoPlayersSetup],
+ * [TetranoRoute.ComputerSetup], [TetranoRoute.TwoPlayersGame] and
+ * [TetranoRoute.ComputerGame] land in this commit (see docs/PLAN.md P8);
  * the rest stay placeholders for later ones.
  */
 @Composable
@@ -62,8 +65,24 @@ fun TetranoNavHost(
                 },
             )
         }
-        composable<TetranoRoute.TwoPlayersGame> { PlaceholderScreen("Two players game") }
-        composable<TetranoRoute.ComputerGame> { PlaceholderScreen("Computer game") }
+        composable<TetranoRoute.TwoPlayersGame> { backStackEntry ->
+            val route = backStackEntry.toRoute<TetranoRoute.TwoPlayersGame>()
+            GameRoute(
+                mode = GameMode.TWO_PLAYERS,
+                savedGameName = route.savedGameName,
+                onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
+                onExit = { navController.popBackStack() },
+            )
+        }
+        composable<TetranoRoute.ComputerGame> { backStackEntry ->
+            val route = backStackEntry.toRoute<TetranoRoute.ComputerGame>()
+            GameRoute(
+                mode = GameMode.VS_COMPUTER,
+                savedGameName = route.savedGameName,
+                onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
+                onExit = { navController.popBackStack() },
+            )
+        }
         composable<TetranoRoute.Challenge> { PlaceholderScreen("Challenge") }
         composable<TetranoRoute.SavedGames> { PlaceholderScreen("Saved games") }
         composable<TetranoRoute.SavedGameViewer> { PlaceholderScreen("Saved game viewer") }
