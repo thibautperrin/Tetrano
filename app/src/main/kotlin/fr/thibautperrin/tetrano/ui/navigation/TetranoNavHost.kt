@@ -10,12 +10,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import fr.thibautperrin.tetrano.ui.home.HomeRoute
+import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
+import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
+import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
 
 /**
- * Wires every [TetranoRoute] to its screen. Real screens land in P8 (see
- * docs/PLAN.md) — every destination is a placeholder for now, which
- * exercises the navigation graph end to end (including argument passing
- * for the routes that carry one) ahead of that.
+ * Wires every [TetranoRoute] to its screen. [TetranoRoute.Home],
+ * [TetranoRoute.PlayMenu], [TetranoRoute.TwoPlayersSetup] and
+ * [TetranoRoute.ComputerSetup] land in this commit (see docs/PLAN.md P8);
+ * the rest stay placeholders for later ones.
  */
 @Composable
 fun TetranoNavHost(
@@ -23,10 +28,40 @@ fun TetranoNavHost(
     modifier: Modifier = Modifier,
 ) {
     NavHost(navController = navController, startDestination = TetranoRoute.Home, modifier = modifier) {
-        composable<TetranoRoute.Home> { PlaceholderScreen("Home") }
-        composable<TetranoRoute.PlayMenu> { PlaceholderScreen("Play menu") }
-        composable<TetranoRoute.TwoPlayersSetup> { PlaceholderScreen("Two players setup") }
-        composable<TetranoRoute.ComputerSetup> { PlaceholderScreen("Computer setup") }
+        composable<TetranoRoute.Home> {
+            HomeRoute(
+                onNavigateToPlayMenu = { navController.navigate(TetranoRoute.PlayMenu) },
+                onNavigateToRules = { navController.navigate(TetranoRoute.Rules) },
+                onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
+            )
+        }
+        composable<TetranoRoute.PlayMenu> {
+            PlayMenuRoute(
+                onNavigateToTwoPlayersSetup = { navController.navigate(TetranoRoute.TwoPlayersSetup) },
+                onNavigateToComputerSetup = { navController.navigate(TetranoRoute.ComputerSetup()) },
+                onNavigateToSavedGames = { navController.navigate(TetranoRoute.SavedGames) },
+                onNavigateToChallenge = { navController.navigate(TetranoRoute.Challenge) },
+            )
+        }
+        composable<TetranoRoute.TwoPlayersSetup> {
+            TwoPlayersSetupRoute(
+                onNavigateToGame = {
+                    navController.navigate(TetranoRoute.TwoPlayersGame()) {
+                        popUpTo(TetranoRoute.TwoPlayersSetup) { inclusive = true }
+                    }
+                },
+            )
+        }
+        composable<TetranoRoute.ComputerSetup> { backStackEntry ->
+            val route = backStackEntry.toRoute<TetranoRoute.ComputerSetup>()
+            ComputerSetupRoute(
+                onNavigateToGame = {
+                    navController.navigate(TetranoRoute.ComputerGame(route.savedGameName)) {
+                        popUpTo(TetranoRoute.ComputerSetup(route.savedGameName)) { inclusive = true }
+                    }
+                },
+            )
+        }
         composable<TetranoRoute.TwoPlayersGame> { PlaceholderScreen("Two players game") }
         composable<TetranoRoute.ComputerGame> { PlaceholderScreen("Computer game") }
         composable<TetranoRoute.Challenge> { PlaceholderScreen("Challenge") }
