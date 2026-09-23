@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the black canvas TetranoBackground.kt draws once Compose
+         takes over, so the splash screen hands off without a color jump. -->
+    <color name="splash_background">#FF000000</color>
+</resources>

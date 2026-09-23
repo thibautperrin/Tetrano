@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash screen background (see themes.xml); overridden for dark mode
+         in values-night/colors.xml. -->
+    <color name="splash_background">#FFFBF3DD</color>
+</resources>
