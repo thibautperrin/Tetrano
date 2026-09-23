@@ -16,6 +16,8 @@ import fr.thibautperrin.tetrano.ui.challenge.ChallengeRoute
 import fr.thibautperrin.tetrano.ui.game.GameRoute
 import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
+import fr.thibautperrin.tetrano.ui.savedgames.SavedGameViewerRoute
+import fr.thibautperrin.tetrano.ui.savedgames.SavedGamesRoute
 import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
 import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
 
@@ -90,8 +92,14 @@ fun TetranoNavHost(
                 onExit = { navController.popBackStack() },
             )
         }
-        composable<TetranoRoute.SavedGames> { PlaceholderScreen("Saved games") }
-        composable<TetranoRoute.SavedGameViewer> { PlaceholderScreen("Saved game viewer") }
+        composable<TetranoRoute.SavedGames> {
+            SavedGamesRoute(
+                onWatch = { name -> navController.navigate(TetranoRoute.SavedGameViewer(name)) },
+                onContinueTwoPlayers = { name -> navController.navigate(TetranoRoute.TwoPlayersGame(name)) },
+                onContinueAgainstComputer = { name -> navController.navigate(TetranoRoute.ComputerSetup(name)) },
+            )
+        }
+        composable<TetranoRoute.SavedGameViewer> { SavedGameViewerRoute() }
         composable<TetranoRoute.Settings> { PlaceholderScreen("Settings") }
         composable<TetranoRoute.Rules> { PlaceholderScreen("Rules") }
         composable<TetranoRoute.WinningExamples> { PlaceholderScreen("Winning examples") }

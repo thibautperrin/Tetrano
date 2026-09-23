@@ -81,4 +81,5 @@
     <string name="i_begin">I begin</string>
     <string name="computer_begins">Computer begins</string>
     <string name="previous">Previous</string>
+    <string name="name_already_used">A saved game already has this name.</string>
 </resources>
