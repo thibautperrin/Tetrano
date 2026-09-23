@@ -1,32 +1,29 @@
 package fr.thibautperrin.tetrano.ui.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import fr.thibautperrin.tetrano.domain.model.GameMode
 import fr.thibautperrin.tetrano.ui.challenge.ChallengeRoute
 import fr.thibautperrin.tetrano.ui.game.GameRoute
 import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
+import fr.thibautperrin.tetrano.ui.rules.RulesRoute
+import fr.thibautperrin.tetrano.ui.rules.WinningExamplesRoute
 import fr.thibautperrin.tetrano.ui.savedgames.SavedGameViewerRoute
 import fr.thibautperrin.tetrano.ui.savedgames.SavedGamesRoute
+import fr.thibautperrin.tetrano.ui.settings.SettingsRoute
 import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
 import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
 
 /**
- * Wires every [TetranoRoute] to its screen. [TetranoRoute.Home],
- * [TetranoRoute.PlayMenu], [TetranoRoute.TwoPlayersSetup],
- * [TetranoRoute.ComputerSetup], [TetranoRoute.TwoPlayersGame] and
- * [TetranoRoute.ComputerGame] land in this commit (see docs/PLAN.md P8);
- * the rest stay placeholders for later ones.
+ * Wires every [TetranoRoute] to its screen (see docs/PLAN.md P8) — the
+ * last of the P8 screens, [TetranoRoute.Settings], [TetranoRoute.Rules]
+ * and [TetranoRoute.WinningExamples], land in this commit.
  */
 @Composable
 fun TetranoNavHost(
@@ -100,15 +97,12 @@ fun TetranoNavHost(
             )
         }
         composable<TetranoRoute.SavedGameViewer> { SavedGameViewerRoute() }
-        composable<TetranoRoute.Settings> { PlaceholderScreen("Settings") }
-        composable<TetranoRoute.Rules> { PlaceholderScreen("Rules") }
-        composable<TetranoRoute.WinningExamples> { PlaceholderScreen("Winning examples") }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(name: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "$name — coming in P8")
+        composable<TetranoRoute.Settings> { SettingsRoute() }
+        composable<TetranoRoute.Rules> {
+            RulesRoute(
+                onNavigateToWinningExamples = { navController.navigate(TetranoRoute.WinningExamples) },
+            )
+        }
+        composable<TetranoRoute.WinningExamples> { WinningExamplesRoute() }
     }
 }
