@@ -49,9 +49,8 @@
     <string name="Star_Won_Two_Players">Вы выигрываете звезду, потому что вы играли %1$d игр в режиме 2 игрока.</string>
     <string name="Star_Won_Against_Computer">Вы выигрываете звезду, потому что вы играли %1$d игр против компьютера.</string>
     <string name="Star_Won_Win_Against_Computer">Вы выигрываете звезду, потому что вы победили %1$d партий против компьютера (с уровнем верхней, чем 30).</string>
-    <string name="Star_Won_All_Games">Вы выигрываете звезду, потому что вы пытались все 4 основных режима игры.</string>
+    <string name="Star_Won_All_Games">Вы выигрываете звезду, потому что вы пытались все 3 основных режима игры.</string>
     <string name="Mot_Clignoter">мигать</string>
-    <string name="OK" translatable="false">OK</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml (P8 challenge/saved-games screens). -->
     <string name="Abandon_Challenge">сдаваться</string>
@@ -88,21 +87,13 @@
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="online_coming_soon">Онлайн (скоро)</string>
-    <string name="player1_name_label">Имя игрока 1</string>
-    <string name="player2_name_label">Имя игрока 2</string>
-    <string name="undo">Отменить</string>
-    <string name="restart">Начать заново</string>
-    <string name="i_begin">Я начинаю</string>
-    <string name="computer_begins">Компьютер начинает</string>
     <string name="previous">Предыдущий</string>
     <string name="name_already_used">Сохранённая игра с таким именем уже существует.</string>
 
-    <!-- WinningExamplesScreen captions (docs/PLAN.md P8): no legacy string
-         existed for these; vocabulary matches Long_Sentence_Rules above. -->
-    <string name="winning_example_concentric">Концентрический: 4 кольца разного размера в одной клетке</string>
-    <string name="winning_example_row_constant_size">Ряд: 4 кольца одинакового размера в одном ряду</string>
-    <string name="winning_example_column_constant_size">Колонка: 4 кольца одинакового размера в одной колонке</string>
-    <string name="winning_example_diagonal_constant_size">Диагональ: 4 кольца одинакового размера по диагонали</string>
-    <string name="winning_example_column_increasing_size">Колонка: 4 кольца возрастающего размера в одной колонке</string>
-    <string name="winning_example_diagonal_increasing_size">Диагональ: 4 кольца возрастающего размера по диагонали</string>
+    <!-- Restored from the 2015 app. -->
+    <string name="Play_Again">Играть снова</string>
+    <string name="Internal_Error">Внутренняя ошибка. Извините.</string>
+    <string name="Joueur1_Name">имя игрока1</string>
+    <string name="Joueur2_Name">имя игрока2</string>
+    <string name="Game_Of">Часть</string>
 </resources>

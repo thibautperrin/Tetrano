@@ -9,9 +9,9 @@ import javax.inject.Singleton
  * `VS_COMPUTER` game's setup that have nowhere else to live.
  *
  * [fr.thibautperrin.tetrano.ui.navigation.TetranoRoute.ComputerGame] only
- * carries a `savedGameName` (see docs/PLAN.md P8's fixed route shapes) —
- * unlike the legacy `Intent` bundle, it can't also carry who begins or,
- * when resuming a save, the possibly role-swapped colors (see
+ * carries a `savedGameName` and a `ringCount` (see docs/PLAN.md P8's fixed
+ * route shapes) — unlike the legacy `Intent` bundle, it can't also carry
+ * who begins or, when resuming a save, the possibly role-swapped colors (see
  * `JouerContreOrdiActivity`'s KDoc, ported in [ComputerSetupViewModel]).
  * The AI level and (for a *fresh* game) the user/adversary colors already
  * round-trip through [fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource]

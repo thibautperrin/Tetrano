@@ -69,6 +69,19 @@ class TetranoPreferencesDataSource @Inject constructor(
     suspend fun setPlayer2Name(name: String) = setString(Keys.PLAYER2_NAME, name)
     suspend fun setUserName(name: String) = setString(Keys.USER_NAME, name)
 
+    /**
+     * The settings screen's 3 values in one atomic write — ports
+     * `SettingsActivity.avantSortir()`: a null [userName] (the field was
+     * left empty) keeps the current name.
+     */
+    suspend fun setUserSettings(userName: String?, userColor: Int, adversaryColor: Int) {
+        dataStore.edit {
+            if (userName != null) it[Keys.USER_NAME] = userName
+            it[Keys.USER_COLOR] = userColor
+            it[Keys.ADVERSARY_COLOR] = adversaryColor
+        }
+    }
+
     suspend fun setAiLevel(level: Int) = setInt(Keys.AI_LEVEL, level)
     suspend fun setNumberStars(count: Int) = setInt(Keys.NUMBER_STARS, count)
 

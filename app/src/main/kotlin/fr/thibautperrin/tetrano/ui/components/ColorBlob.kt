@@ -1,13 +1,16 @@
 package fr.thibautperrin.tetrano.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
 
 /**
  * An irregular ink-blot shape filled with [color] — the settings screen's
@@ -19,7 +22,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun ColorBlob(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.then(Modifier.size(BLOB_DEFAULT_SIZE).aspectRatio(1f))) {
+    Canvas(modifier = modifier.aspectRatio(1f)) {
         val side = minOf(size.width, size.height)
         val path = Path().apply {
             moveTo(BLOB_POINTS_X.last() * side, BLOB_POINTS_Y.last() * side)
@@ -32,7 +35,24 @@ fun ColorBlob(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-private val BLOB_DEFAULT_SIZE = 48.dp
+/**
+ * The 8 selectable colors as one full-width row of equally sized square
+ * blobs — the legacy `button_tache_style` (`layout_weight = 1`), so the row
+ * always fits the screen width whatever its size.
+ */
+@Composable
+fun ColorBlobRow(onColorSelected: (Color) -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth()) {
+        for (option in TetranoRingColors.selectable) {
+            ColorBlob(
+                color = option,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(role = Role.Button) { onColorSelected(option) },
+            )
+        }
+    }
+}
 
 // Legacy TacheView.remplirTabPoints(), unchanged: fractions of the blob's
 // bounding square.

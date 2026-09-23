@@ -27,7 +27,8 @@ class AiService @Inject constructor(
      *   starting with player 1.
      * @param level AI difficulty, 0..100.
      * @param onProgress reports search progress at AI levels high enough
-     *   for a single move to take a noticeable time.
+     *   for a single move to take a noticeable time. Called on the search's
+     *   own thread (the [DefaultDispatcher]), not the caller's.
      *
      * Cancelling the calling coroutine stops the search at its next
      * checkpoint (see [AiProgress.isCancelled]) instead of leaving it to

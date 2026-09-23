@@ -7,12 +7,12 @@ package fr.thibautperrin.tetrano.ui.settings
  * [fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupUiModel].
  */
 data class SettingsUiModel(
-    val userName: String = "",
+    /** What the player typed; starts empty, like the legacy `editTextNomUtilisateur`. */
+    val userNameDraft: String = "",
+    /** The saved user name, shown as the field's hint; blank until one was saved (the screen then hints `User`). */
+    val currentUserName: String = "",
     val userColor: Int = DEFAULT_USER_COLOR,
     val adversaryColor: Int = DEFAULT_ADVERSARY_COLOR,
-    val isLoading: Boolean = true,
-    /** True right after [SettingsAction.SaveClicked] persists — the screen shows `Settings_Saved` and acknowledges it. */
-    val justSaved: Boolean = false,
 ) {
     companion object {
         // TetranoPreferencesDataSource.DefaultColors, unchanged.
@@ -25,6 +25,7 @@ sealed interface SettingsAction {
     data class UserNameChanged(val name: String) : SettingsAction
     data class UserColorSelected(val color: Int) : SettingsAction
     data class AdversaryColorSelected(val color: Int) : SettingsAction
+
+    /** Confirm, or Back: both save, then close the screen (`avantSortir()`). */
     data object SaveClicked : SettingsAction
-    data object SavedAcknowledged : SettingsAction
 }

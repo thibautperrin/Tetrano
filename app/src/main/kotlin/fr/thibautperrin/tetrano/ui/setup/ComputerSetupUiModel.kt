@@ -1,11 +1,16 @@
 package fr.thibautperrin.tetrano.ui.setup
 
+import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
+
+/**
+ * @param aiLevel the AI difficulty, [ComputerSetupViewModel.MIN_LEVEL]..[ComputerSetupViewModel.MAX_LEVEL]
+ *   (the legacy `seekBarLevel`).
+ * @param userBegins whether the user is the one to (re)start playing next —
+ *   the legacy "User" / "Computer" radio choice.
+ */
 data class ComputerSetupUiModel(
-    val isLoading: Boolean = true,
-    val aiLevel: Int = 10,
-    /** Whether the user is the one to (re)start playing next — the "commence"/"ne commence pas" radio choice. */
+    val aiLevel: Int = TetranoPreferencesDataSource.DEFAULT_AI_LEVEL,
     val userBegins: Boolean = true,
-    val isResumingSavedGame: Boolean = false,
 )
 
 sealed interface ComputerSetupAction {

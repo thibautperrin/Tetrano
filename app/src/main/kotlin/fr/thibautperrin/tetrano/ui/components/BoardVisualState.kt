@@ -2,8 +2,12 @@ package fr.thibautperrin.tetrano.ui.components
 
 import androidx.compose.ui.graphics.Color
 
-/** Which edge of the board the 4-ring tray sits along. Ports `orientationVerticale`. */
-enum class BoardOrientation { PORTRAIT, LANDSCAPE }
+/**
+ * Which edge of the board the 4-ring tray sits along (`orientationVerticale`),
+ * or [SQUARE]: grid only, no tray (`formeCarre`, used to watch a saved game
+ * and by the winning examples).
+ */
+enum class BoardOrientation { PORTRAIT, LANDSCAPE, SQUARE }
 
 /**
  * A ring animating in a straight line from the tray to its resting cell
@@ -27,8 +31,17 @@ data class BoardVisualState(
     val player2Color: Color,
     /** Rings not drawn this frame — the "off" half of a blink cycle. */
     val hiddenRings: Set<Int> = emptySet(),
-    /** 0 = no tray shown and no drag accepted; 1 or 2 = that player may drag from the tray. */
+    /**
+     * The tray's color: 1 or 2 = that player's, 0 = the empty-slot grey
+     * (legacy `couleur[0]`). A drag is only accepted from a 1/2 tray and
+     * when [dragEnabled].
+     */
     val trayPlayer: Int = 0,
+    /**
+     * False shows the tray in [trayPlayer]'s color without accepting a drag
+     * (legacy `deplacementAutorisee`), e.g. while the opponent's ring flies in.
+     */
+    val dragEnabled: Boolean = true,
     /** 0..360: how much of each tray ring is drawn — an AI-search progress indicator. 360 = whole ring. */
     val trayAngleDegrees: Float = 360f,
     val movingRing: MovingRing? = null,
@@ -41,6 +54,7 @@ data class BoardVisualState(
             player2Color == other.player2Color &&
             hiddenRings == other.hiddenRings &&
             trayPlayer == other.trayPlayer &&
+            dragEnabled == other.dragEnabled &&
             trayAngleDegrees == other.trayAngleDegrees &&
             movingRing == other.movingRing
     }
@@ -51,6 +65,7 @@ data class BoardVisualState(
         result = 31 * result + player2Color.hashCode()
         result = 31 * result + hiddenRings.hashCode()
         result = 31 * result + trayPlayer
+        result = 31 * result + dragEnabled.hashCode()
         result = 31 * result + trayAngleDegrees.hashCode()
         result = 31 * result + (movingRing?.hashCode() ?: 0)
         return result

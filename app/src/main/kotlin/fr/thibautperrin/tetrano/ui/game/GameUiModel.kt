@@ -7,10 +7,10 @@ import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
 /**
  * Everything [GameScreen] needs, one level up from [BoardVisualState]:
  * names are raw (possibly blank — the screen resolves a localized
- * fallback, exactly like [fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupScreen]'s
- * hints) so this stays free of Android string resources.
+ * fallback) so this stays free of Android string resources.
  */
 data class GameUiModel(
+    /** True until the game is set up: the title stays blank meanwhile. */
     val isLoading: Boolean = true,
     val board: BoardVisualState = BoardVisualState(
         rings = ByteArray(64),
@@ -19,29 +19,39 @@ data class GameUiModel(
     ),
     val player1Name: String = "",
     val player2Name: String = "",
+    val title: GameTitleState = GameTitleState(),
+    /** Star dialogs still to show, one at a time (`ApplicationTetrano.displayMessageStars`, once per award). */
+    val starDialogs: List<StarDialog> = emptyList(),
+    /** Show the `Internal_Error` toast once, then send [GameAction.InternalErrorShown]. */
+    val showInternalError: Boolean = false,
+    /** The screen leaves as soon as [starDialogs] is empty (`GestionJeu.sortir()` → `finish()`). */
+    val exitRequested: Boolean = false,
+)
+
+/**
+ * What the dynamic action-bar title (`mettreLeBonTitre`) is computed from.
+ * Kept apart from the board because the legacy code updated the title at
+ * its own moments (e.g. the end-of-game title only once the computer's
+ * winning ring has landed).
+ */
+data class GameTitleState(
     val nextPlayer: Int = 1,
     val playedCount: Int = 0,
-    val isBusy: Boolean = false,
     val isFinished: Boolean = false,
     val isDraw: Boolean = false,
     val winner: Int? = null,
-    val canUndo: Boolean = false,
-    val canBlink: Boolean = false,
-    val showSaveDialog: Boolean = false,
-    val saveNameDraft: String = "",
-    val lastSavedName: String? = null,
-    val starAwards: List<StarAward> = emptyList(),
 )
+
+/** One star dialog: [award]'s message, titled with the [starCount] reached once it was granted. */
+data class StarDialog(val award: StarAward, val starCount: Int)
 
 sealed interface GameAction {
     data class RingDropped(val ring: Int) : GameAction
-    data object RestartClicked : GameAction
-    data object UndoClicked : GameAction
+    data object PlayAgainClicked : GameAction
     data object BlinkClicked : GameAction
-    data object SaveClicked : GameAction
-    data class SaveNameChanged(val name: String) : GameAction
-    data object SaveConfirmed : GameAction
-    data object SaveDismissed : GameAction
-    data object StarAwardsDismissed : GameAction
-    data object SavedNameAcknowledged : GameAction
+    data object CancelClicked : GameAction
+    data class SaveConfirmed(val name: String) : GameAction
+    data object StarDialogDismissed : GameAction
+    data object InternalErrorShown : GameAction
+    data object BackPressed : GameAction
 }

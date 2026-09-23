@@ -5,14 +5,13 @@ import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
 
 /**
  * Everything [ChallengeScreen] needs, one level up from [BoardVisualState].
- * Unlike [fr.thibautperrin.tetrano.ui.game.GameUiModel], colors are fixed
- * (the legacy `ChallengeActivity` always drew the user in
- * [fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource]'s
- * user/adversary colors, refreshed from Settings — [ChallengeViewModel]
- * reads them once at start, same as the legacy `refreshSettings`).
+ * The user always plays [BoardVisualState.player1Color] and the computer
+ * [BoardVisualState.player2Color]: the user/adversary colors of
+ * [fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource], which
+ * [ChallengeViewModel] keeps observing so a change made in Settings applies
+ * on return (legacy `onActivityResult` → `refreshSettings`).
  */
 data class ChallengeUiModel(
-    val isLoading: Boolean = true,
     val board: BoardVisualState = BoardVisualState(
         rings = ByteArray(64),
         player1Color = TetranoRingColors.Red,
@@ -21,8 +20,9 @@ data class ChallengeUiModel(
     val level: Int = 1,
     val usedRings: Int = 0,
     val authorizedRings: Int = 0,
-    /** Ports `updateTextAndButton`'s visibility rule for the "give up" button. */
+    /** Ports `updateTextAndButton`'s visibility rule for the "give up" button (hidden, space kept, when false). */
     val canAbandon: Boolean = false,
+    /** Current star count, for the star dialogs' [fr.thibautperrin.tetrano.ui.components.StarBadge] titles. */
     val numberStars: Int = 0,
     /** 1 or 2, or null when no explanations dialog is shown. Ports `displayExplanations`'s 2-page flow. */
     val showExplanationsPage: Int? = null,
@@ -30,7 +30,7 @@ data class ChallengeUiModel(
     val showNoStarsMessage: Boolean = false,
     val showConfirmUseStar: Boolean = false,
     val endDialog: ChallengeEndDialog? = null,
-    /** Ports the "all 4 main modes tried" star, surfaced the same way [fr.thibautperrin.tetrano.ui.game.GameUiModel.starAwards] does. */
+    /** Ports the "all main modes tried" star message (`ApplicationTetrano.displayMessageStars`). */
     val showAllModesTriedAward: Boolean = false,
 )
 

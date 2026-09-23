@@ -46,9 +46,8 @@
     <string name="Star_Won_Two_Players">Vous gagnez une étoile car vous avez fait %1$d parties en mode 2 joueurs.</string>
     <string name="Star_Won_Against_Computer">Vous gagnez une étoile car vous avez fait %1$d parties contre l’ordinateur.</string>
     <string name="Star_Won_Win_Against_Computer">Vous gagnez une étoile car vous avez gagné %1$d partie contre l’ordinateur (avec des niveaux supérieurs à 30).</string>
-    <string name="Star_Won_All_Games">Vous gagnez une étoile car vous avez testé chacun des quatre modes de jeu.</string>
+    <string name="Star_Won_All_Games">Vous gagnez une étoile car vous avez testé chacun des trois modes de jeu.</string>
     <string name="Mot_Clignoter">Clignoter</string>
-    <string name="OK" translatable="false">OK</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-fr/strings.xml (P8 challenge/saved-games screens). -->
     <string name="Abandon_Challenge">Abandonner</string>
@@ -85,21 +84,13 @@
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="online_coming_soon">En ligne (bientôt disponible)</string>
-    <string name="player1_name_label">Nom du joueur 1</string>
-    <string name="player2_name_label">Nom du joueur 2</string>
-    <string name="undo">Annuler</string>
-    <string name="restart">Recommencer</string>
-    <string name="i_begin">Je commence</string>
-    <string name="computer_begins">L’ordinateur commence</string>
     <string name="previous">Précédent</string>
     <string name="name_already_used">Une partie sauvegardée porte déjà ce nom.</string>
 
-    <!-- WinningExamplesScreen captions (docs/PLAN.md P8): no legacy string
-         existed for these; vocabulary matches Long_Sentence_Rules above. -->
-    <string name="winning_example_concentric">Concentrique : 4 anneaux de tailles différentes dans la même case</string>
-    <string name="winning_example_row_constant_size">Ligne : 4 anneaux de la même taille sur une ligne</string>
-    <string name="winning_example_column_constant_size">Colonne : 4 anneaux de la même taille sur une colonne</string>
-    <string name="winning_example_diagonal_constant_size">Diagonale : 4 anneaux de la même taille sur une diagonale</string>
-    <string name="winning_example_column_increasing_size">Colonne : 4 anneaux de taille croissante sur une colonne</string>
-    <string name="winning_example_diagonal_increasing_size">Diagonale : 4 anneaux de taille croissante sur une diagonale</string>
+    <!-- Restored from the 2015 app. -->
+    <string name="Play_Again">Recommencer</string>
+    <string name="Internal_Error">Erreur interne. Désolé.</string>
+    <string name="Joueur1_Name">nom Joueur 1 ?</string>
+    <string name="Joueur2_Name">nom Joueur 2 ?</string>
+    <string name="Game_Of">Partie du</string>
 </resources>

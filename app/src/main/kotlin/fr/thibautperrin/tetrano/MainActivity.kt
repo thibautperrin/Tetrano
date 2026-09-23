@@ -1,15 +1,14 @@
 package fr.thibautperrin.tetrano
 
 import android.os.Bundle
+import android.graphics.Color
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
-import fr.thibautperrin.tetrano.ui.components.TetranoBackground
 import fr.thibautperrin.tetrano.ui.navigation.TetranoNavHost
 import fr.thibautperrin.tetrano.ui.theme.TetranoTheme
 
@@ -26,7 +25,9 @@ class MainActivity : ComponentActivity() {
         // integration contract.
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Light status-bar icons: every screen's top edge is dark (the legacy
+        // dark action bar, or the black fond_inverse collage).
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
         setContent {
             TetranoApp()
         }
@@ -36,8 +37,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun TetranoApp() {
     TetranoTheme {
-        TetranoBackground(modifier = Modifier.fillMaxSize()) {
-            TetranoNavHost()
-        }
+        TetranoNavHost()
     }
 }

@@ -22,18 +22,13 @@ import javax.inject.Inject
  * `onNext`/`getProchainJoueur` exactly: [SavedGameSummary.ringsPlayed]
  * replayed up to `cursor`, alternating from first-player color starting
  * with [SavedGameSummary.userBegins] — the same rule as
- * [SavedGameSummary.matrix], just stoppable partway through.
- *
- * The legacy activity's "play against computer"/"play 2 players" menu
- * (which resumed from the *current* cursor position, not the full saved
- * game) isn't reproduced here: per docs/PLAN.md P8's table, resuming a
- * saved game ("Continuer") is listed under [SavedGamesScreen]'s content,
- * not this screen's (whose column only lists the move-by-move replay) —
- * see [SavedGamesViewModel]'s KDoc for how that's wired instead.
+ * [SavedGameSummary.matrix], just stoppable partway through. The screen's
+ * resume menu (`menu_watch_saved_game`) resumes from that cursor: see
+ * [SavedGameViewerRoute]. The cursor survives process death.
  */
 @HiltViewModel
 class SavedGameViewerViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val savedGameService: SavedGameService,
 ) : ViewModel() {
     private val savedGameName: String = savedStateHandle.toRoute<TetranoRoute.SavedGameViewer>().savedGameName
@@ -41,7 +36,7 @@ class SavedGameViewerViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SavedGameViewerUiModel())
     val uiState: StateFlow<SavedGameViewerUiModel> = _uiState.asStateFlow()
 
-    private lateinit var game: SavedGameSummary
+    private var game: SavedGameSummary? = null
     private var cursor: Int = 0
 
     init {
@@ -52,33 +47,25 @@ class SavedGameViewerViewModel @Inject constructor(
                 return@launch
             }
             game = saved
-            cursor = saved.ringsPlayed.size
-            publish()
+            // The legacy activity opened on the last ring.
+            cursor = savedStateHandle.get<Int>(KEY_CURSOR)?.coerceIn(0, saved.ringsPlayed.size) ?: saved.ringsPlayed.size
+            publish(saved)
         }
     }
 
     fun onAction(action: SavedGameViewerAction) {
+        val game = game ?: return
         when (action) {
-            SavedGameViewerAction.PreviousClicked -> onPrevious()
-            SavedGameViewerAction.NextClicked -> onNext()
+            // WatchSavedGameActivity.onPrevious().
+            SavedGameViewerAction.PreviousClicked -> if (cursor > 0) cursor-- else return
+            // WatchSavedGameActivity.onNext().
+            SavedGameViewerAction.NextClicked -> if (cursor < game.ringsPlayed.size) cursor++ else return
         }
+        savedStateHandle[KEY_CURSOR] = cursor
+        publish(game)
     }
 
-    // WatchSavedGameActivity.onPrevious().
-    private fun onPrevious() {
-        if (cursor <= 0) return
-        cursor--
-        publish()
-    }
-
-    // WatchSavedGameActivity.onNext().
-    private fun onNext() {
-        if (cursor >= game.ringsPlayed.size) return
-        cursor++
-        publish()
-    }
-
-    private fun publish() {
+    private fun publish(game: SavedGameSummary) {
         val rings = ByteArray(64)
         var player: Byte = if (game.userBegins) 1 else 2
         for (i in 0 until cursor) {
@@ -96,9 +83,11 @@ class SavedGameViewerViewModel @Inject constructor(
                 ),
                 cursor = cursor,
                 totalMoves = game.ringsPlayed.size,
-                canGoPrevious = cursor > 0,
-                canGoNext = cursor < game.ringsPlayed.size,
             )
         }
+    }
+
+    private companion object {
+        const val KEY_CURSOR = "cursor"
     }
 }

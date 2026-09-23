@@ -433,12 +433,15 @@ SharedPreferences) dans `androidTest/assets`, import exécuté, vérification de
 ### P7 — UI socle
 
 1. **Thème** — Material 3, couleurs reprises de `colors.xml` (noir, gris, rouge, vert, bleu, vert clair,
-   violet, marron, orange, + couleurs de boutons), thème clair **et** sombre, typographie.
-2. **`TetranoBackground`** — remplace `fond_inverse.png` (321 Ko + 233 Ko en paysage + 40 Ko en small).
-   Le fond d'origine est un collage de grilles 4×4 inclinées et d'anneaux concentriques colorés sur fond
-   noir : il est **régénéré par programme** dans un `Canvas` (graine fixe → rendu stable, liste des
-   formes en `remember` → aucune allocation par frame), s'adapte à toute taille et orientation.
-   **Gain : ~600 Ko d'APK et tous les qualifiers de densité supprimés.**
+   violet, marron, orange, + couleurs de boutons), thème **clair uniquement** (comme l'original : pages
+   blanches, barre d'action sombre), typographie, et les `dimens.xml` d'origine par taille d'écran
+   (`LegacyDimens`) utilisés comme tailles maximales avec texte auto-ajusté (rien n'est jamais coupé).
+2. **`TetranoBackground`** — affiche `fond_inverse` (accueil et menu Jouer uniquement, comme l'original).
+   ~~Régénéré par programme~~ : la version générative ne ressemblait pas à l'original et la vectorisation
+   du collage (fines lignes de 1 px) ne le restitue pas fidèlement (1,2 Mo de tracés, lignes en
+   pointillés). **Repli retenu (cf. risques)** : les deux originaux (portrait 450×800, paysage 800×450)
+   en WebP sans perte, identiques au pixel près (245 Ko + 179 Ko), choisis selon la place disponible,
+   `ContentScale.Crop`.
 3. **`BoardCanvas`** — remplace `SurfaceGraphView` + `ThreadSurfaceGraphView` + `HandlerSurfaceGraphView`
    + `Dessin`. Un seul `Canvas` Compose :
    - coefficients de dessin **repris tels quels** de `StaticFields` (`thicknessBorderCoeff = 0.01262`,
@@ -491,14 +494,16 @@ joueur ayant commencé, exactement ce que faisait `SauvegardePartie`).
 
   | PNG d'origine | Remplacement |
   |---|---|
-  | `bouton_1_joueur`, `bouton_2_joueurs`, `bouton_challenge`, `bouton_partie_sauvegarde`, `bouton_jeu_online` | vector drawables (silhouettes noires : personnage, téléphone, trophée, sauvegarde, réseau) ou Material Symbols |
-  | `star`, `apply`, `reseau` | icônes Material / vector |
-  | `fond_inverse` (×3) | `TetranoBackground` génératif (§P7.2) |
+  | `bouton_1_joueur`, `bouton_2_joueurs`, `bouton_challenge`, `bouton_partie_sauvegarde`, `bouton_jeu_online` | vector drawables **tracés depuis les PNG d'origine** (potrace, calques par niveau de gris) : même dessin, format 2:1 |
+  | `star` | vector drawable redessiné (étoile dorée à dégradé radial, contour orangé) |
+  | `apply`, `reseau` | supprimés (utilisés seulement par le Bluetooth) |
+  | `fond_inverse` (×3) | WebP sans perte des originaux portrait/paysage (§P7.2) |
   | `bouton_jeu_bluetooth` | supprimé |
-  | `ic_launcher` | **icône adaptative** : `ic_launcher_foreground` vectoriel (grille + anneaux concentriques rouge/bleu du logo d'origine), fond uni, + couche `monochrome` pour les icônes thématiques Android 13+ |
+  | `ic_launcher` | **icône adaptative** reconstruite depuis l'original 150×150 : plateau incliné (−21,8°), lignes, cases et anneaux redessinés à partir de la géométrie mesurée, titre « Tetrano » et son ombre tracés depuis le bitmap ; placée dans la zone sûre de 66 dp sur fond blanc, + couche `monochrome` |
 
 - **Splash** : `androidx.core:core-splashscreen`.
-- Objectif : **aucun PNG/JPEG dans l'APK**, aucun qualifier `-small`/`-large`/`-land` de drawable.
+- Objectif : **aucun PNG/JPEG dans l'APK** (seul `fond_inverse` reste raster, en WebP), aucun qualifier
+  `-small`/`-large`/`-land` de drawable.
 
 ### P10 — Finition, perf, release
 
@@ -523,7 +528,7 @@ joueur ayant commencé, exactement ce que faisait `SauvegardePartie`).
 | A4 | Migration : parties, niveau challenge, étoiles, stats et réglages retrouvés | `androidTest` sur fixtures |
 | A5 | Rendu du plateau identique à l'original | comparaison visuelle sur captures 2015 / 2026 |
 | A6 | Rotation + mort de process sans perte de partie | test manuel + `SavedStateHandle` |
-| A7 | Aucun PNG dans l'APK, taille < 3 Mo | inspection de l'AAB |
+| A7 | Aucun PNG dans l'APK (hors `fond_inverse` en WebP), taille < 3 Mo | inspection de l'AAB |
 | A8 | `./gradlew build` vert, zéro warning Kotlin non justifié | build local |
 
 ---

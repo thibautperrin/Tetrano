@@ -1,11 +1,16 @@
 package fr.thibautperrin.tetrano.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
+/**
+ * The legacy app only ever had a light look (`Theme.AppCompat.Light.DarkActionBar`:
+ * white pages, dark action bar) — the rewrite keeps exactly that instead of
+ * following the system dark mode, which would repaint every screen and the
+ * board differently from the 2015 artwork.
+ */
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
     onPrimary = md_theme_light_onPrimary,
@@ -21,29 +26,12 @@ private val LightColors = lightColorScheme(
     onSurface = md_theme_light_onSurface,
 )
 
-private val DarkColors = darkColorScheme(
-    primary = md_theme_dark_primary,
-    onPrimary = md_theme_dark_onPrimary,
-    primaryContainer = md_theme_dark_primaryContainer,
-    onPrimaryContainer = md_theme_dark_onPrimaryContainer,
-    secondary = md_theme_dark_secondary,
-    onSecondary = md_theme_dark_onSecondary,
-    secondaryContainer = md_theme_dark_secondaryContainer,
-    onSecondaryContainer = md_theme_dark_onSecondaryContainer,
-    background = md_theme_dark_background,
-    onBackground = md_theme_dark_onBackground,
-    surface = md_theme_dark_surface,
-    onSurface = md_theme_dark_onSurface,
-)
-
 @Composable
-fun TetranoTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun TetranoTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
+        colorScheme = LightColors,
         typography = TetranoTypography,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalLegacyDimens provides rememberLegacyDimens(), content = content)
+    }
 }
