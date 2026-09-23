@@ -22,21 +22,27 @@ import java.io.FileOutputStream
  * `PRAGMA user_version = 1` database and runs [MIGRATION_1_2] exactly as
  * it would on a real user's upgrade.
  *
- * NOTE: requires a connected device or emulator to run (`androidTest`);
- * it has not been executed in the environment this was written in (no
- * emulator was available there — see docs/PLAN.md P4 and the commit
- * introducing this file).
+ * NOTE: requires a connected device or emulator to run (`androidTest`).
+ * Run on a physical device for docs/PLAN.md P10 (see that commit): caught
+ * and fixed a wrong-Context bug below that this test's introducing commit
+ * couldn't have found without one (see [instrumentation]'s KDoc).
  */
 class DatabaseMigrationTest {
 
     @Test
     fun migrationFromLegacySchemaPreservesSavedGamesAndAddsChallengeTable() = runBlocking {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
         val dbFile = context.getDatabasePath(TetranoDatabase.FILE_NAME)
         dbFile.parentFile?.mkdirs()
         if (dbFile.exists()) dbFile.delete()
 
-        context.assets.open("migration-test/savedGames-v1.db").use { input ->
+        // The fixture is packaged in the *androidTest* APK, not the app
+        // APK: it must be read through the instrumentation's own Context
+        // (`instrumentation.context`), not `targetContext` (the app under
+        // test, whose AssetManager only sees app/src/*/assets and would
+        // throw FileNotFoundException for a test-only asset).
+        instrumentation.context.assets.open("migration-test/savedGames-v1.db").use { input ->
             FileOutputStream(dbFile).use { output -> input.copyTo(output) }
         }
 
