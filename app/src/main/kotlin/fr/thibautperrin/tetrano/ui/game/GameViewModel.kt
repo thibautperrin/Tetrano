@@ -2,6 +2,7 @@ package fr.thibautperrin.tetrano.ui.game
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -45,11 +46,31 @@ import java.util.Date
  * undo/restart fly-out animation described in docs/PLAN.md P7.5 is out of
  * this commit's scope (only the two above are asked for) — undo and
  * restart apply instantly here.
+ *
+ * Process-death survival (docs/PLAN.md P8, acceptance criterion A6): unlike
+ * [ChallengeViewModel], which delegates to the already-persisted
+ * [fr.thibautperrin.tetrano.domain.service.ChallengeService], this
+ * ViewModel's [session] is purely in-memory ([GameSessionService] isn't
+ * backed by storage until an explicit [GameAction.SaveConfirmed]), so an
+ * in-progress game — including moves played past whatever [savedGameName]
+ * pointed at — would otherwise vanish if the process is killed while
+ * backgrounded. [savedStateHandle] mirrors [GameSessionService.playedRings]/
+ * [GameSessionService.startingPlayer] on every session state change
+ * ([persistSessionState]); [resolveSetup] prefers that mirror over
+ * [savedGameName]/[PendingComputerGameSetup] when present, exactly the way
+ * the legacy `SauvegardePartie` `Parcelable` reconstructed a game from its
+ * move list. Player colors/names still come from
+ * [TetranoPreferencesDataSource]/[savedGameService] on restore, same as a
+ * fresh screen entry — for a role-swapped [GameMode.VS_COMPUTER] resume,
+ * this matches [PendingComputerGameSetup]'s own documented degrade on
+ * process death (falls back to the preference defaults), rather than
+ * inventing a second persistence path for that edge case.
  */
 @HiltViewModel(assistedFactory = GameViewModel.Factory::class)
 class GameViewModel @AssistedInject constructor(
     @Assisted private val mode: GameMode,
     @Assisted private val savedGameName: String?,
+    private val savedStateHandle: SavedStateHandle,
     private val gameSessionFactory: GameSessionService.Factory,
     private val savedGameService: SavedGameService,
     private val starService: StarService,
@@ -104,39 +125,58 @@ class GameViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun resolveSetup(): ResolvedSetup = when (mode) {
-        GameMode.TWO_PLAYERS -> {
-            val saved = savedGameName?.let { savedGameService.get(it) }
-            ResolvedSetup(
-                initialMoves = saved?.ringsPlayed ?: ByteArray(0),
-                startingPlayer = if (saved == null || saved.userBegins) 1 else 2,
-                player1Color = saved?.userColor ?: preferences.player1Color.first(),
-                player2Color = saved?.adversaryColor ?: preferences.player2Color.first(),
-                player1Name = preferences.player1Name.first(),
-                player2Name = preferences.player2Name.first(),
-                aiLevel = 0,
-            )
+    private suspend fun resolveSetup(): ResolvedSetup {
+        val base = when (mode) {
+            GameMode.TWO_PLAYERS -> {
+                val saved = savedGameName?.let { savedGameService.get(it) }
+                ResolvedSetup(
+                    initialMoves = saved?.ringsPlayed ?: ByteArray(0),
+                    startingPlayer = if (saved == null || saved.userBegins) 1 else 2,
+                    player1Color = saved?.userColor ?: preferences.player1Color.first(),
+                    player2Color = saved?.adversaryColor ?: preferences.player2Color.first(),
+                    player1Name = preferences.player1Name.first(),
+                    player2Name = preferences.player2Name.first(),
+                    aiLevel = 0,
+                )
+            }
+            GameMode.VS_COMPUTER -> {
+                val pending = pendingComputerGameSetup.consume()
+                val saved = savedGameName?.let { savedGameService.get(it) }
+                ResolvedSetup(
+                    initialMoves = saved?.ringsPlayed ?: ByteArray(0),
+                    startingPlayer = if (pending.userBegins) 1 else 2,
+                    player1Color = pending.userColor ?: preferences.userColor.first(),
+                    player2Color = pending.adversaryColor ?: preferences.adversaryColor.first(),
+                    player1Name = preferences.userName.first(),
+                    player2Name = "",
+                    aiLevel = preferences.aiLevel.first(),
+                )
+            }
+            else -> error("GameScreen does not support $mode")
         }
-        GameMode.VS_COMPUTER -> {
-            val pending = pendingComputerGameSetup.consume()
-            val saved = savedGameName?.let { savedGameService.get(it) }
-            ResolvedSetup(
-                initialMoves = saved?.ringsPlayed ?: ByteArray(0),
-                startingPlayer = if (pending.userBegins) 1 else 2,
-                player1Color = pending.userColor ?: preferences.userColor.first(),
-                player2Color = pending.adversaryColor ?: preferences.adversaryColor.first(),
-                player1Name = preferences.userName.first(),
-                player2Name = "",
-                aiLevel = preferences.aiLevel.first(),
-            )
+        // Recovering from process death: the moves actually played this
+        // session (possibly more than what savedGameName/PendingComputerGameSetup
+        // knows about) take priority — see this class's KDoc.
+        val restoredMoves = savedStateHandle.get<ByteArray>(KEY_PLAYED_RINGS)
+        val restoredStartingPlayer = savedStateHandle.get<Int>(KEY_STARTING_PLAYER)
+        return if (restoredMoves != null && restoredStartingPlayer != null) {
+            base.copy(initialMoves = restoredMoves, startingPlayer = restoredStartingPlayer)
+        } else {
+            base
         }
-        else -> error("GameScreen does not support $mode")
+    }
+
+    private fun persistSessionState() {
+        if (!::session.isInitialized) return
+        savedStateHandle[KEY_PLAYED_RINGS] = session.playedRings()
+        savedStateHandle[KEY_STARTING_PLAYER] = session.startingPlayer()
     }
 
     private fun observeSession() {
         viewModelScope.launch {
             var previous: GameSessionState? = null
             session.state.collect { state ->
+                persistSessionState()
                 val aiJustMoved = mode == GameMode.VS_COMPUTER &&
                     previous?.isBusy == true &&
                     !state.isBusy &&
@@ -276,5 +316,7 @@ class GameViewModel @AssistedInject constructor(
         const val MOVE_IN_STEPS = 40
         const val BLINK_CYCLES = 5
         const val BLINK_PERIOD_MS = 400L
+        const val KEY_PLAYED_RINGS = "game_played_rings"
+        const val KEY_STARTING_PLAYER = "game_starting_player"
     }
 }
