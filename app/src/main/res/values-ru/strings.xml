@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Tetrano</string>
+
+    <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml, except
+         Long_Sentence_About: the legacy file left this string in French (a leftover
+         copy-paste from values-fr/strings.xml) instead of translating it; fixed here. -->
+    <string name="Play">играть</string>
+    <string name="About">кстати</string>
+    <string name="Long_Sentence_About">Приложение разработано Тибо Перреном по мотивам настольной игры, придуманной Максимом Виалем в 2004 году.</string>
+    <string name="action_settings">настройки</string>
+    <string name="Rules_Of_Game">Правила игры</string>
+    <string name="Long_Sentence_Rules">Тетрано-это игра для двоих.\n
+        Последовательно игроки распологаються на кольце на сетке,цель собрать серию из четырёх колец одно цвета.\n
+        Эта серия может быть :\n
+        -концентрической : 4 кольца различного размера находятся в одной клетке\n
+        -линейной : 4 кольца либо одинакового размера либо расположенны в порядке увеличения или в порядке уменьшения размера находятся на одной линии, колонке, диагонали.\n
+        Игра заканчивается когда один из участников получает серию из четырёх колец цвета,которой он выбрал в начале.\n
+        Чтобы сыграть в кольцо,нажмите на это кольцо,потом на клетку,на которую вы желаете его поставить.\n
+        Удачи!\n
+    </string>
+    <string name="Winning_Situation_Example">Победа примеры ситуации</string>
+    <string name="User">пользователь</string>
+    <string name="User_Name">Имя пользователя</string>
+    <string name="User_Color">цвет пользователя</string>
+    <string name="Adversary_Color">противник цвет</string>
+    <string name="Two_Players">2 игроков</string>
+    <string name="One_Player">1 игрок</string>
+    <string name="Saved_Games">сохраненные игры</string>
+    <string name="Challenge">вызов</string>
+    <string name="Joueur1">игрок1</string>
+    <string name="Joueur2">игрок2</string>
+    <string name="Level">уровень</string>
+    <string name="Who_Begins">Кто начнет?</string>
+    <string name="Save_The_Game">Сохранить игру</string>
+    <string name="Enter_A_Name">Введите имя</string>
+    <string name="Cancel">отменить</string>
+    <string name="Settings_Saved">Параметры сохраняются</string>
+    <string name="Explanation_Star">Вы можете использовать звезду в режиме вызов для намека, когда вы заблокированы.</string>
+    <string name="Sentence_End_Null">Игра закончилась. Нет победителем.</string>
+    <string name="Sentence_End_Win">Вы выиграли!</string>
+    <string name="Sentence_End_Lost">Вы потеряли.</string>
+    <string name="Winner">Победитель</string>
+    <string name="Sentence_Begin_Start">Начиная: Вы можете начать играть.</string>
+    <string name="Your_Turn">Это ваша очередь.</string>
+    <string name="Sentence_Computer_Work">Компьютер играет</string>
+    <string name="You_Can_Start">, Вы можете начать.</string>
+    <string name="Computer">компьютер</string>
+    <string name="Star_Won_Two_Players">Вы выигрываете звезду, потому что вы играли %1$d игр в режиме 2 игрока.</string>
+    <string name="Star_Won_Against_Computer">Вы выигрываете звезду, потому что вы играли %1$d игр против компьютера.</string>
+    <string name="Star_Won_Win_Against_Computer">Вы выигрываете звезду, потому что вы победили %1$d партий против компьютера (с уровнем верхней, чем 30).</string>
+    <string name="Star_Won_All_Games">Вы выигрываете звезду, потому что вы пытались все 4 основных режима игры.</string>
+    <string name="Mot_Clignoter">мигать</string>
+    <string name="OK" translatable="false">OK</string>
+
+    <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml (P8 challenge/saved-games screens). -->
+    <string name="Abandon_Challenge">сдаваться</string>
+    <string name="Quit">Выйти</string>
+    <string name="Abandoned">заброшенный</string>
+    <string name="Try_Again">Попробуй еще раз</string>
+    <string name="Go_To_Next_Level">Перейти на следующий уровень</string>
+    <string name="You_Lost_At_Level">Вы потеряли на уровне </string>
+    <string name="You_Passed_Level">Вы прошли уровень</string>
+    <string name="Computer_Won_Before">Компьютер выиграл перед вами!</string>
+    <string name="Sentence_Number_Rings">Вы не сумели использовать выделенное количество колец.</string>
+    <string name="Explanation_Rings_Number">В режиме вызова, вы должны выиграть, используя ограниченное количество колец.</string>
+    <string name="In_This_Level">В этом уровне:</string>
+    <string name="Number_Of_Rings_Allowed">Уполномоченный количество колец:</string>
+    <string name="Rings_used">Кольца используются</string>
+    <string name="Explanations_Challenge1">Добро пожаловать в режиме Challenge,\n\nВ этом режиме, вы начинаете с начавшейся игре, и вы можете использовать только ограниченное количество колец, чтобы выиграть. Если вы не выиграть игру с этого ограниченного числа, вы проиграете. Если вы выиграли игру, используя большое количество колец, вы выиграете и вы можете перейти к следующему уровню.</string>
+    <string name="Explanations_Challenge2">Если уровень кажется слишком трудным, вы можете передать его. Для этого вам нужно использовать одну из ваших звезд.</string>
+    <string name="Next">Следующий</string>
+    <string name="Explanations">Пояснения</string>
+    <string name="Use_Star">Используйте звезду, чтобы получить ключ</string>
+    <string name="No_More_Stars">У вас больше нет звёзд.\n\nЧтобы заработать новые звёзды, играйте в режиме на 2 игроков, против компьютера и в режиме вызов.</string>
+    <string name="Sentence_Confirm_Use_Star">Вы действительно хотите использовать один из ваших звезд, чтобы получить ключ?</string>
+    <string name="All_Levels_Passed">Вам удалось все уровни. Вы закончили режим вызов!</string>
+    <string name="Sentence_No_Saved_Game">Вы не имеют никаких сохраненных игр.</string>
+    <string name="Watch">Визуализируйте</string>
+    <string name="Delete">удалить</string>
+    <string name="Rename">переименовать</string>
+    <string name="Confirm">подтвердить</string>
+    <string name="Rename_A_Saved_Game">Переименовать сохраненную игру</string>
+    <string name="Sentence_Confirm_Delete_Game">Действительно удалить сохраненную игру?</string>
+    <string name="Continue_In_Two_Players_Mode">Продолжить партию в 2 игрока режиме</string>
+    <string name="Continue_Against_Computer">Продолжить игру против компьютера</string>
+    <string name="Ring">кольцо</string>
+
+    <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
+    <string name="online_coming_soon">Онлайн (скоро)</string>
+    <string name="player1_name_label">Имя игрока 1</string>
+    <string name="player2_name_label">Имя игрока 2</string>
+    <string name="undo">Отменить</string>
+    <string name="restart">Начать заново</string>
+    <string name="i_begin">Я начинаю</string>
+    <string name="computer_begins">Компьютер начинает</string>
+    <string name="previous">Предыдущий</string>
+    <string name="name_already_used">Сохранённая игра с таким именем уже существует.</string>
+
+    <!-- WinningExamplesScreen captions (docs/PLAN.md P8): no legacy string
+         existed for these; vocabulary matches Long_Sentence_Rules above. -->
+    <string name="winning_example_concentric">Концентрический: 4 кольца разного размера в одной клетке</string>
+    <string name="winning_example_row_constant_size">Ряд: 4 кольца одинакового размера в одном ряду</string>
+    <string name="winning_example_column_constant_size">Колонка: 4 кольца одинакового размера в одной колонке</string>
+    <string name="winning_example_diagonal_constant_size">Диагональ: 4 кольца одинакового размера по диагонали</string>
+    <string name="winning_example_column_increasing_size">Колонка: 4 кольца возрастающего размера в одной колонке</string>
+    <string name="winning_example_diagonal_increasing_size">Диагональ: 4 кольца возрастающего размера по диагонали</string>
+</resources>

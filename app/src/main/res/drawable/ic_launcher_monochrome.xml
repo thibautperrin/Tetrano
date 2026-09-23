@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Placeholder monochrome launcher layer (P1 bootstrap), used by themed icons
-  on Android 13+. The system tints this to a single color, so only the
-  silhouette (not the colors) matters. Redrawn alongside the rest of the
-  launcher icon in phase P9.
+  Monochrome launcher layer (P9, Android 13+ themed icons): same grid + ring
+  silhouette as ic_launcher_foreground.xml; a single color since the system
+  applies its own tint to this layer.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -12,10 +11,28 @@
     android:viewportHeight="108">
     <path
         android:strokeColor="#FF000000"
-        android:strokeWidth="6"
-        android:pathData="M54,30 a24,24 0 1,0 0.1,0 z" />
+        android:strokeWidth="2.2"
+        android:pathData="
+            M21,21 L87,21 L87,87 L21,87 Z
+            M37.5,21 L37.5,87
+            M54,21 L54,87
+            M70.5,21 L70.5,87
+            M21,37.5 L87,37.5
+            M21,54 L87,54
+            M21,70.5 L87,70.5" />
     <path
         android:strokeColor="#FF000000"
-        android:strokeWidth="6"
-        android:pathData="M54,42 a12,12 0 1,0 0.1,0 z" />
+        android:strokeWidth="2.6"
+        android:pathData="
+            M45.75,39.35 a6.4,6.4 0 1,0 0.1,0 z
+            M62.25,39.35 a6.4,6.4 0 1,0 0.1,0 z
+            M29.25,72.35 a6.4,6.4 0 1,0 0.1,0 z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.2"
+        android:pathData="
+            M45.75,42.55 a3.2,3.2 0 1,0 0.1,0 z
+            M62.25,42.55 a3.2,3.2 0 1,0 0.1,0 z
+            M29.25,75.55 a3.2,3.2 0 1,0 0.1,0 z
+            M78.75,24.85 a4.4,4.4 0 1,0 0.1,0 z" />
 </vector>

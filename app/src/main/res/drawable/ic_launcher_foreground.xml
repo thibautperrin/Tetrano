@@ -1,20 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Placeholder launcher foreground (P1 bootstrap): a simple concentric-rings
-  motif standing in for the real vector identity redrawn in phase P9 from
-  the legacy ic_launcher.png (see seed_assets/README.md).
+  Launcher foreground (P9): the legacy logo's 4x4 grid + concentric red/blue
+  rings (see seed_assets/ic_launcher_legacy_reference.png, now removed),
+  redrawn as flat vector paths using the same grid/ring motif
+  TetranoBackground.kt draws generatively for the in-app background.
+  Centered in the 66dp adaptive-icon safe zone (grid spans 21..87 of 108).
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- 4x4 board grid, olive to match the legacy artwork. -->
     <path
-        android:strokeColor="#FF2196F3"
-        android:strokeWidth="6"
-        android:pathData="M54,30 a24,24 0 1,0 0.1,0 z" />
+        android:strokeColor="#FFC8A94A"
+        android:strokeWidth="2.2"
+        android:pathData="
+            M21,21 L87,21 L87,87 L21,87 Z
+            M37.5,21 L37.5,87
+            M54,21 L54,87
+            M70.5,21 L70.5,87
+            M21,37.5 L87,37.5
+            M21,54 L87,54
+            M21,70.5 L87,70.5" />
+    <!-- Outer (red) rings of 3 concentric pairs. -->
     <path
-        android:strokeColor="#FFE53935"
-        android:strokeWidth="6"
-        android:pathData="M54,42 a12,12 0 1,0 0.1,0 z" />
+        android:strokeColor="#FFB3261E"
+        android:strokeWidth="2.6"
+        android:pathData="
+            M45.75,39.35 a6.4,6.4 0 1,0 0.1,0 z
+            M62.25,39.35 a6.4,6.4 0 1,0 0.1,0 z
+            M29.25,72.35 a6.4,6.4 0 1,0 0.1,0 z" />
+    <!-- Inner (blue) rings of the same 3 pairs, plus one standalone ring. -->
+    <path
+        android:strokeColor="#FF0B57D0"
+        android:strokeWidth="2.2"
+        android:pathData="
+            M45.75,42.55 a3.2,3.2 0 1,0 0.1,0 z
+            M62.25,42.55 a3.2,3.2 0 1,0 0.1,0 z
+            M29.25,75.55 a3.2,3.2 0 1,0 0.1,0 z
+            M78.75,24.85 a4.4,4.4 0 1,0 0.1,0 z" />
 </vector>

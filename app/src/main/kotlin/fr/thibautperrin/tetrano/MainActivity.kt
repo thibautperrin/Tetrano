@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import fr.thibautperrin.tetrano.ui.components.TetranoBackground
 import fr.thibautperrin.tetrano.ui.navigation.TetranoNavHost
@@ -19,6 +20,11 @@ import fr.thibautperrin.tetrano.ui.theme.TetranoTheme
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Must run before super.onCreate()/setContent (see docs/PLAN.md P9):
+        // it reads the Theme.Tetrano splash attributes and keeps the splash
+        // visible until the first Compose frame, per the core-splashscreen
+        // integration contract.
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

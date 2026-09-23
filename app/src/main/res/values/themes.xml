@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-      Placeholder launch theme (P1 bootstrap). The real Material 3 Compose
-      theme (light + dark, colors ported from the legacy colors.xml) is
-      built in phase P7 — see docs/PLAN.md.
+      Theme.Tetrano (P9) parents Theme.SplashScreen from
+      androidx.core:core-splashscreen so it can be set directly as
+      android:theme on both <application> and MainActivity: the library
+      paints windowSplashScreenBackground/Icon until
+      installSplashScreen() — called in MainActivity.onCreate before
+      super.onCreate/setContent — hands off to postSplashScreenTheme.
+      windowSplashScreenBackground is qualified for dark mode in
+      values-night/colors.xml; the actual Material 3 theming (light + dark)
+      lives in Compose (ui/theme/Theme.kt, P7), so postSplashScreenTheme
+      only needs to be a valid, minimal window host until setContent runs.
     -->
-    <style name="Theme.Tetrano" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Tetrano" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.Tetrano.Main</item>
+    </style>
+
+    <style name="Theme.Tetrano.Main" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>
