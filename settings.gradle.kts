@@ -25,4 +25,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Tetrano"
-include(":app", ":engine")
+include(":app", ":engine", ":selfplay")
