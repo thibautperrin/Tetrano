@@ -14,6 +14,9 @@ package fr.thibautperrin.tetrano.engine.ai
 enum class AiSearchPhase {
     SEARCHING_FORK,
     BLOCKING_FORK,
+
+    /** The level-101 neural search ([fr.thibautperrin.tetrano.engine.nn.NeuralPlayer]): the whole move in one phase. */
+    NEURAL_SEARCH,
 }
 
 /**
