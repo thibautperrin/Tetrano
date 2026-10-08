@@ -103,12 +103,14 @@ class GumbelMcts(
      * opponent [theirs], with at most [simulations] simulations and until
      * [deadlineNanos] (`System.nanoTime()` scale). [onSimulation] is called
      * after each simulation with (done, budget) and may return false to stop.
+     * [noise] overrides [Config.gumbelNoise] for this search.
      */
     fun search(
         mine: Long,
         theirs: Long,
         simulations: Int,
         deadlineNanos: Long = Long.MAX_VALUE,
+        noise: Boolean = config.gumbelNoise,
         onSimulation: ((Int, Int) -> Boolean)? = null,
     ): Result {
         val root = Node(mine, theirs)
@@ -118,7 +120,7 @@ class GumbelMcts(
         }
 
         val k = root.moves.size
-        val gumbel = FloatArray(k) { if (config.gumbelNoise) sampleGumbel() else 0f }
+        val gumbel = FloatArray(k) { if (noise) sampleGumbel() else 0f }
         val m = minOf(config.maxConsidered, k)
         var remaining = (0 until k).sortedByDescending { gumbel[it] + root.logits[it] }.take(m).toIntArray()
         val phases = max(1, ceil(ln(m.toDouble()) / ln(2.0)).toInt())

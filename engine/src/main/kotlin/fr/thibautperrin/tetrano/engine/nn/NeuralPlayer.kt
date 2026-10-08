@@ -19,8 +19,10 @@ class Position(val mine: Long, val theirs: Long) {
 }
 
 /**
- * The level-101 player: [GumbelMcts] guided by [QubicNet], deterministic,
- * with a thinking-time budget. Plays either side.
+ * The level-101 player: [GumbelMcts] guided by [QubicNet], with a
+ * thinking-time budget. Plays either side. Deterministic except for its
+ * first moves, sampled (Gumbel noise) among the best ones so that openings
+ * vary from game to game.
  *
  * The simulation count is derived from the budget and a running estimate
  * of the time one simulation takes on this device, so sequential halving
@@ -31,6 +33,8 @@ class NeuralPlayer(
     net: QubicNet,
     private val maxSimulations: Int = 3000,
     private val minSimulations: Int = 32,
+    /** Moves played with Gumbel noise at the start of a game, so the openings vary. */
+    private val variedOpeningPlies: Int = 4,
 ) {
     private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false))
     private var nanosPerSimulation = 0.0
@@ -53,6 +57,7 @@ class NeuralPlayer(
             position.theirs,
             simulations,
             deadlineNanos = start + 2 * budgetNanos,
+            noise = movesPlayed.size < variedOpeningPlies,
         ) { done, total ->
             progress?.onProgress(AiSearchPhase.NEURAL_SEARCH, done, total)
             progress?.isCancelled() != true
