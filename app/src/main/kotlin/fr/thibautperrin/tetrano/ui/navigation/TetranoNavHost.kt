@@ -10,6 +10,7 @@ import androidx.navigation.toRoute
 import fr.thibautperrin.tetrano.domain.model.GameMode
 import fr.thibautperrin.tetrano.ui.challenge.ChallengeRoute
 import fr.thibautperrin.tetrano.ui.game.GameRoute
+import fr.thibautperrin.tetrano.ui.game.ReviewRequest
 import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
 import fr.thibautperrin.tetrano.ui.rules.RulesRoute
@@ -29,6 +30,15 @@ import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
  *   legacy `RESULT_CODE_LEAVE` chain closed the saved-games list, the
  *   viewer and the setup screen).
  */
+/** The review screen for a game that just ended. */
+private fun ReviewRequest.toRoute() = TetranoRoute.SavedGameViewer(
+    rings = rings,
+    userBegins = userBegins,
+    userColor = userColor,
+    adversaryColor = adversaryColor,
+    analyse = true,
+)
+
 @Composable
 fun TetranoNavHost(
     navController: NavHostController = rememberNavController(),
@@ -78,6 +88,7 @@ fun TetranoNavHost(
                 ringCount = route.ringCount,
                 onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
                 onExit = { navController.popBackStack() },
+                onReview = { navController.navigate(it.toRoute()) },
             )
         }
         composable<TetranoRoute.ComputerGame> { backStackEntry ->
@@ -88,6 +99,7 @@ fun TetranoNavHost(
                 ringCount = route.ringCount,
                 onNavigateToSettings = { navController.navigate(TetranoRoute.Settings) },
                 onExit = { navController.popBackStack() },
+                onReview = { navController.navigate(it.toRoute()) },
             )
         }
         composable<TetranoRoute.Challenge> {

@@ -86,4 +86,18 @@
     <string name="Joueur1_Name">Nome giocatore1?</string>
     <string name="Joueur2_Name">Nome giocatore2?</string>
     <string name="Game_Of">Parte del</string>
+    <string name="Analyse_Game">Analizza la partita</string>
+    <string name="Review_Game">Rivedi la partita</string>
+    <string name="Analysing">Analisi in corso…</string>
+    <string name="Draw_Short">Patta</string>
+    <string name="Verdict_Best">Mossa migliore</string>
+    <string name="Verdict_Good">Buona mossa</string>
+    <string name="Verdict_Inaccuracy">Imprecisione</string>
+    <string name="Verdict_Mistake">Errore</string>
+    <string name="Verdict_Blunder">Errore grave</string>
+    <string name="Verdict_Missed_Win">Vittoria forzata mancata</string>
+    <string name="Verdict_Allowed_Win">Vittoria forzata concessa</string>
+    <string name="Previous_Mistake">Errore precedente</string>
+    <string name="Next_Mistake">Errore successivo</string>
+    <string name="Level_Neural">rete neurale</string>
 </resources>

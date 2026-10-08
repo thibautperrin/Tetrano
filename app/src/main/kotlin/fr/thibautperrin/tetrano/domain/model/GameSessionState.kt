@@ -71,7 +71,8 @@ data class AiProgressState(
 ) {
     /**
      * The legacy tray arc (`HandlerIntelligence.handleMessage`): 0..180° while
-     * searching for a fork, 180..360° while looking for one to block.
+     * searching for a fork, 180..360° while looking for one to block; the
+     * level-101 neural search fills the whole circle.
      */
     val trayAngleDegrees: Float
         get() {
@@ -79,6 +80,7 @@ data class AiProgressState(
             return when (phase) {
                 AiSearchPhase.SEARCHING_FORK -> fraction * 180f
                 AiSearchPhase.BLOCKING_FORK -> 180f + fraction * 180f
+                AiSearchPhase.NEURAL_SEARCH -> fraction * 360f
             }
         }
 }

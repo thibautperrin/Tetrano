@@ -1,5 +1,6 @@
 package fr.thibautperrin.tetrano.domain.service
 
+import fr.thibautperrin.tetrano.data.assets.NeuralNets
 import fr.thibautperrin.tetrano.domain.model.AiProgressState
 import fr.thibautperrin.tetrano.domain.model.GameMode
 import fr.thibautperrin.tetrano.domain.model.GameSessionEvent
@@ -28,7 +29,14 @@ class GameSessionServiceTest {
     // virtual time control. A StandardTestDispatcher keeps the search
     // pending until the scheduler runs it, so a test can act "while the
     // computer thinks".
-    private fun TestScope.factory() = GameSessionService.Factory(AiService(StandardTestDispatcher(testScheduler)))
+    private fun TestScope.factory() = GameSessionService.Factory(
+        AiService(
+            StandardTestDispatcher(testScheduler),
+            object : NeuralNets {
+                override val net get() = error("level 101 is not used in these tests")
+            },
+        ),
+    )
 
     private fun TestScope.collectEvents(session: GameSessionService): List<GameSessionEvent> {
         val events = mutableListOf<GameSessionEvent>()

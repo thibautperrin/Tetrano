@@ -113,6 +113,12 @@ fun BoardCanvas(
                 drawPlacedRing(side, colorFor(player, state, emptyRingColor), ring)
             }
 
+            state.ghostRing?.let { ghost ->
+                if (state.rings[ghost.ringNumber].toInt() == 0) {
+                    drawPlacedRing(side, colorFor(ghost.player, state, emptyRingColor).copy(alpha = GHOST_ALPHA), ghost.ringNumber)
+                }
+            }
+
             if (showTray) {
                 drawTray(side, colorFor(state.trayPlayer, state, emptyRingColor), vertical, state.trayAngleDegrees)
             }
@@ -129,6 +135,9 @@ fun BoardCanvas(
         }
     }
 }
+
+/** Opacity of a [GhostRing]. */
+private const val GHOST_ALPHA = 0.45f
 
 private fun colorFor(player: Int, state: BoardVisualState, empty: Color): Color = when (player) {
     1 -> state.player1Color

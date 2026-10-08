@@ -151,6 +151,8 @@ class GameViewModel @AssistedInject constructor(
             GameAction.PlayAgainClicked -> ifReady { restart() }
             GameAction.CancelClicked -> ifReady { undo() }
             GameAction.BlinkClicked -> ifReady { startBlink(session.blinkingRings()) }
+            GameAction.ReviewClicked -> ifReady { requestReview() }
+            GameAction.ReviewHandled -> _uiState.update { it.copy(reviewRequest = null) }
             is GameAction.SaveConfirmed -> ifReady { save(action.name) }
             GameAction.StarDialogDismissed -> _uiState.update { it.copy(starDialogs = it.starDialogs.drop(1)) }
             GameAction.InternalErrorShown -> _uiState.update { it.copy(showInternalError = false) }
@@ -445,6 +447,17 @@ class GameViewModel @AssistedInject constructor(
                     )
                 }
             }
+    }
+
+    /** Asks the screen to open the review of the game, with the same player mapping as [save]. */
+    private fun requestReview() {
+        val request = ReviewRequest(
+            rings = session.playedRings().joinToString(","),
+            userBegins = session.startingPlayer() == 1,
+            userColor = player1Color.toArgb(),
+            adversaryColor = player2Color.toArgb(),
+        )
+        _uiState.update { it.copy(reviewRequest = request) }
     }
 
     /** `sauvegarderPartiePourPlusTard`: silent, a taken name gets a " (n)" suffix. */

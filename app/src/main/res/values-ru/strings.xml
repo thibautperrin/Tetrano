@@ -96,4 +96,18 @@
     <string name="Joueur1_Name">имя игрока1</string>
     <string name="Joueur2_Name">имя игрока2</string>
     <string name="Game_Of">Часть</string>
+    <string name="Analyse_Game">Анализировать партию</string>
+    <string name="Review_Game">Просмотреть партию</string>
+    <string name="Analysing">Анализ…</string>
+    <string name="Draw_Short">Ничья</string>
+    <string name="Verdict_Best">Лучший ход</string>
+    <string name="Verdict_Good">Хороший ход</string>
+    <string name="Verdict_Inaccuracy">Неточность</string>
+    <string name="Verdict_Mistake">Ошибка</string>
+    <string name="Verdict_Blunder">Грубая ошибка</string>
+    <string name="Verdict_Missed_Win">Упущена форсированная победа</string>
+    <string name="Verdict_Allowed_Win">Допущена форсированная победа</string>
+    <string name="Previous_Mistake">Предыдущая ошибка</string>
+    <string name="Next_Mistake">Следующая ошибка</string>
+    <string name="Level_Neural">нейросеть</string>
 </resources>

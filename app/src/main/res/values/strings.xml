@@ -96,4 +96,18 @@
     <string name="Joueur1_Name">Joueur 1 name ?</string>
     <string name="Joueur2_Name">Joueur 2 name ?</string>
     <string name="Game_Of">Game of</string>
+    <string name="Analyse_Game">Analyse the game</string>
+    <string name="Review_Game">Review the game</string>
+    <string name="Analysing">Analysing…</string>
+    <string name="Draw_Short">Draw</string>
+    <string name="Verdict_Best">Best move</string>
+    <string name="Verdict_Good">Good move</string>
+    <string name="Verdict_Inaccuracy">Inaccuracy</string>
+    <string name="Verdict_Mistake">Mistake</string>
+    <string name="Verdict_Blunder">Blunder</string>
+    <string name="Verdict_Missed_Win">Missed a forced win</string>
+    <string name="Verdict_Allowed_Win">Allowed a forced win</string>
+    <string name="Previous_Mistake">Previous mistake</string>
+    <string name="Next_Mistake">Next mistake</string>
+    <string name="Level_Neural">neural network</string>
 </resources>
