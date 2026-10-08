@@ -26,6 +26,8 @@ data class GameUiModel(
     val showInternalError: Boolean = false,
     /** The screen leaves as soon as [starDialogs] is empty (`GestionJeu.sortir()` → `finish()`). */
     val exitRequested: Boolean = false,
+    /** Set by [GameAction.ReviewClicked]: the finished game to open in the review screen, once. */
+    val reviewRequest: ReviewRequest? = null,
 )
 
 /**
@@ -45,10 +47,20 @@ data class GameTitleState(
 /** One star dialog: [award]'s message, titled with the [starCount] reached once it was granted. */
 data class StarDialog(val award: StarAward, val starCount: Int)
 
+/**
+ * A game to review: [rings] in play order, comma-separated; [userBegins] and the colors follow
+ * the saved-game convention (player 1 is the user, drawn in [userColor]).
+ */
+data class ReviewRequest(val rings: String, val userBegins: Boolean, val userColor: Int, val adversaryColor: Int)
+
 sealed interface GameAction {
     data class RingDropped(val ring: Int) : GameAction
     data object PlayAgainClicked : GameAction
     data object BlinkClicked : GameAction
+
+    /** Replaces Blink once the game is over: opens the level-101 review of this game. */
+    data object ReviewClicked : GameAction
+    data object ReviewHandled : GameAction
     data object CancelClicked : GameAction
     data class SaveConfirmed(val name: String) : GameAction
     data object StarDialogDismissed : GameAction

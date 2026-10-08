@@ -41,8 +41,20 @@ sealed interface TetranoRoute {
     @Serializable
     data object SavedGames : TetranoRoute
 
+    /**
+     * Watches a saved game ([savedGameName]) or, for a game that was not saved (reviewing a game
+     * that just ended), the game given by [rings] (ring numbers, comma-separated, in play order)
+     * and its players' colors. [analyse] starts the level-101 review right away.
+     */
     @Serializable
-    data class SavedGameViewer(val savedGameName: String) : TetranoRoute
+    data class SavedGameViewer(
+        val savedGameName: String? = null,
+        val rings: String? = null,
+        val userBegins: Boolean = true,
+        val userColor: Int = 0,
+        val adversaryColor: Int = 0,
+        val analyse: Boolean = false,
+    ) : TetranoRoute
 
     @Serializable
     data object Settings : TetranoRoute

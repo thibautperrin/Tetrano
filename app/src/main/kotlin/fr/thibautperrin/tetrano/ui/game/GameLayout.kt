@@ -57,6 +57,7 @@ private data class GameButtonSpec(val label: String, val background: Color, val 
 @Composable
 internal fun GameBoardAndButtons(
     board: BoardVisualState,
+    finished: Boolean,
     landscape: Boolean,
     onAction: (GameAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -64,7 +65,11 @@ internal fun GameBoardAndButtons(
     val dimens = LocalLegacyDimens.current
     val buttons = listOf(
         GameButtonSpec(stringResource(R.string.Play_Again), LegacyColors.ButtonYellow) { onAction(GameAction.PlayAgainClicked) },
-        GameButtonSpec(stringResource(R.string.Mot_Clignoter), LegacyColors.ButtonGreen) { onAction(GameAction.BlinkClicked) },
+        if (finished) {
+            GameButtonSpec(stringResource(R.string.Review_Game), LegacyColors.ButtonGreen) { onAction(GameAction.ReviewClicked) }
+        } else {
+            GameButtonSpec(stringResource(R.string.Mot_Clignoter), LegacyColors.ButtonGreen) { onAction(GameAction.BlinkClicked) }
+        },
         GameButtonSpec(stringResource(R.string.Cancel), LegacyColors.ButtonCyan) { onAction(GameAction.CancelClicked) },
     )
     val onRingDropped: (Int) -> Unit = { onAction(GameAction.RingDropped(it)) }

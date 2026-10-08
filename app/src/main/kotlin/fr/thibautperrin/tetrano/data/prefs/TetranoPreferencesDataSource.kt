@@ -37,7 +37,7 @@ class TetranoPreferencesDataSource @Inject constructor(
     val player2Name: Flow<String> = stringFlow(Keys.PLAYER2_NAME, "")
     val userName: Flow<String> = stringFlow(Keys.USER_NAME, "")
 
-    /** AI difficulty, 0..100. Ports `StaticFields.LABEL_LEVEL` / `ApplicationTetrano.niveauJeu`. */
+    /** AI difficulty, 0..101 (101 = neural network). Ports `StaticFields.LABEL_LEVEL` / `ApplicationTetrano.niveauJeu`. */
     val aiLevel: Flow<Int> = intFlow(Keys.AI_LEVEL, DEFAULT_AI_LEVEL)
 
     /** Challenge-mode hint currency. Ports `MemoryVarsChallenge.numberStars`. */

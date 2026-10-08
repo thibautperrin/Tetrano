@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import fr.thibautperrin.tetrano.domain.service.AiService
 import javax.inject.Inject
 
 /**
@@ -126,8 +127,8 @@ class ComputerSetupViewModel @Inject constructor(
     }
 
     companion object {
-        /** The legacy `seekBarLevel` range. */
+        /** The legacy `seekBarLevel` range, plus the neural level [AiService.NEURAL_LEVEL] on top. */
         const val MIN_LEVEL = 0
-        const val MAX_LEVEL = 100
+        const val MAX_LEVEL = AiService.NEURAL_LEVEL
     }
 }

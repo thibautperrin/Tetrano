@@ -60,6 +60,7 @@ fun GameRoute(
     ringCount: Int,
     onNavigateToSettings: () -> Unit,
     onExit: () -> Unit,
+    onReview: (ReviewRequest) -> Unit,
     viewModel: GameViewModel = hiltViewModel(
         creationCallback = { factory: GameViewModel.Factory -> factory.create(mode, savedGameName, ringCount) },
     ),
@@ -71,6 +72,7 @@ fun GameRoute(
         onAction = viewModel::onAction,
         onNavigateToSettings = onNavigateToSettings,
         onExit = onExit,
+        onReview = onReview,
     )
 }
 
@@ -94,6 +96,7 @@ fun GameScreen(
     onAction: (GameAction) -> Unit,
     onNavigateToSettings: () -> Unit,
     onExit: () -> Unit,
+    onReview: (ReviewRequest) -> Unit = {},
 ) {
     // Non-null while the save dialog is shown: the name being typed.
     var saveNameDraft by rememberSaveable { mutableStateOf<String?>(null) }
@@ -105,6 +108,13 @@ fun GameScreen(
     val readyToExit = uiModel.exitRequested && uiModel.starDialogs.isEmpty()
     LaunchedEffect(readyToExit) {
         if (readyToExit) onExit()
+    }
+
+    uiModel.reviewRequest?.let { request ->
+        LaunchedEffect(request) {
+            onAction(GameAction.ReviewHandled)
+            onReview(request)
+        }
     }
 
     if (uiModel.showInternalError) {
@@ -151,6 +161,7 @@ fun GameScreen(
     ) { padding ->
         GameBoardAndButtons(
             board = uiModel.board,
+            finished = uiModel.title.isFinished,
             landscape = isLandscape(),
             onAction = onAction,
             modifier = Modifier

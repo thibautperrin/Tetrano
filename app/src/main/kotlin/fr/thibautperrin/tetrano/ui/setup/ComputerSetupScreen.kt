@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
+import fr.thibautperrin.tetrano.domain.service.AiService
 import fr.thibautperrin.tetrano.ui.components.FitText
 import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.TriangleButton
@@ -54,7 +55,7 @@ fun ComputerSetupRoute(
  * Ports `JouerContreOrdiActivity` (`activity_jouer_contre_ordi.xml`), on a
  * white page titled "1 player" (the activity's manifest label, see
  * [SetupPage]): "Who begins?", the User / Computer radio buttons, "Level"
- * and its number, the ◀ level bar ▶ row (0..100, ±1 per arrow), and the
+ * and its number, the ◀ level bar ▶ row (0..101, ±1 per arrow; 101 = neural network), and the
  * big Play button.
  * - Portrait: all of it stacked, Play centered in the height left over.
  * - Landscape (`layout-land`): the settings on the left two thirds, Play
@@ -136,9 +137,10 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
             color = Color.Black,
             modifier = Modifier.weight(1f, fill = false),
         )
-        // Legacy TextNiveauPourcent: String.format(" %d", progress).
+        // Legacy TextNiveauPourcent: String.format(" %d", progress); 101 is the neural network.
+        val neural = if (uiModel.aiLevel >= AiService.NEURAL_LEVEL) " (${stringResource(R.string.Level_Neural)})" else ""
         FitText(
-            text = " ${uiModel.aiLevel}",
+            text = " ${uiModel.aiLevel}$neural",
             maxFontSize = dimens.title2,
             color = Color.Black,
         )

@@ -93,4 +93,18 @@
     <string name="Joueur1_Name">nom Joueur 1 ?</string>
     <string name="Joueur2_Name">nom Joueur 2 ?</string>
     <string name="Game_Of">Partie du</string>
+    <string name="Analyse_Game">Analyser la partie</string>
+    <string name="Review_Game">Revoir la partie</string>
+    <string name="Analysing">Analyse en cours…</string>
+    <string name="Draw_Short">Nul</string>
+    <string name="Verdict_Best">Meilleur coup</string>
+    <string name="Verdict_Good">Bon coup</string>
+    <string name="Verdict_Inaccuracy">Imprécision</string>
+    <string name="Verdict_Mistake">Erreur</string>
+    <string name="Verdict_Blunder">Gaffe</string>
+    <string name="Verdict_Missed_Win">Gain forcé manqué</string>
+    <string name="Verdict_Allowed_Win">Gain forcé concédé</string>
+    <string name="Previous_Mistake">Erreur précédente</string>
+    <string name="Next_Mistake">Erreur suivante</string>
+    <string name="Level_Neural">réseau de neurones</string>
 </resources>

@@ -17,6 +17,9 @@ enum class BoardOrientation { PORTRAIT, LANDSCAPE, SQUARE }
  */
 data class MovingRing(val ringNumber: Int, val player: Int, val progress: Float)
 
+/** A translucent ring drawn on a free slot: a suggested move (game review). */
+data class GhostRing(val ringNumber: Int, val player: Int)
+
 /**
  * Everything [BoardCanvas] needs to render one frame — no engine or
  * domain types leak into this UI-facing model. Animation (blinking,
@@ -45,6 +48,7 @@ data class BoardVisualState(
     /** 0..360: how much of each tray ring is drawn — an AI-search progress indicator. 360 = whole ring. */
     val trayAngleDegrees: Float = 360f,
     val movingRing: MovingRing? = null,
+    val ghostRing: GhostRing? = null,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -56,7 +60,8 @@ data class BoardVisualState(
             trayPlayer == other.trayPlayer &&
             dragEnabled == other.dragEnabled &&
             trayAngleDegrees == other.trayAngleDegrees &&
-            movingRing == other.movingRing
+            movingRing == other.movingRing &&
+            ghostRing == other.ghostRing
     }
 
     override fun hashCode(): Int {
@@ -68,6 +73,7 @@ data class BoardVisualState(
         result = 31 * result + dragEnabled.hashCode()
         result = 31 * result + trayAngleDegrees.hashCode()
         result = 31 * result + (movingRing?.hashCode() ?: 0)
+        result = 31 * result + (ghostRing?.hashCode() ?: 0)
         return result
     }
 }
