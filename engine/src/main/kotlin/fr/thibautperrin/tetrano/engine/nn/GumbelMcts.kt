@@ -42,6 +42,13 @@ class GumbelMcts(
         val vcfBudgetNode: Int = 1_000,
         /** Gumbel noise at the root: on for self-play, off for deterministic play. */
         val gumbelNoise: Boolean = true,
+        /**
+         * Weight of the network's moves-left estimate in clearly decided positions
+         * (|value| > [movesLeftThreshold]): the winner prefers short wins, the loser long
+         * resistance. 0 disables it (pure values, as the review needs).
+         */
+        val movesLeftWeight: Float = 0.05f,
+        val movesLeftThreshold: Float = 0.8f,
     )
 
     /** Exact status of a node, for the player to move there. */
@@ -68,6 +75,10 @@ class GumbelMcts(
 
         /** Network value for the player to move (0 when exact or without network). */
         var netValue: Float = 0f
+            internal set
+
+        /** Network estimate of the plies left until the end of the game (0 without that head). */
+        var netMovesLeft: Float = 0f
             internal set
         val netWdl: FloatArray = FloatArray(3)
     }
@@ -187,7 +198,7 @@ class GumbelMcts(
         if (vcfMove >= 0) return prove(node, Status.WIN, vcfMove)
         setMoves(node, if (block != 0L) block else empty)
         evaluateNet(node)
-        return node.netValue
+        return searchValue(node)
     }
 
     /**
@@ -197,6 +208,15 @@ class GumbelMcts(
     private fun preferShortestWin(root: Node) {
         val move = vcf.shortest(root.mine, root.theirs, config.vcfBudgetRoot)
         if (move >= 0) root.winningMove = move
+    }
+
+    /** The value backed up for a freshly evaluated node: [Node.netValue] nudged by moves left. */
+    private fun searchValue(node: Node): Float {
+        val v = node.netValue
+        val w = config.movesLeftWeight
+        if (w == 0f || kotlin.math.abs(v) <= config.movesLeftThreshold) return v
+        val left = node.netMovesLeft / QubicNet.MOVES_LEFT_SCALE
+        return (if (v > 0f) v - w * left else v + w * left).coerceIn(-1f, 1f)
     }
 
     private fun prove(node: Node, status: Status, move: Int): Float {
@@ -241,6 +261,7 @@ class GumbelMcts(
         val logTotal = ln(total).toFloat()
         for (i in 0 until n) node.logits[i] = netPolicy[node.moves[i]] - maxLogit - logTotal
         node.netValue = node.netWdl[0] - node.netWdl[2]
+        node.netMovesLeft = workspace.movesLeft
     }
 
     private fun child(node: Node, index: Int): Node {

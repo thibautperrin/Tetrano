@@ -19,7 +19,11 @@ import kotlin.math.sqrt
  * - per line: {empty, mine 1/2/3, theirs 1/2/3, dead (both colours)};
  * - "I am the first player" (equal ring counts).
  *
- * File format (little endian): int32 magic [MAGIC], int32 version (1),
+ * Version 2 adds a third head, the number of plies left until the end of
+ * the game ([Workspace.movesLeft]); version 1 files (no such head) still
+ * load, with 0 plies left.
+ *
+ * File format (little endian): int32 magic [MAGIC], int32 version (1 or 2),
  * int32 H, int32 L, int32 parameter count, then float32 parameters in the
  * order read by the constructor. Linear weights are stored transposed,
  * `[in][out]`, so the forward pass is a sequence of vectorizable axpy loops.
@@ -27,7 +31,13 @@ import kotlin.math.sqrt
  * The weights are immutable and may be shared; [evaluate] needs a
  * per-thread [Workspace].
  */
-class QubicNet private constructor(val hidden: Int, val layers: Int, params: FloatArray) {
+class QubicNet private constructor(
+    val hidden: Int,
+    val layers: Int,
+    params: FloatArray,
+    /** True iff the file has the moves-left head (version 2). */
+    val hasMovesLeft: Boolean,
+) {
 
     private var offset = 0
     private val all = params
@@ -77,6 +87,12 @@ class QubicNet private constructor(val hidden: Int, val layers: Int, params: Flo
     private val valB1 = take(h)
     private val valW2 = take(h * 3)
     private val valB2 = take(3)
+    private val mlLnGamma = if (hasMovesLeft) take(valueIn) else 0
+    private val mlLnBeta = if (hasMovesLeft) take(valueIn) else 0
+    private val mlW1 = if (hasMovesLeft) take(valueIn * h) else 0
+    private val mlB1 = if (hasMovesLeft) take(h) else 0
+    private val mlW2 = if (hasMovesLeft) take(h) else 0
+    private val mlB2 = if (hasMovesLeft) take(1) else 0
 
     init {
         require(offset == params.size) { "parameter count ${params.size}, expected $offset" }
@@ -90,6 +106,10 @@ class QubicNet private constructor(val hidden: Int, val layers: Int, params: Flo
         internal val normed = FloatArray(maxOf(2 * h, valueIn))
         internal val mid = FloatArray(h)
         internal val out = FloatArray(h)
+
+        /** Plies left until the end of the game, as estimated by the last [evaluate] (0 for a version-1 network). */
+        var movesLeft: Float = 0f
+            internal set
     }
 
     fun newWorkspace(): Workspace = Workspace()
@@ -203,6 +223,20 @@ class QubicNet private constructor(val hidden: Int, val layers: Int, params: Flo
             total += wdl[o]
         }
         for (o in 0 until 3) wdl[o] /= total
+
+        // Moves-left head, on the same pooled input: plies left / 64.
+        if (hasMovesLeft) {
+            layerNorm(input, valueIn, mlLnGamma, mlLnBeta, ws.normed)
+            linear(ws.normed, valueIn, mlW1, mlB1, h, ws.mid)
+            var plies = p[mlB2]
+            for (j in 0 until h) {
+                val v = ws.mid[j]
+                if (v > 0f) plies += v * p[mlW2 + j]
+            }
+            ws.movesLeft = maxOf(0f, plies) * MOVES_LEFT_SCALE
+        } else {
+            ws.movesLeft = 0f
+        }
     }
 
     /** `target[base until base+h] += W2 · relu(W1 · LN(input) + b1) + b2`. */
@@ -246,6 +280,9 @@ class QubicNet private constructor(val hidden: Int, val layers: Int, params: Flo
         const val MAGIC: Int = 0x54454E51
         private const val LN_EPS = 1e-5f
 
+        /** The moves-left head predicts plies left divided by this. */
+        const val MOVES_LEFT_SCALE: Float = 64f
+
         /** Line input state: 0 empty, 1..3 mine, 4..6 theirs, 7 dead. */
         fun lineState(mask: Long, mine: Long, theirs: Long): Int {
             val m = java.lang.Long.bitCount(mask and mine)
@@ -265,7 +302,7 @@ class QubicNet private constructor(val hidden: Int, val layers: Int, params: Flo
             val hb = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
             require(hb.int == MAGIC) { "not a QNET file" }
             val version = hb.int
-            require(version == 1) { "unsupported QNET version $version" }
+            require(version == 1 || version == 2) { "unsupported QNET version $version" }
             val hidden = hb.int
             val layers = hb.int
             val count = hb.int
@@ -273,7 +310,7 @@ class QubicNet private constructor(val hidden: Int, val layers: Int, params: Flo
             data.readFully(raw)
             val params = FloatArray(count)
             ByteBuffer.wrap(raw).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(params)
-            return QubicNet(hidden, layers, params)
+            return QubicNet(hidden, layers, params, hasMovesLeft = version >= 2)
         }
     }
 }

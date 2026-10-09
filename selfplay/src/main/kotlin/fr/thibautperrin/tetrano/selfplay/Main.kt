@@ -18,10 +18,11 @@ import kotlin.random.Random
 /**
  * Usage: `selfplay <command> key=value...`
  *
- * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N`
+ * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N random_plies=5`
  * - `arena a=<file|none> b=<file|none> games=N sims=N threads=N`
  * - `vslegacy model=<file> level=100 games=N sims=N threads=N`
  * - `bench model=<file> sims=N`
+ * - `match a=<file> b=<file> ...` (tournament games, see [tournamentMatch])
  *
  * Output lines starting with `RESULT ` are machine-readable `key=value` pairs
  * read by tools/nn/loop.py.
@@ -37,6 +38,7 @@ fun main(args: Array<String>) {
         "arena" -> arena(options)
         "vslegacy" -> vsLegacy(options)
         "bench" -> bench(options)
+        "match" -> tournamentMatch(options)
         else -> error("unknown command $command")
     }
 }
@@ -62,38 +64,67 @@ private class Position(
     val flags: Int,
 )
 
-/** Plays one self-play game; returns its positions and the winner (0 first, 1 second, -1 draw). */
-private fun playGame(mcts: GumbelMcts, sims: Int): Pair<List<Position>, Int> {
+/** A self-play game: recorded positions, the winner (0 first, 1 second, -1 draw) and its length in plies. */
+private class PlayedGame(val positions: List<Position>, val winner: Int, val plies: Int)
+
+/** A uniformly random free cell of a board that has one. */
+private fun randomFreeCell(occupied: Long, rng: Random): Int {
+    val free = (occupied).inv()
+    var index = rng.nextInt(java.lang.Long.bitCount(free))
+    var bits = free
+    while (index-- > 0) bits = bits and (bits - 1)
+    return java.lang.Long.numberOfTrailingZeros(bits)
+}
+
+/**
+ * Plays one self-play game. It starts with 0..[maxRandomPlies] uniformly random moves (not
+ * recorded: they are not good moves to learn from), then the search plays both sides to the
+ * real end of the game — also once a position is proven, so that every position knows how many
+ * plies were left.
+ */
+private fun playGame(mcts: GumbelMcts, sims: Int, maxRandomPlies: Int, rng: Random): PlayedGame {
+    var mine: Long
+    var theirs: Long
+    var ply: Int
+    do {
+        mine = 0L
+        theirs = 0L
+        ply = 0
+        var over = false
+        repeat(rng.nextInt(maxRandomPlies + 1)) {
+            if (over) return@repeat
+            val cell = randomFreeCell(mine or theirs, rng)
+            val after = mine or (1L shl cell)
+            if (Tactics.wonWith(after, cell)) over = true
+            mine = theirs
+            theirs = after
+            ply++
+        }
+    } while (over)
     val positions = ArrayList<Position>()
-    var mine = 0L
-    var theirs = 0L
-    var ply = 0
     while (true) {
         val result = mcts.search(mine, theirs, sims)
         val mover = ply % 2
-        if (result.status != GumbelMcts.Status.UNKNOWN) {
-            val policyFlag = if (result.status == GumbelMcts.Status.WIN) FLAG_POLICY else 0
-            positions += Position(mine, theirs, ply, result.policy, result.value, policyFlag or FLAG_EXACT)
-            val winner = when (result.status) {
-                GumbelMcts.Status.WIN -> mover
-                GumbelMcts.Status.LOSS -> 1 - mover
-                else -> -1
-            }
-            return positions to winner
+        val flags = when (result.status) {
+            GumbelMcts.Status.WIN -> FLAG_POLICY or FLAG_EXACT
+            GumbelMcts.Status.UNKNOWN -> if (result.simulations == 0) 0 else FLAG_POLICY
+            else -> FLAG_EXACT
         }
-        val forced = result.simulations == 0
-        positions += Position(mine, theirs, ply, result.policy, result.value, if (forced) 0 else FLAG_POLICY)
+        positions += Position(mine, theirs, ply, result.policy, result.value, flags)
+        if (result.move < 0) return PlayedGame(positions, -1, ply)
         val after = mine or (1L shl result.move)
-        if (Tactics.wonWith(after, result.move)) return positions to mover
-        if ((after or theirs) == -1L) return positions to -1
+        ply++
+        if (Tactics.wonWith(after, result.move)) return PlayedGame(positions, mover, ply)
+        if ((after or theirs) == -1L) return PlayedGame(positions, -1, ply)
         mine = theirs
         theirs = after
-        ply++
     }
 }
 
-private fun encode(positions: List<Position>, winner: Int, out: ByteBuffer) {
-    for (p in positions) {
+/** Writes a game's positions; the free byte holds the plies left until the end (moves-left target). */
+private fun encode(game: PlayedGame, out: ByteBuffer) {
+    val winner = game.winner
+    for (p in game.positions) {
         val mover = p.ply % 2
         val outcome = when (winner) {
             -1 -> 1
@@ -105,7 +136,7 @@ private fun encode(positions: List<Position>, winner: Int, out: ByteBuffer) {
         out.put(outcome.toByte())
         out.put(p.flags.toByte())
         out.put(p.ply.toByte())
-        out.put(0)
+        out.put((game.plies - p.ply).coerceIn(0, 255).toByte())
         for (c in 0 until 64) out.putShort(Math.round(p.policy[c].coerceIn(0f, 1f) * 65535f).toShort())
         out.putFloat(p.value)
     }
@@ -117,6 +148,7 @@ private fun selfPlay(options: Map<String, String>) {
     val sims = options.int("sims", 48)
     val threads = options.int("threads", Runtime.getRuntime().availableProcessors() - 2)
     val seed = options.long("seed", System.nanoTime())
+    val randomPlies = options.int("random_plies", 5)
     val outFile = File(options["out"] ?: error("out= required"))
     val tmp = File(outFile.path + ".tmp")
     val started = System.nanoTime()
@@ -129,17 +161,18 @@ private fun selfPlay(options: Map<String, String>) {
         val pool = Executors.newFixedThreadPool(threads)
         repeat(threads) { t ->
             pool.execute {
-                val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), Random(seed * 1000 + t))
+                val rng = Random(seed * 1000 + t)
+                val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
                 while (next.getAndIncrement() < games) {
-                    val (positions, winner) = playGame(mcts, sims)
-                    val buffer = ByteBuffer.allocate(positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
-                    encode(positions, winner, buffer)
+                    val game = playGame(mcts, sims, randomPlies, rng)
+                    val buffer = ByteBuffer.allocate(game.positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
+                    encode(game, buffer)
                     synchronized(file) {
                         file.write(buffer.array())
-                        wins[if (winner == -1) 2 else winner]++
-                        plySum += positions.last().ply + 1
+                        wins[if (game.winner == -1) 2 else game.winner]++
+                        plySum += game.plies
                     }
-                    positionsCount.addAndGet(positions.size.toLong())
+                    positionsCount.addAndGet(game.positions.size.toLong())
                 }
                 evaluations.addAndGet(mcts.evaluations)
             }
@@ -163,12 +196,16 @@ private fun interface Player {
 }
 
 /**
- * Plays one game; returns 0 if the first player wins, 1 for the second, -1 for a draw.
- * The moves are appended to [moves].
+ * Plays one game from the position after [moves] (empty board by default); [first] is the player
+ * to move there. Returns 0 if [first] wins, 1 if [second] wins, -1 for a draw. The moves played
+ * are appended to [moves].
  */
 private fun playMatch(first: Player, second: Player, moves: MutableList<Int> = ArrayList()): Int {
     var mine = 0L
     var theirs = 0L
+    for ((i, m) in moves.withIndex()) {
+        if ((moves.size - i) % 2 == 1) theirs = theirs or (1L shl m) else mine = mine or (1L shl m)
+    }
     var ply = 0
     while (true) {
         val player = if (ply % 2 == 0) first else second
@@ -182,6 +219,108 @@ private fun playMatch(first: Player, second: Player, moves: MutableList<Int> = A
         theirs = after
         ply++
     }
+}
+
+/**
+ * A tournament player: [GumbelMcts] with [sims] simulations, Gumbel noise on its own first
+ * [noisyMoves] moves only (like level 101 in the app), deterministic afterwards.
+ */
+private fun tournamentPlayer(net: QubicNet?, sims: Int, noisyMoves: Int, seed: Long): Player {
+    val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false), Random(seed))
+    var played = 0
+    return Player { mine, theirs, _ -> mcts.search(mine, theirs, sims, noise = played++ < noisyMoves).move }
+}
+
+/**
+ * The first [count] random openings of [plies] moves for [seed]: no line or threat for either
+ * side, all distinct up to the 192 board symmetries. Deterministic, so every pair of a
+ * tournament plays the same openings.
+ */
+private fun randomOpenings(seed: Long, count: Int, plies: Int): List<List<Int>> {
+    val rng = Random(seed)
+    val seen = HashSet<Pair<Long, Long>>()
+    val openings = ArrayList<List<Int>>()
+    while (openings.size < count) {
+        var mine = 0L
+        var theirs = 0L
+        val moves = ArrayList<Int>()
+        repeat(plies) {
+            val cell = randomFreeCell(mine or theirs, rng)
+            moves += cell
+            val after = mine or (1L shl cell)
+            mine = theirs
+            theirs = after
+        }
+        if (Tactics.threats(mine, theirs) != 0L || Tactics.threats(theirs, mine) != 0L) continue
+        if (Tactics.hasWon(mine) || Tactics.hasWon(theirs)) continue
+        var best: Pair<Long, Long>? = null
+        for (s in 0 until fr.thibautperrin.tetrano.engine.nn.QubicGeometry.symmetryCount) {
+            val key = fr.thibautperrin.tetrano.engine.nn.QubicGeometry.transform(s, mine) to
+                fr.thibautperrin.tetrano.engine.nn.QubicGeometry.transform(s, theirs)
+            if (best == null || java.lang.Long.compareUnsigned(key.first, best.first) < 0 ||
+                (key.first == best.first && java.lang.Long.compareUnsigned(key.second, best.second) < 0)
+            ) {
+                best = key
+            }
+        }
+        if (seen.add(best!!)) openings += moves
+    }
+    return openings
+}
+
+/**
+ * `match a= b= games= sims= threads= openings=empty|random opening_plies=5 seed= offset= noisy_moves=4 games_out=`
+ *
+ * empty: game g starts from the empty board, A moves first in even games.
+ * random: game g starts from opening `offset + g / 2`, A to move in even games, B in odd ones
+ * (each opening is played once each way).
+ */
+private fun tournamentMatch(options: Map<String, String>) {
+    val a = loadNet(options["a"])
+    val b = loadNet(options["b"])
+    val games = options.int("games", 40)
+    val sims = options.int("sims", 128)
+    val threads = options.int("threads", Runtime.getRuntime().availableProcessors() - 2)
+    val noisyMoves = options.int("noisy_moves", 4)
+    val seed = options.long("seed", 1)
+    val random = options["openings"] == "random"
+    val offset = options.int("offset", 0)
+    val openings = if (random) randomOpenings(seed, offset + (games + 1) / 2, options.int("opening_plies", 5)) else emptyList()
+    val lines = arrayOfNulls<String>(games)
+    val next = AtomicInteger(0)
+    val started = System.nanoTime()
+    val pool = Executors.newFixedThreadPool(threads)
+    repeat(threads) {
+        pool.execute {
+            while (true) {
+                val g = next.getAndIncrement()
+                if (g >= games) break
+                val gameSeed = seed * 1_000_003L + (offset * 2L + g) * 7919L
+                val pa = tournamentPlayer(a, sims, noisyMoves, gameSeed)
+                val pb = tournamentPlayer(b, sims, noisyMoves, gameSeed + 1)
+                val aFirst = g % 2 == 0
+                val moves = if (random) ArrayList(openings[offset + g / 2]) else ArrayList()
+                val result = if (aFirst) playMatch(pa, pb, moves) else playMatch(pb, pa, moves)
+                lines[g] = "${if (aFirst) 1 else 0} $result ${moves.joinToString(" ")}"
+            }
+        }
+    }
+    pool.shutdown()
+    pool.awaitTermination(7, TimeUnit.DAYS)
+    options["games_out"]?.let { File(it).writeText(lines.joinToString("\n", postfix = "\n")) }
+    var aScore = 0.0
+    for (line in lines) {
+        val (aFirst, result) = line!!.split(" ").let { (it[0] == "1") to it[1].toInt() }
+        aScore += when {
+            result == -1 -> 0.5
+            (result == 0) == aFirst -> 1.0
+            else -> 0.0
+        }
+    }
+    println(
+        "RESULT match games=$games aScore=${"%.1f".format(java.util.Locale.ROOT, aScore)} " +
+            "seconds=${"%.1f".format(java.util.Locale.ROOT, (System.nanoTime() - started) / 1e9)}",
+    )
 }
 
 private fun mctsPlayer(net: QubicNet?, sims: Int, noise: Boolean, seed: Long): Player {
@@ -269,7 +408,7 @@ private fun vsLegacy(options: Map<String, String>) {
     match(
         games = options.int("games", 20),
         threads = options.int("threads", Runtime.getRuntime().availableProcessors() - 2),
-        makeA = { seed -> mctsPlayer(net, sims, noise = options["noise"] == "true", seed = seed) },
+        makeA = { seed -> mctsPlayer(net, sims, noise = options["noise"] != "false", seed = seed) },
         makeB = { seed -> legacyPlayer(level, seed) },
         label = "vslegacy",
         gamesOut = options["games_out"]?.let(::File),

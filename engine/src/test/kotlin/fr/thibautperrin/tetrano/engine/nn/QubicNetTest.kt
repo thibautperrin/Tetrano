@@ -1,6 +1,7 @@
 package fr.thibautperrin.tetrano.engine.nn
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.ByteBuffer
@@ -21,20 +22,36 @@ class QubicNetTest {
 
     @Test
     fun matchesPyTorchReference() {
-        val buffer = ByteBuffer.wrap(resource("fixture_positions.bin")).order(ByteOrder.LITTLE_ENDIAN)
+        assertTrue(net.hasMovesLeft)
+        assertParity(net, "fixture_positions.bin", withMovesLeft = true)
+    }
+
+    @Test
+    fun readsVersion1Networks() {
+        val v1 = QubicNet.load(resource("fixture_net_v1.bin").inputStream())
+        assertFalse(v1.hasMovesLeft)
+        assertParity(v1, "fixture_positions_v1.bin", withMovesLeft = false)
+    }
+
+    private fun assertParity(net: QubicNet, fixture: String, withMovesLeft: Boolean) {
+        val buffer = ByteBuffer.wrap(resource(fixture)).order(ByteOrder.LITTLE_ENDIAN)
         val count = buffer.int
         val ws = net.newWorkspace()
         val policy = FloatArray(64)
         val wdl = FloatArray(3)
         var maxError = 0f
+        var maxMovesLeftError = 0f
         repeat(count) {
             val mine = buffer.long
             val theirs = buffer.long
             net.evaluate(mine, theirs, ws, policy, wdl)
             for (c in 0 until 64) maxError = maxOf(maxError, abs(policy[c] - buffer.float))
             for (o in 0 until 3) maxError = maxOf(maxError, abs(wdl[o] - buffer.float))
+            if (withMovesLeft) maxMovesLeftError = maxOf(maxMovesLeftError, abs(ws.movesLeft - buffer.float))
+            else assertEquals(0f, ws.movesLeft)
         }
         assertTrue("max error $maxError", maxError < 1e-4f)
+        assertTrue("max moves-left error $maxMovesLeftError", maxMovesLeftError < 1e-2f)
     }
 
     @Test

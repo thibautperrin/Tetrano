@@ -13,7 +13,8 @@ from torch import nn
 import qubic
 
 MAGIC = 0x54454E51  # "QNET" little endian
-VERSION = 1
+VERSION = 2
+MOVES_LEFT_SCALE = 64.0  # the moves-left head predicts plies left / 64
 
 
 class Block(nn.Module):
@@ -51,6 +52,9 @@ class QubicNet(nn.Module):
         self.val_ln = nn.LayerNorm(v)
         self.val_fc1 = nn.Linear(v, h)
         self.val_fc2 = nn.Linear(h, 3)
+        self.ml_ln = nn.LayerNorm(v)
+        self.ml_fc1 = nn.Linear(v, h)
+        self.ml_fc2 = nn.Linear(h, 1)
         self.register_buffer("incidence", torch.from_numpy(qubic.INCIDENCE))
         self.register_buffer("inv_degree", torch.from_numpy(1.0 / qubic.DEGREE).float())
         self.register_buffer("degree_class", torch.from_numpy(qubic.DEGREE_CLASS))
@@ -58,7 +62,8 @@ class QubicNet(nn.Module):
     def forward(self, cell_state, line_state, first):
         """cell_state [B,64] long, line_state [B,76] long, first [B] float.
 
-        Returns policy logits [B,64] (unmasked) and WDL logits [B,3].
+        Returns policy logits [B,64] (unmasked), WDL logits [B,3] and the moves-left
+        prediction [B] (plies left / MOVES_LEFT_SCALE, before clamping at 0).
         """
         c = (self.cell_embed[cell_state] + self.degree_embed[self.degree_class][None]
              + first[:, None, None] * self.first_embed)
@@ -72,7 +77,8 @@ class QubicNet(nn.Module):
         policy = self.pol_fc2(torch.relu(self.pol_fc1(self.pol_ln(c)))).squeeze(-1)
         pooled = torch.cat([c.mean(dim=1), c.max(dim=1).values, l.mean(dim=1), first[:, None]], dim=-1)
         wdl = self.val_fc2(torch.relu(self.val_fc1(self.val_ln(pooled))))
-        return policy, wdl
+        moves_left = self.ml_fc2(torch.relu(self.ml_fc1(self.ml_ln(pooled)))).squeeze(-1)
+        return policy, wdl, moves_left
 
     # ---- export ----
 
@@ -97,6 +103,9 @@ class QubicNet(nn.Module):
         out += [self.val_ln.weight.detach(), self.val_ln.bias.detach()]
         lin(self.val_fc1)
         lin(self.val_fc2)
+        out += [self.ml_ln.weight.detach(), self.ml_ln.bias.detach()]
+        lin(self.ml_fc1)
+        out += [self.ml_fc2.weight.detach().reshape(-1), self.ml_fc2.bias.detach()]
         return torch.cat([t.reshape(-1).float() for t in out]).numpy()
 
     def export_weights(self, path):
@@ -107,8 +116,17 @@ class QubicNet(nn.Module):
 
 
 def evaluate_bits(model, mine, theirs):
-    """Numpy convenience: policy logits [N,64], WDL probabilities [N,3]."""
+    """Numpy convenience: policy logits [N,64], WDL probabilities [N,3], plies left [N]."""
     cs, ls, first = qubic.encode(np.asarray(mine, dtype=np.uint64), np.asarray(theirs, dtype=np.uint64))
     with torch.no_grad():
-        pol, wdl = model(torch.from_numpy(cs), torch.from_numpy(ls), torch.from_numpy(first))
-    return pol.numpy(), torch.softmax(wdl, dim=-1).numpy()
+        pol, wdl, ml = model(torch.from_numpy(cs), torch.from_numpy(ls), torch.from_numpy(first))
+    return pol.numpy(), torch.softmax(wdl, dim=-1).numpy(), (torch.clamp(ml, min=0) * MOVES_LEFT_SCALE).numpy()
+
+
+def load_checkpoint(path, strict=True):
+    """A QubicNet from a training checkpoint; strict=False starts missing heads from scratch."""
+    ckpt = torch.load(path, map_location="cpu", weights_only=False)
+    model = QubicNet(ckpt["hidden"], ckpt["layers"])
+    missing, unexpected = model.load_state_dict(ckpt["model"], strict=strict)
+    model.eval()
+    return model, ckpt, missing

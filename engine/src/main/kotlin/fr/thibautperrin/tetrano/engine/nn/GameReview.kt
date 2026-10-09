@@ -32,7 +32,7 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
         val verdict: Verdict?,
     )
 
-    private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false))
+    private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f))
 
     /**
      * Reviews [moves] (rings in play order). [onPosition] receives each
