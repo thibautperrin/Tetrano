@@ -38,7 +38,7 @@ def main():
         print(f"== training until {args.train_until}", flush=True)
         code = subprocess.run([python, "-u", "loop.py", "--run", args.run, "--stop-at", args.train_until,
                                "--init-checkpoint", args.reference_checkpoint,
-                               "--elo-reference", args.reference_model], cwd=HERE).returncode
+                               "--elo-every", "0"], cwd=HERE).returncode
         if code == 0:
             break
         # A crash: resume from the last saved generation rather than idle until the tournament.
