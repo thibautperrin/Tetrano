@@ -162,11 +162,13 @@ private fun interface Player {
     fun move(mine: Long, theirs: Long, firstMoves: List<Int>): Int
 }
 
-/** Plays one game; returns 0 if the first player wins, 1 for the second, -1 for a draw. */
-private fun playMatch(first: Player, second: Player): Int {
+/**
+ * Plays one game; returns 0 if the first player wins, 1 for the second, -1 for a draw.
+ * The moves are appended to [moves].
+ */
+private fun playMatch(first: Player, second: Player, moves: MutableList<Int> = ArrayList()): Int {
     var mine = 0L
     var theirs = 0L
-    val moves = ArrayList<Int>()
     var ply = 0
     while (true) {
         val player = if (ply % 2 == 0) first else second
@@ -204,7 +206,10 @@ private fun match(
     makeA: (Long) -> Player,
     makeB: (Long) -> Player,
     label: String,
+    gamesOut: File? = null,
 ) {
+    // One line per game: "<A played first: 1|0> <result: 0 first wins, 1 second wins, -1 draw> <moves...>".
+    val lines = arrayOfNulls<String>(games)
     val next = AtomicInteger(0)
     val stats = IntArray(6) // A first: win/draw/loss, A second: win/draw/loss
     val pool = Executors.newFixedThreadPool(threads)
@@ -217,7 +222,9 @@ private fun match(
                 val a = makeA(g * 31L + t)
                 val b = makeB(g * 17L + t + 1_000_000)
                 val aFirst = g % 2 == 0
-                val result = if (aFirst) playMatch(a, b) else playMatch(b, a)
+                val moves = ArrayList<Int>()
+                val result = if (aFirst) playMatch(a, b, moves) else playMatch(b, a, moves)
+                lines[g] = "${if (aFirst) 1 else 0} $result ${moves.joinToString(" ")}"
                 val base = if (aFirst) 0 else 3
                 val aSide = if (aFirst) 0 else 1
                 val slot = when (result) {
@@ -231,6 +238,7 @@ private fun match(
     }
     pool.shutdown()
     pool.awaitTermination(7, TimeUnit.DAYS)
+    gamesOut?.writeText(lines.joinToString("\n", postfix = "\n"))
     val score = stats[0] + stats[3] + 0.5 * (stats[1] + stats[4])
     println(
         "RESULT $label games=$games score=${"%.3f".format(java.util.Locale.ROOT, score / games)} " +
@@ -250,6 +258,7 @@ private fun arena(options: Map<String, String>) {
         makeA = { seed -> mctsPlayer(a, sims, noise = true, seed = seed) },
         makeB = { seed -> mctsPlayer(b, sims, noise = true, seed = seed) },
         label = "arena",
+        gamesOut = options["games_out"]?.let(::File),
     )
 }
 
@@ -263,6 +272,7 @@ private fun vsLegacy(options: Map<String, String>) {
         makeA = { seed -> mctsPlayer(net, sims, noise = options["noise"] == "true", seed = seed) },
         makeB = { seed -> legacyPlayer(level, seed) },
         label = "vslegacy",
+        gamesOut = options["games_out"]?.let(::File),
     )
 }
 
