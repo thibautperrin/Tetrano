@@ -115,6 +115,11 @@ class GumbelMcts(
     ): Result {
         val root = Node(mine, theirs)
         expand(root, config.vcfBudgetRoot)
+        if (root.status == Status.UNKNOWN && root.moves.size == 1) {
+            // A forced move: one simulation is enough for its exact outcome (e.g. the
+            // block only delays an opponent VCF) to reach the root through the solver.
+            simulate(root, 0)
+        }
         if (root.status != Status.UNKNOWN || root.moves.size <= 1) {
             return immediateResult(root)
         }

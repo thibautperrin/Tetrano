@@ -85,7 +85,8 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
                 loss = (before - after).coerceAtLeast(0f)
                 verdict = when {
                     r.status == GumbelMcts.Status.WIN && nextStatus != GumbelMcts.Status.LOSS -> Verdict.MISSED_WIN
-                    r.status != GumbelMcts.Status.LOSS && nextStatus == GumbelMcts.Status.WIN -> Verdict.ALLOWED_WIN
+                    r.status != GumbelMcts.Status.LOSS && nextStatus == GumbelMcts.Status.WIN &&
+                        hasSafeMove(Position.after(moves, i)) -> Verdict.ALLOWED_WIN
                     played == r.move -> Verdict.BEST
                     loss >= BLUNDER -> Verdict.BLUNDER
                     loss >= MISTAKE -> Verdict.MISTAKE
@@ -98,7 +99,30 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
         }
     }
 
+    private val vcf = Vcf(16)
+
+    /**
+     * True iff the player to move has a move after which the opponent has no immediate win
+     * and no VCF. Otherwise every move concedes a forced win: the position was already lost
+     * (the mistake came earlier) and the move played is not to blame.
+     */
+    private fun hasSafeMove(position: Position): Boolean {
+        val mine = position.mine
+        val theirs = position.theirs
+        val block = Tactics.threats(theirs, mine)
+        var candidates = if (block != 0L) block else (mine or theirs).inv()
+        while (candidates != 0L) {
+            val cell = java.lang.Long.numberOfTrailingZeros(candidates)
+            candidates = candidates and (candidates - 1)
+            val after = mine or (1L shl cell)
+            if (Tactics.wonWith(after, cell)) return true
+            if (vcf.solve(theirs, after, SAFE_MOVE_VCF_BUDGET) == Vcf.NONE) return true
+        }
+        return false
+    }
+
     companion object {
+        private const val SAFE_MOVE_VCF_BUDGET = 20_000
         const val INACCURACY = 0.08f
         const val MISTAKE = 0.18f
         const val BLUNDER = 0.35f
