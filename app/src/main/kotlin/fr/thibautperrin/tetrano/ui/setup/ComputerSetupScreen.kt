@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -137,12 +138,20 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
             color = Color.Black,
             modifier = Modifier.weight(1f, fill = false),
         )
-        // Legacy TextNiveauPourcent: String.format(" %d", progress); 101 is the neural network.
-        val neural = if (uiModel.aiLevel >= AiService.NEURAL_LEVEL) " (${stringResource(R.string.Level_Neural)})" else ""
+        // Legacy TextNiveauPourcent: String.format(" %d", progress).
         FitText(
-            text = " ${uiModel.aiLevel}$neural",
+            text = " ${uiModel.aiLevel}",
             maxFontSize = dimens.title2,
             color = Color.Black,
+        )
+    }
+    if (uiModel.aiLevel >= AiService.NEURAL_LEVEL) {
+        FitText(
+            text = stringResource(R.string.Level_Neural),
+            maxFontSize = dimens.title3,
+            color = Color.Black,
+            textAlign = TextAlign.End,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
