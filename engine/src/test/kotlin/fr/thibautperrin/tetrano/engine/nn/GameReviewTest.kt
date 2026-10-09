@@ -43,7 +43,9 @@ class GameReviewTest {
         for (ply in 10 until moves.size) {
             val expected = if (ply % 2 == 0) GumbelMcts.Status.WIN else GumbelMcts.Status.LOSS
             assertEquals("ply $ply", expected, reviews[ply].status)
-            assertEquals("ply $ply", GameReview.Verdict.BEST, verdicts[ply])
+            // The computer's moves keep the win but not always the shortest one (BEST = shortest).
+            val allowed = if (ply % 2 == 0) setOf(GameReview.Verdict.BEST, GameReview.Verdict.GOOD) else setOf(GameReview.Verdict.BEST)
+            assertTrue("ply $ply: ${verdicts[ply]}", verdicts[ply] in allowed)
         }
     }
 

@@ -158,8 +158,86 @@ class Vcf(log2TableSize: Int = 16) {
         return result
     }
 
+    // ---- shortest VCF (iterative deepening) ----
+
+    /** Number of moves of [p] in the last VCF found by [shortest] (the winning move included). */
+    var shortestLength: Int = 0
+        private set
+
+    private val depthKeyP = LongArray(1 shl log2TableSize)
+    private val depthKeyO = LongArray(1 shl log2TableSize)
+
+    /** Deepest limit (in [p]'s moves) proven to hold no VCF for that (p, o); 0 = nothing known. */
+    private val depthFailed = ByteArray(1 shl log2TableSize)
+
+    /**
+     * Like [solve], but the first move of a *shortest* VCF: the fewest moves of [p] until its
+     * line is complete, by iterative deepening. [NONE] if there is no VCF, [UNKNOWN] if
+     * [maxNodes] ran out before any VCF was found; if it runs out during the deepening, the
+     * first VCF found is returned instead and [shortestLength] is 0. [maxNodes] bounds each of
+     * the two searches.
+     */
+    fun shortest(p: Long, o: Long, maxNodes: Int): Int {
+        val any = solve(p, o, maxNodes)
+        if (any < 0) return any
+        depthFailed.fill(0)
+        budget = maxNodes // shared by all the iterations
+        for (limit in 1..MAX_VCF_MOVES) {
+            val r = searchWithin(p, o, limit)
+            if (r == UNKNOWN) break
+            if (r >= 0) {
+                shortestLength = limit
+                return r
+            }
+        }
+        // Out of budget before the shortest was found: fall back on the VCF already known.
+        shortestLength = 0
+        return any
+    }
+
+    /** A first move winning within [limit] moves of [p] by continuous threats, [NONE] or [UNKNOWN]. */
+    private fun searchWithin(p: Long, o: Long, limit: Int): Int {
+        nodes++
+        val win = Tactics.threats(p, o)
+        if (win != 0L) return lowestCell(win)
+        if (limit < 2) return NONE
+        val toBlock = Tactics.threats(o, p)
+        if (popCount(toBlock) >= 2) return NONE
+        val h = slot(p, o)
+        if (depthKeyP[h] == p && depthKeyO[h] == o && depthFailed[h] >= limit) return NONE
+        if (--budget < 0) return UNKNOWN
+
+        var unknown = false
+        var candidates = if (toBlock != 0L) toBlock else Tactics.threatMoves(p, o)
+        // A double threat wins in 2 moves: look for one before going deeper.
+        var rest = candidates
+        while (rest != 0L) {
+            val cell = lowestCell(rest)
+            rest = rest and (rest - 1)
+            if (popCount(Tactics.newThreats(p, o, cell)) >= 2) return cell
+        }
+        if (limit > 2) {
+            while (candidates != 0L) {
+                val cell = lowestCell(candidates)
+                candidates = candidates and (candidates - 1)
+                val created = Tactics.newThreats(p, o, cell)
+                if (created == 0L) continue
+                val r = searchWithin(p or (1L shl cell), o or created, limit - 1)
+                if (r == UNKNOWN) unknown = true else if (r >= 0) return cell
+            }
+        }
+        if (unknown) return UNKNOWN
+        depthKeyP[h] = p
+        depthKeyO[h] = o
+        depthFailed[h] = limit.toByte()
+        return NONE
+    }
+
     companion object {
         const val NONE: Int = -1
         const val UNKNOWN: Int = -2
+
+        /** A VCF is at most 32 moves long (the board has 64 cells). */
+        private const val MAX_VCF_MOVES = 32
     }
 }
