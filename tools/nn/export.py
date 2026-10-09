@@ -10,6 +10,7 @@ import numpy as np
 import torch
 
 from model import QubicNet, evaluate_bits
+from model import load_checkpoint as model_load_checkpoint
 
 
 def random_positions(n, seed):
@@ -33,21 +34,18 @@ def random_positions(n, seed):
 
 def write_fixture(model, path, n=200, seed=7):
     mine, theirs = random_positions(n, seed)
-    pol, wdl = evaluate_bits(model, mine, theirs)
+    pol, wdl, ml = evaluate_bits(model, mine, theirs)
     with open(path, "wb") as f:
         f.write(struct.pack("<i", n))
         for i in range(n):
             f.write(struct.pack("<QQ", int(mine[i]), int(theirs[i])))
             f.write(pol[i].astype("<f4").tobytes())
             f.write(wdl[i].astype("<f4").tobytes())
+            f.write(np.float32(ml[i]).astype("<f4").tobytes())
 
 
 def load_checkpoint(path):
-    ckpt = torch.load(path, map_location="cpu", weights_only=False)
-    model = QubicNet(ckpt["hidden"], ckpt["layers"])
-    model.load_state_dict(ckpt["model"])
-    model.eval()
-    return model
+    return model_load_checkpoint(path)[0]
 
 
 def main():

@@ -23,9 +23,10 @@ def test_symmetry_invariance():
     torch.manual_seed(0)
     model = QubicNet(16, 3).eval()
     mine, theirs = random_positions(30, 11)
-    pol, wdl = evaluate_bits(model, mine, theirs)
+    pol, wdl, ml = evaluate_bits(model, mine, theirs)
     for s in (1, 17, 55, 100, 191):
-        pm, ws = evaluate_bits(model, qubic.transform(s, mine), qubic.transform(s, theirs))
+        pm, ws, ms = evaluate_bits(model, qubic.transform(s, mine), qubic.transform(s, theirs))
         np.testing.assert_allclose(ws, wdl, atol=1e-5)
+        np.testing.assert_allclose(ms, ml, atol=1e-3)
         # policy is equivariant: logit of cell c moves to cell sym[c]
         np.testing.assert_allclose(pm[:, qubic.SYMMETRIES[s]], pol, atol=1e-4)

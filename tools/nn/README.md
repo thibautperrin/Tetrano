@@ -48,6 +48,27 @@ mémorisés dans `runs/main/config.json` au premier lancement ; une option pass�
 commande les remplace. Le processus empêche la mise en veille automatique de Windows tant qu'il
 tourne (pas un capot fermé).
 
+## Entraînement du week-end + tournoi (une seule commande)
+
+```
+cd tools/nn
+.venv/Scripts/python -u weekend.py
+```
+
+- Entraîne jusqu'au `--train-until` (défaut 2026-10-11T18:00) dans `runs/weekend`, en partant
+  de la génération 198 (`runs/main`), puis lance le tournoi jusqu'au `--tournament-until`
+  (défaut 2026-10-11T20:00). Relancer la même commande reprend à la bonne étape.
+- Auto-jeu : chaque partie commence par 0 à 5 coups aléatoires (non appris) et est jouée jusqu'au
+  bout ; le réseau a une 3e tête (plis restants, format `QNET` v2) qui pousse le gagnant à
+  conclure vite et le perdant à résister (désactivée pour la revue).
+- Taux d'apprentissage : 5e-4 jusqu'à 40 % du temps, puis cosinus jusqu'à 5e-5 à l'heure d'arrêt.
+- Toutes les 10 générations : Elo approximatif contre la 198 sur ouvertures aléatoires appariées
+  (`elo_vs_reference` dans `metrics.csv`).
+- Tournoi (`tournament.py`) : la 198 (Elo 1000), la dernière génération et 5 intermédiaires
+  (1/6 … 5/6 du temps de calcul cumulé) ; mode A plateau vierge, mode B 5 coups aléatoires
+  (mêmes ouvertures pour toutes les paires, chacune jouée dans les deux sens) ; 128 simulations,
+  bruit sur les 4 premiers coups de chaque réseau. Rapport : `runs/weekend/tournament/report.md`.
+
 ## Suivi
 
 - `runs/main/log.txt` : journal ; `runs/main/metrics.csv` : une ligne par génération.

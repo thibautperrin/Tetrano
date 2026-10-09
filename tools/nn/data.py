@@ -9,7 +9,7 @@ RECORD = np.dtype([
     ("outcome", "u1"),  # 0 win, 1 draw, 2 loss for the player to move
     ("flags", "u1"),  # bit 0: policy target valid, bit 1: exact (proven) position
     ("ply", "u1"),
-    ("pad", "u1"),
+    ("moves_left", "u1"),  # plies until the end of the game (0 in files from before the moves-left head)
     ("policy", "<u2", (64,)),  # probability * 65535
     ("value", "<f4"),  # root search value for the player to move
 ])
