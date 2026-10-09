@@ -120,6 +120,7 @@ class GumbelMcts(
             // block only delays an opponent VCF) to reach the root through the solver.
             simulate(root, 0)
         }
+        if (root.status == Status.WIN) preferShortestWin(root)
         if (root.status != Status.UNKNOWN || root.moves.size <= 1) {
             return immediateResult(root)
         }
@@ -153,10 +154,12 @@ class GumbelMcts(
             remaining = scored.take((remaining.size + 1) / 2).toIntArray()
         }
 
+        if (root.status == Status.WIN) preferShortestWin(root)
         val sig = FloatArray(k)
         sigmas(root, sig)
         val chosen = when (root.status) {
-            Status.WIN -> root.moves.indexOf(root.winningMove)
+            Status.WIN -> root.moves.indexOf(root.winningMove).takeIf { it >= 0 }
+                ?: remaining.maxBy { gumbel[it] + root.logits[it] + sig[it] }
             else -> remaining.maxBy { gumbel[it] + root.logits[it] + sig[it] }
         }
         return buildResult(root, root.moves[chosen], done)
@@ -185,6 +188,15 @@ class GumbelMcts(
         setMoves(node, if (block != 0L) block else empty)
         evaluateNet(node)
         return node.netValue
+    }
+
+    /**
+     * A won root keeps the first winning move found, which may lead to a needlessly long win:
+     * when the win is a VCF, play the first move of a shortest one instead.
+     */
+    private fun preferShortestWin(root: Node) {
+        val move = vcf.shortest(root.mine, root.theirs, config.vcfBudgetRoot)
+        if (move >= 0) root.winningMove = move
     }
 
     private fun prove(node: Node, status: Status, move: Int): Float {
