@@ -2,6 +2,7 @@ package fr.thibautperrin.tetrano.engine.nn
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameReviewTest {
@@ -23,6 +24,27 @@ class GameReviewTest {
         assertEquals(GumbelMcts.Status.LOSS, reviews[8].status)
         assertNull(reviews[8].verdict)
         assertEquals(1f, reviews[8].wdl[2])
+    }
+
+    @Test
+    fun forcedWinIsNotBlamedOnEveryMoveOfItsSequence() {
+        // A game lost against level 101 on a phone: from ply 10 the computer wins by a long
+        // sequence of threats, each block being forced. None of those blocks may be blamed for
+        // allowing the forced win, and the winner never "misses" it while carrying it out.
+        val moves = byteArrayOf(
+            12, 21, 3, 6, 48, 42, 63, 53, 37, 26, 18, 33, 23, 43, 29, 46, 36, 24,
+            38, 39, 25, 51, 13, 49, 15, 14, 7, 11, 22, 52, 19, 28, 31, 47, 27,
+        )
+        val reviews = GameReview(net, simulations = 32).review(moves)
+        val verdicts = reviews.dropLast(1).map { it.verdict }
+        assertEquals(0, verdicts.count { it == GameReview.Verdict.MISSED_WIN })
+        assertTrue(verdicts.count { it == GameReview.Verdict.ALLOWED_WIN } <= 1)
+        // From ply 10 the computer has a VCF: it plays it out, the user's blocks are all forced.
+        for (ply in 10 until moves.size) {
+            val expected = if (ply % 2 == 0) GumbelMcts.Status.WIN else GumbelMcts.Status.LOSS
+            assertEquals("ply $ply", expected, reviews[ply].status)
+            assertEquals("ply $ply", GameReview.Verdict.BEST, verdicts[ply])
+        }
     }
 
     @Test
