@@ -49,7 +49,7 @@ DEFAULTS = {
     "lr_final": 5e-5,
     "lr_hold": 0.4,
     "weight_decay": 1e-4,
-    "elo_every": 10,
+    "elo_every": 0,  # > 0: Elo check against elo_reference every N generations (off: benchmark at the end)
     "elo_games": 200,
     "elo_sims": 64,
     "elo_reference": "",

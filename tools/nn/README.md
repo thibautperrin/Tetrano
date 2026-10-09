@@ -62,8 +62,8 @@ cd tools/nn
   bout ; le réseau a une 3e tête (plis restants, format `QNET` v2) qui pousse le gagnant à
   conclure vite et le perdant à résister (désactivée pour la revue).
 - Taux d'apprentissage : 5e-4 jusqu'à 40 % du temps, puis cosinus jusqu'à 5e-5 à l'heure d'arrêt.
-- Toutes les 10 générations : Elo approximatif contre la 198 sur ouvertures aléatoires appariées
-  (`elo_vs_reference` dans `metrics.csv`).
+- Aucun match pendant l'entraînement : le seul banc d'essai est le tournoi final (un contrôle Elo
+  périodique reste possible avec `loop.py --elo-every N --elo-reference <modèle>`).
 - Tournoi (`tournament.py`) : la 198 (Elo 1000), la dernière génération et 5 intermédiaires
   (1/6 … 5/6 du temps de calcul cumulé) ; mode A plateau vierge, mode B 5 coups aléatoires
   (mêmes ouvertures pour toutes les paires, chacune jouée dans les deux sens) ; 128 simulations,
