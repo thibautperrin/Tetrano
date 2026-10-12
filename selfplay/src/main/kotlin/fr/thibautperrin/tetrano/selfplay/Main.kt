@@ -269,7 +269,7 @@ private fun randomOpenings(seed: Long, count: Int, plies: Int): List<List<Int>> 
 }
 
 /**
- * `match a= b= games= sims= threads= openings=empty|random opening_plies=5 seed= offset= noisy_moves=4 games_out=`
+ * `match a= b= games= sims= [sims_a= sims_b=] threads= openings=empty|random opening_plies=5 seed= offset= noisy_moves=4 games_out=`
  *
  * empty: game g starts from the empty board, A moves first in even games.
  * random: game g starts from opening `offset + g / 2`, A to move in even games, B in odd ones
@@ -280,6 +280,8 @@ private fun tournamentMatch(options: Map<String, String>) {
     val b = loadNet(options["b"])
     val games = options.int("games", 40)
     val sims = options.int("sims", 128)
+    val simsA = options.int("sims_a", sims)
+    val simsB = options.int("sims_b", sims)
     val threads = options.int("threads", Runtime.getRuntime().availableProcessors() - 2)
     val noisyMoves = options.int("noisy_moves", 4)
     val seed = options.long("seed", 1)
@@ -296,8 +298,8 @@ private fun tournamentMatch(options: Map<String, String>) {
                 val g = next.getAndIncrement()
                 if (g >= games) break
                 val gameSeed = seed * 1_000_003L + (offset * 2L + g) * 7919L
-                val pa = tournamentPlayer(a, sims, noisyMoves, gameSeed)
-                val pb = tournamentPlayer(b, sims, noisyMoves, gameSeed + 1)
+                val pa = tournamentPlayer(a, simsA, noisyMoves, gameSeed)
+                val pb = tournamentPlayer(b, simsB, noisyMoves, gameSeed + 1)
                 val aFirst = g % 2 == 0
                 val moves = if (random) ArrayList(openings[offset + g / 2]) else ArrayList()
                 val result = if (aFirst) playMatch(pa, pb, moves) else playMatch(pb, pa, moves)
