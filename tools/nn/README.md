@@ -69,6 +69,26 @@ cd tools/nn
   (mêmes ouvertures pour toutes les paires, chacune jouée dans les deux sens) ; 128 simulations,
   bruit sur les 4 premiers coups de chaque réseau. Rapport : `runs/weekend/tournament/report.md`.
 
+## Nuit à 512 simulations sur ouvertures disputées (une seule commande)
+
+```
+cd tools/nn
+.venv/Scripts/python -u night.py
+```
+
+- Attend `--start`, affine depuis le point de contrôle 480 du week-end (poids + état d'Adam)
+  jusqu'au `--train-until` dans `runs/night512`, puis duel 480 contre la dernière génération
+  jusqu'au `--duel-until`. Relancer la même commande reprend à la bonne étape.
+- Auto-jeu : 512 simulations, 1000 parties par génération, toujours 5 coups aléatoires, gardés
+  seulement si l'évaluation directe du réseau (sans recherche) donne au joueur au trait 20 à 80 %
+  de victoire (option `disputed=0.2,0.8` de `selfplay`) ; sinon nouveau tirage.
+- La fenêtre démarre avec les 5 dernières générations de données du week-end (pour ne pas
+  sur-apprendre les premières parties), qui en sortent après une quinzaine de générations ;
+  toutes les données sont gardées (`--keep-data 1`) pour entraîner d'autres réseaux plus tard.
+- Duel (128 simulations, chaque ouverture jouée dans les deux sens) : mode B (mêmes ouvertures
+  aléatoires que le tournoi du week-end) et mode C (ouvertures disputées selon la 480).
+  Rapport : `runs/night512/duel/report.md`.
+
 ## Suivi
 
 - `runs/main/log.txt` : journal ; `runs/main/metrics.csv` : une ligne par génération.
@@ -79,7 +99,7 @@ cd tools/nn
 ## Mettre un modèle dans l'appli
 
 ```
-cp runs/main/models/gen_XXXX.bin ../../app/src/main/res/raw/tetrano_nn.bin
+cp runs/<run>/models/gen_XXXX.bin ../../app/src/main/res/raw/tetrano_nn.bin
 ```
 
 ## Tests
