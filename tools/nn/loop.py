@@ -37,6 +37,9 @@ DEFAULTS = {
     "games": 2000,
     "sims": 48,
     "random_plies": 5,
+    # "0.2,0.8": always random_plies random moves, kept only if the network's direct evaluation
+    # gives the side to move a win probability in that range (drawn again otherwise).
+    "disputed": "",
     "threads": max(1, (os.cpu_count() or 4) - 2),
     "batch": 1024,
     "reuse": 4.0,
@@ -54,6 +57,7 @@ DEFAULTS = {
     "elo_sims": 64,
     "elo_reference": "",
     "keep_checkpoint_every": 10,
+    "keep_data": 0,  # 1: never delete self-play data (to train other networks on it later)
     "java_heap": "6g",
 }
 
@@ -166,7 +170,7 @@ def window_files(files, max_positions):
 def clean_up(run, cfg, gen, kept_data):
     """Deletes data files out of the window and most checkpoints (one in N and the last are kept)."""
     for f in data.files_in(run / "data"):
-        if f not in kept_data:
+        if f not in kept_data and not cfg["keep_data"]:
             f.unlink(missing_ok=True)
     every = cfg["keep_checkpoint_every"]
     for f in (run / "checkpoints").glob("gen_*.pt"):
@@ -222,8 +226,10 @@ def main():
         model.load_state_dict(ckpt["model"])
         optimizer.load_state_dict(ckpt["optimizer"])
     elif args.init_checkpoint:
-        start, _, missing = load_checkpoint(args.init_checkpoint, strict=False)
+        start, ckpt, missing = load_checkpoint(args.init_checkpoint, strict=False)
         model.load_state_dict(start.state_dict())
+        if not missing and "optimizer" in ckpt:
+            optimizer.load_state_dict(ckpt["optimizer"])  # same network: continue with its Adam moments
         log(run, f"warm start from {args.init_checkpoint} (new parameters: {missing})")
     model.eval()
     if gen == 0 and args.init_checkpoint and not (run / "models" / "init.bin").exists():
@@ -247,7 +253,8 @@ def main():
             if state["phase"] == "selfplay":
                 res = java(cfg, ["selfplay", f"model={prev_model}", f"games={cfg['games']}", f"sims={cfg['sims']}",
                                  f"random_plies={cfg['random_plies']}", f"threads={cfg['threads']}",
-                                 f"out={out}", f"seed={gen + 1}"], deadline)
+                                 f"out={out}", f"seed={gen + 1}"]
+                           + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else []), deadline)
                 row.update(res)
                 row["selfplay_s"] = round(time.time() - phase_start)
                 log(run, f"gen {gen} self-play: {res}")

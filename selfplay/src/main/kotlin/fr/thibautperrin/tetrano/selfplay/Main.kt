@@ -18,7 +18,7 @@ import kotlin.random.Random
 /**
  * Usage: `selfplay <command> key=value...`
  *
- * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N random_plies=5`
+ * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N random_plies=5 [disputed=0.2,0.8]`
  * - `arena a=<file|none> b=<file|none> games=N sims=N threads=N`
  * - `vslegacy model=<file> level=100 games=N sims=N threads=N`
  * - `bench model=<file> sims=N`
@@ -77,12 +77,52 @@ private fun randomFreeCell(occupied: Long, rng: Random): Int {
 }
 
 /**
+ * Openings kept only when they are "disputed": the network's direct evaluation (one forward pass,
+ * no search) gives the side to move a win probability in [minWin, maxWin].
+ */
+private class DisputedFilter(val net: QubicNet, val minWin: Float, val maxWin: Float) {
+    val attempts = AtomicLong(0)
+    val accepted = AtomicLong(0)
+
+    /** One per thread: the network's scratch buffers. */
+    inner class Judge {
+        private val workspace = net.newWorkspace()
+        private val logits = FloatArray(64)
+        private val wdl = FloatArray(3)
+
+        fun accepts(mine: Long, theirs: Long): Boolean {
+            attempts.incrementAndGet()
+            net.evaluate(mine, theirs, workspace, logits, wdl)
+            val ok = wdl[0] in minWin..maxWin
+            if (ok) accepted.incrementAndGet()
+            return ok
+        }
+    }
+
+    companion object {
+        /** `disputed=0.2,0.8` -> a filter on [net] (none without the option). */
+        fun parse(option: String?, net: QubicNet?): DisputedFilter? {
+            if (option == null) return null
+            val (lo, hi) = option.split(",").map { it.toFloat() }
+            return DisputedFilter(net ?: error("disputed= needs a model"), lo, hi)
+        }
+    }
+}
+
+/**
  * Plays one self-play game. It starts with 0..[maxRandomPlies] uniformly random moves (not
  * recorded: they are not good moves to learn from), then the search plays both sides to the
  * real end of the game — also once a position is proven, so that every position knows how many
- * plies were left.
+ * plies were left. With a [judge], always exactly [maxRandomPlies] random moves, drawn again
+ * until the judge finds the position disputed.
  */
-private fun playGame(mcts: GumbelMcts, sims: Int, maxRandomPlies: Int, rng: Random): PlayedGame {
+private fun playGame(
+    mcts: GumbelMcts,
+    sims: Int,
+    maxRandomPlies: Int,
+    rng: Random,
+    judge: DisputedFilter.Judge? = null,
+): PlayedGame {
     var mine: Long
     var theirs: Long
     var ply: Int
@@ -91,7 +131,7 @@ private fun playGame(mcts: GumbelMcts, sims: Int, maxRandomPlies: Int, rng: Rand
         theirs = 0L
         ply = 0
         var over = false
-        repeat(rng.nextInt(maxRandomPlies + 1)) {
+        repeat(if (judge != null) maxRandomPlies else rng.nextInt(maxRandomPlies + 1)) {
             if (over) return@repeat
             val cell = randomFreeCell(mine or theirs, rng)
             val after = mine or (1L shl cell)
@@ -100,7 +140,7 @@ private fun playGame(mcts: GumbelMcts, sims: Int, maxRandomPlies: Int, rng: Rand
             theirs = after
             ply++
         }
-    } while (over)
+    } while (over || (judge != null && !judge.accepts(mine, theirs)))
     val positions = ArrayList<Position>()
     while (true) {
         val result = mcts.search(mine, theirs, sims)
@@ -149,6 +189,7 @@ private fun selfPlay(options: Map<String, String>) {
     val threads = options.int("threads", Runtime.getRuntime().availableProcessors() - 2)
     val seed = options.long("seed", System.nanoTime())
     val randomPlies = options.int("random_plies", 5)
+    val filter = DisputedFilter.parse(options["disputed"], net)
     val outFile = File(options["out"] ?: error("out= required"))
     val tmp = File(outFile.path + ".tmp")
     val started = System.nanoTime()
@@ -163,8 +204,9 @@ private fun selfPlay(options: Map<String, String>) {
             pool.execute {
                 val rng = Random(seed * 1000 + t)
                 val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
+                val judge = filter?.Judge()
                 while (next.getAndIncrement() < games) {
-                    val game = playGame(mcts, sims, randomPlies, rng)
+                    val game = playGame(mcts, sims, randomPlies, rng, judge)
                     val buffer = ByteBuffer.allocate(game.positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
                     encode(game, buffer)
                     synchronized(file) {
@@ -186,7 +228,8 @@ private fun selfPlay(options: Map<String, String>) {
     println(
         "RESULT games=$games positions=${positionsCount.get()} firstWins=${wins[0]} secondWins=${wins[1]} " +
             "draws=${wins[2]} avgPlies=${"%.1f".format(java.util.Locale.ROOT, plySum.toDouble() / games)} " +
-            "evals=${evaluations.get()} seconds=${"%.1f".format(java.util.Locale.ROOT, seconds)}",
+            "evals=${evaluations.get()} seconds=${"%.1f".format(java.util.Locale.ROOT, seconds)}" +
+            (filter?.let { " openingDraws=${it.attempts.get()} openingsKept=${it.accepted.get()}" } ?: ""),
     )
 }
 
@@ -233,10 +276,10 @@ private fun tournamentPlayer(net: QubicNet?, sims: Int, noisyMoves: Int, seed: L
 
 /**
  * The first [count] random openings of [plies] moves for [seed]: no line or threat for either
- * side, all distinct up to the 192 board symmetries. Deterministic, so every pair of a
- * tournament plays the same openings.
+ * side, all distinct up to the 192 board symmetries, and disputed for [judge] if given.
+ * Deterministic, so every pair of a tournament plays the same openings.
  */
-private fun randomOpenings(seed: Long, count: Int, plies: Int): List<List<Int>> {
+private fun randomOpenings(seed: Long, count: Int, plies: Int, judge: DisputedFilter.Judge? = null): List<List<Int>> {
     val rng = Random(seed)
     val seen = HashSet<Pair<Long, Long>>()
     val openings = ArrayList<List<Int>>()
@@ -253,6 +296,7 @@ private fun randomOpenings(seed: Long, count: Int, plies: Int): List<List<Int>> 
         }
         if (Tactics.threats(mine, theirs) != 0L || Tactics.threats(theirs, mine) != 0L) continue
         if (Tactics.hasWon(mine) || Tactics.hasWon(theirs)) continue
+        if (judge != null && !judge.accepts(mine, theirs)) continue
         var best: Pair<Long, Long>? = null
         for (s in 0 until fr.thibautperrin.tetrano.engine.nn.QubicGeometry.symmetryCount) {
             val key = fr.thibautperrin.tetrano.engine.nn.QubicGeometry.transform(s, mine) to
@@ -269,11 +313,12 @@ private fun randomOpenings(seed: Long, count: Int, plies: Int): List<List<Int>> 
 }
 
 /**
- * `match a= b= games= sims= [sims_a= sims_b=] threads= openings=empty|random opening_plies=5 seed= offset= noisy_moves=4 games_out=`
+ * `match a= b= games= sims= [sims_a= sims_b=] threads= openings=empty|random opening_plies=5 seed= offset= noisy_moves=4 games_out= [judge=<file> disputed=0.2,0.8]`
  *
  * empty: game g starts from the empty board, A moves first in even games.
  * random: game g starts from opening `offset + g / 2`, A to move in even games, B in odd ones
- * (each opening is played once each way).
+ * (each opening is played once each way); with `judge`, only openings that network finds
+ * disputed (see [DisputedFilter]).
  */
 private fun tournamentMatch(options: Map<String, String>) {
     val a = loadNet(options["a"])
@@ -287,7 +332,8 @@ private fun tournamentMatch(options: Map<String, String>) {
     val seed = options.long("seed", 1)
     val random = options["openings"] == "random"
     val offset = options.int("offset", 0)
-    val openings = if (random) randomOpenings(seed, offset + (games + 1) / 2, options.int("opening_plies", 5)) else emptyList()
+    val judge = DisputedFilter.parse(options["disputed"], loadNet(options["judge"]))?.Judge()
+    val openings = if (random) randomOpenings(seed, offset + (games + 1) / 2, options.int("opening_plies", 5), judge) else emptyList()
     val lines = arrayOfNulls<String>(games)
     val next = AtomicInteger(0)
     val started = System.nanoTime()
