@@ -4,7 +4,9 @@ Reference implementation of the forward pass mirrored by the app's
 engine/src/main/kotlin/.../engine/nn/QubicNet.kt. Any change here must be
 reflected there (and in the export order of `export_weights`).
 """
+import os
 import struct
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -109,10 +111,15 @@ class QubicNet(nn.Module):
         return torch.cat([t.reshape(-1).float() for t in out]).numpy()
 
     def export_weights(self, path):
+        """Writes the QNET file atomically (temporary file renamed at the end): a reader, or a
+        resumed run after a hard kill, never sees a truncated model."""
         flat = self.flat_parameters().astype("<f4")
-        with open(path, "wb") as f:
+        path = Path(path)
+        tmp = path.with_name(path.name + ".tmp")
+        with open(tmp, "wb") as f:
             f.write(struct.pack("<iiiii", MAGIC, VERSION, self.hidden, self.layers, flat.size))
             f.write(flat.tobytes())
+        os.replace(tmp, path)
 
 
 def evaluate_bits(model, mine, theirs):

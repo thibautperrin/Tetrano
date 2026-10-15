@@ -4,18 +4,25 @@ Each generation: self-play with the latest network (Kotlin, `:selfplay`, games s
 0..5 random moves and played to the end) -> train on a sliding window of recent positions ->
 export -> every few generations, an Elo check against a reference network on paired random
 openings. Everything lives in the run directory; re-running the same command resumes where it
-stopped (the generation in progress is redone).
+stopped (the generation in progress is redone, except the self-play chunks already finished
+with --chunk-games).
 
     python loop.py --run runs/weekend --init-checkpoint runs/main/checkpoints/gen_0198.pt \
         --stop-at 2026-10-11T18:00 --elo-reference runs/main/models/gen_0198.bin
+
+A hard kill (closed console, taskkill /F) at any moment leaves a resumable run: every file is
+written to a temporary file then renamed (state, config, metrics, checkpoints, models, self-play
+data), and the java child dies with this process (winproc.run_child).
 """
 import argparse
 import csv
 import datetime as dt
+import io
 import json
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -27,6 +34,7 @@ import torch
 import data
 import train
 from model import load_checkpoint
+from winproc import keep_system_awake, run_child  # keep_system_awake: also imported from here
 
 ROOT = Path(__file__).resolve().parents[2]  # the Tetrano repository
 SELFPLAY_LIB = ROOT / "selfplay" / "build" / "install" / "selfplay" / "lib"
@@ -35,6 +43,9 @@ DEFAULTS = {
     "hidden": 48,
     "layers": 6,
     "games": 2000,
+    # > 0: a generation's self-play runs as successive java calls of chunk_games games each
+    # (data/partial/), so that stopping loses at most one chunk; 0: one call.
+    "chunk_games": 0,
     "sims": 48,
     "random_plies": 5,
     # "0.2,0.8": always random_plies random moves, kept only if the network's direct evaluation
@@ -51,6 +62,10 @@ DEFAULTS = {
     "lr_peak": 5e-4,
     "lr_final": 5e-5,
     "lr_hold": 0.4,
+    # By generations instead (when lr_decay_gens > 0, whatever --stop-at): lr_peak until
+    # generation lr_hold_gens, cosine down to lr_final at generation lr_decay_gens, then lr_final.
+    "lr_hold_gens": 0,
+    "lr_decay_gens": 0,
     "weight_decay": 1e-4,
     "elo_every": 0,  # > 0: Elo check against elo_reference every N generations (off: benchmark at the end)
     "elo_games": 200,
@@ -73,6 +88,14 @@ def log(run, msg):
         f.write(line + "\n")
 
 
+def write_atomic(path, text):
+    path = Path(path)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8", newline="") as f:
+        f.write(text)
+    os.replace(tmp, path)
+
+
 def remaining(deadline):
     if deadline is None:
         return None
@@ -87,7 +110,7 @@ def java(cfg, args, deadline):
     cmd = ["java", f"-Xmx{cfg['java_heap']}", "-cp", str(SELFPLAY_LIB / "*"),
            "fr.thibautperrin.tetrano.selfplay.MainKt"] + args
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=remaining(deadline))
+        proc = run_child(cmd, timeout=remaining(deadline))
     except subprocess.TimeoutExpired:
         raise DeadlineReached()
     if proc.returncode != 0:
@@ -100,15 +123,24 @@ def java(cfg, args, deadline):
     return results
 
 
-def lr_for(cfg, state, deadline):
+def lr_for(cfg, state, deadline, gen):
+    peak, final = cfg["lr_peak"], cfg["lr_final"]
+    if cfg.get("lr_decay_gens", 0) > 0:
+        hold, end = cfg.get("lr_hold_gens", 0), cfg["lr_decay_gens"]
+        if gen <= hold:
+            return peak
+        if gen >= end:
+            return final
+        t = (gen - hold) / max(1, end - hold)
+        return final + (peak - final) * 0.5 * (1.0 + math.cos(math.pi * t))
     if deadline is None:
-        return cfg["lr_peak"]
+        return peak
     start = state["start_time"]
     f = min(1.0, max(0.0, (time.time() - start) / max(1.0, deadline - start)))
     if f < cfg["lr_hold"]:
-        return cfg["lr_peak"]
+        return peak
     t = (f - cfg["lr_hold"]) / (1.0 - cfg["lr_hold"])
-    return cfg["lr_final"] + (cfg["lr_peak"] - cfg["lr_final"]) * 0.5 * (1.0 + math.cos(math.pi * t))
+    return final + (peak - final) * 0.5 * (1.0 + math.cos(math.pi * t))
 
 
 def elo_from_score(score):
@@ -131,9 +163,7 @@ def load_state(run):
 
 
 def save_state(run, state):
-    tmp = run / "state.json.tmp"
-    tmp.write_text(json.dumps(state, indent=1))
-    os.replace(tmp, run / "state.json")
+    write_atomic(run / "state.json", json.dumps(state, indent=1))
 
 
 FIELDS = ["generation", "time", "compute_s", "games", "positions", "firstWins", "secondWins", "draws",
@@ -143,13 +173,27 @@ FIELDS = ["generation", "time", "compute_s", "games", "positions", "firstWins", 
 
 
 def append_metrics(run, row):
+    """Adds the generation's row, replacing any row of this generation or a later one (left by a
+    kill between this write and the state's). The whole file is rewritten atomically; existing
+    lines are kept verbatim."""
     path = run / "metrics.csv"
-    new = not path.exists()
-    with open(path, "a", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=FIELDS, extrasaction="ignore")
-        if new:
-            w.writeheader()
-        w.writerow(row)
+    gen = int(row["generation"])
+    lines = []
+    if path.exists():
+        with open(path, encoding="utf-8", newline="") as f:
+            lines = f.read().splitlines(keepends=True)
+    out = io.StringIO()
+    if lines:
+        out.write(lines[0] if lines[0].endswith("\n") else lines[0] + "\n")
+        for line in lines[1:]:
+            first = line.split(",", 1)[0].strip()
+            if line.endswith("\n") and re.fullmatch(r"-?\d+", first) and int(first) < gen:
+                out.write(line)
+    w = csv.DictWriter(out, fieldnames=FIELDS, extrasaction="ignore", lineterminator="\r\n")
+    if not lines:
+        w.writeheader()
+    w.writerow(row)
+    write_atomic(path, out.getvalue())
 
 
 def model_file(run, gen):
@@ -179,12 +223,73 @@ def clean_up(run, cfg, gen, kept_data):
             f.unlink(missing_ok=True)
 
 
-def keep_system_awake():
-    """Windows: ask the OS not to idle-sleep while this process runs (released when it exits)."""
-    if sys.platform == "win32":
-        import ctypes
-        es_continuous, es_system_required = 0x80000000, 0x00000001
-        ctypes.windll.kernel32.SetThreadExecutionState(es_continuous | es_system_required)
+# ---- self-play ----
+
+def selfplay_args(cfg, model, games, out, seed):
+    return (["selfplay", f"model={model}", f"games={games}", f"sims={cfg['sims']}",
+             f"random_plies={cfg['random_plies']}", f"threads={cfg['threads']}", f"out={out}", f"seed={seed}"]
+            + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else []))
+
+
+SUMMED = ("games", "positions", "firstWins", "secondWins", "draws", "evals", "openingDraws", "openingsKept")
+
+
+def aggregate(results):
+    """One RESULT for the whole generation from the chunks' ones."""
+    total = {}
+    for key in SUMMED:
+        if any(key in r for r in results):
+            total[key] = sum(int(r.get(key, 0)) for r in results)
+    games = total.get("games", 0)
+    total["avgPlies"] = round(sum(float(r["avgPlies"]) * int(r["games"]) for r in results) / max(1, games), 1)
+    total["seconds"] = round(sum(float(r["seconds"]) for r in results), 1)
+    total["chunks"] = len(results)
+    return total
+
+
+def partial_dir(run):
+    return run / "data" / "partial"
+
+
+def remove_partials(run, upto):
+    """Deletes the chunk files of generations <= upto."""
+    for f in partial_dir(run).glob("gen_*"):
+        m = re.match(r"gen_(-?\d+)_", f.name)
+        if m and int(m.group(1)) <= upto:
+            f.unlink(missing_ok=True)
+
+
+def chunked_selfplay(run, cfg, state, gen, prev_model, out, deadline):
+    """The generation's self-play as successive java calls of chunk_games games. Each finished
+    chunk is data/partial/gen_XXXX_cNNN.bin (+ .json, its RESULT); a resumed generation only plays
+    the missing chunks. Returns the aggregated RESULT once out (all chunks, in order) is written."""
+    part = partial_dir(run)
+    part.mkdir(parents=True, exist_ok=True)
+    plan = state.get("chunk_plan")
+    if not plan:  # frozen for the generation, so that a config change cannot mix chunk sizes
+        n, c = cfg["games"], cfg["chunk_games"]
+        plan = [min(c, n - k) for k in range(0, n, c)]
+        state["chunk_plan"] = plan
+        save_state(run, state)
+    results, files = [], []
+    for i, games in enumerate(plan):
+        stem = part / f"gen_{gen:04d}_c{i:03d}"
+        chunk, meta = Path(f"{stem}.bin"), Path(f"{stem}.json")
+        if not (chunk.exists() and meta.exists()):
+            tmp = Path(f"{stem}.bin.tmp")  # the java tool itself writes <out>.tmp, then renames it to <out>
+            res = java(cfg, selfplay_args(cfg, prev_model, games, tmp, gen * 1000 + i + 1), deadline)
+            write_atomic(meta, json.dumps(res))
+            os.replace(tmp, chunk)
+            log(run, f"gen {gen} self-play chunk {i + 1}/{len(plan)}: {res}")
+        results.append(json.loads(meta.read_text()))
+        files.append(chunk)
+    tmp = Path(f"{out}.tmp")
+    with open(tmp, "wb") as dst:
+        for f in files:
+            with open(f, "rb") as src:
+                shutil.copyfileobj(src, dst, 1 << 22)
+    os.replace(tmp, out)
+    return aggregate(results)
 
 
 def main():
@@ -209,7 +314,7 @@ def main():
         v = getattr(args, key)
         if v is not None:
             cfg[key] = v
-    cfg_path.write_text(json.dumps(cfg, indent=1))
+    write_atomic(cfg_path, json.dumps(cfg, indent=1))
     deadline = dt.datetime.fromisoformat(args.stop_at).timestamp() if args.stop_at else None
     torch.set_num_threads(os.cpu_count() or 4)
     if not SELFPLAY_LIB.exists():
@@ -218,6 +323,8 @@ def main():
     state = load_state(run)
     save_state(run, state)
     gen = state["generation"]
+    # Chunks of finished generations (a kill between the state's update and their deletion).
+    remove_partials(run, gen if state["phase"] != "selfplay" else gen - 1)
     model = train.new_model(cfg["hidden"], cfg["layers"])
     optimizer = train.make_optimizer(model, cfg["lr_peak"], cfg["weight_decay"])
     last_trained = gen if state["phase"] == "eval" else gen - 1
@@ -233,7 +340,7 @@ def main():
         log(run, f"warm start from {args.init_checkpoint} (new parameters: {missing})")
     model.eval()
     if gen == 0 and args.init_checkpoint and not (run / "models" / "init.bin").exists():
-        # The warm-start network plays generation 0's self-play.
+        # The warm-start network plays generation 0's self-play (export_weights is atomic).
         model.export_weights(run / "models" / "init.bin")
     rng = np.random.default_rng(int(time.time()))
     log(run, f"start at generation {gen}, phase {state['phase']}, config {cfg}")
@@ -251,15 +358,17 @@ def main():
             phase_start = time.time()
 
             if state["phase"] == "selfplay":
-                res = java(cfg, ["selfplay", f"model={prev_model}", f"games={cfg['games']}", f"sims={cfg['sims']}",
-                                 f"random_plies={cfg['random_plies']}", f"threads={cfg['threads']}",
-                                 f"out={out}", f"seed={gen + 1}"]
-                           + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else []), deadline)
+                if cfg["chunk_games"] > 0:
+                    res = chunked_selfplay(run, cfg, state, gen, prev_model, out, deadline)
+                else:
+                    res = java(cfg, selfplay_args(cfg, prev_model, cfg["games"], out, gen + 1), deadline)
                 row.update(res)
                 row["selfplay_s"] = round(time.time() - phase_start)
                 log(run, f"gen {gen} self-play: {res}")
+                state.pop("chunk_plan", None)
                 state.update(phase="train", selfplay=res, compute_s=state["compute_s"] + time.time() - phase_start)
                 save_state(run, state)
+                remove_partials(run, gen)
             else:
                 row.update(state.get("selfplay", {}))
 
@@ -273,7 +382,7 @@ def main():
                 files = window_files(data.files_in(run / "data"), window_size)
                 window = data.load_window(files, window_size)
                 steps = max(50, math.ceil(len(fresh) * cfg["reuse"] / cfg["batch"]))
-                lr = lr_for(cfg, state, deadline)
+                lr = lr_for(cfg, state, deadline, gen)
                 for group in optimizer.param_groups:
                     group["lr"] = lr
                 log(run, f"gen {gen} training {steps} steps on {data.summary(window)}, lr {lr:.2e}")
@@ -286,10 +395,11 @@ def main():
                            policy_loss=round(result[1], 4), moves_left_loss=round(result[2], 5),
                            train_s=round(time.time() - t))
                 log(run, f"gen {gen} trained: value {result[0]:.4f} policy {result[1]:.4f} moves-left {result[2]:.5f}")
-                clean_up(run, cfg, gen, set(files))
                 state.update(phase="eval", train_row={k: row[k] for k in row if k not in ("generation", "time")},
                              compute_s=state["compute_s"] + time.time() - t)
                 save_state(run, state)
+                # Only now: a kill before the state's update must still find checkpoint gen - 1.
+                clean_up(run, cfg, gen, set(files))
             else:
                 row.update(state.get("train_row", {}))
 
