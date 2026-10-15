@@ -4,7 +4,7 @@ import fr.thibautperrin.tetrano.engine.ai.AiProgress
 import fr.thibautperrin.tetrano.engine.ai.AiSearchPhase
 
 /** Bitboards of a game given as its rings in play order (the first ring is the first player's). */
-class Position(val mine: Long, val theirs: Long) {
+data class Position(val mine: Long, val theirs: Long) {
     companion object {
         /** The position after [moves], from the point of view of the player to move. */
         fun after(moves: ByteArray, count: Int = moves.size): Position {
@@ -19,57 +19,34 @@ class Position(val mine: Long, val theirs: Long) {
 }
 
 /**
- * The level-101 player: [GumbelMcts] guided by [QubicNet], with a
- * thinking-time budget. Plays either side. Deterministic except for its
- * first moves, sampled (Gumbel noise) among the best ones so that openings
- * vary from game to game.
- *
- * The simulation count is derived from the budget and a running estimate
- * of the time one simulation takes on this device, so sequential halving
- * gets to finish its phases; a hard deadline at twice the budget is a
- * safety net. Not thread-safe.
+ * The level-101 player: [GumbelMcts] guided by [QubicNet], searching a
+ * fixed number of simulations per move (the "variations tested", a user
+ * setting). Plays either side. Deterministic except for its first moves,
+ * sampled (Gumbel noise) among the best ones so that openings vary from
+ * game to game. Not thread-safe.
  */
 class NeuralPlayer(
     net: QubicNet,
-    private val maxSimulations: Int = 3000,
-    private val minSimulations: Int = 32,
     /** Moves played with Gumbel noise at the start of a game, so the openings vary. */
     private val variedOpeningPlies: Int = 4,
 ) {
     private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false))
-    private var nanosPerSimulation = 0.0
 
-    init {
-        // Calibrate on a quiet early position.
-        val start = System.nanoTime()
-        val r = mcts.search(1L, 1L shl 63, 24)
-        nanosPerSimulation = (System.nanoTime() - start).toDouble() / maxOf(1, r.simulations)
-    }
-
-    /** The full search result for the player to move after [movesPlayed]. */
-    fun search(movesPlayed: ByteArray, timeBudgetMillis: Long, progress: AiProgress? = null): GumbelMcts.Result {
+    /** The full search result for the player to move after [movesPlayed], with [simulations] simulations. */
+    fun search(movesPlayed: ByteArray, simulations: Int, progress: AiProgress? = null): GumbelMcts.Result {
         val position = Position.after(movesPlayed)
-        val budgetNanos = timeBudgetMillis * 1_000_000
-        val simulations = (budgetNanos / nanosPerSimulation).toInt().coerceIn(minSimulations, maxSimulations)
-        val start = System.nanoTime()
-        val result = mcts.search(
+        return mcts.search(
             position.mine,
             position.theirs,
-            simulations,
-            deadlineNanos = start + 2 * budgetNanos,
+            simulations.coerceAtLeast(1),
             noise = movesPlayed.size < variedOpeningPlies,
         ) { done, total ->
             progress?.onProgress(AiSearchPhase.NEURAL_SEARCH, done, total)
             progress?.isCancelled() != true
         }
-        if (result.simulations >= 16) {
-            val measured = (System.nanoTime() - start).toDouble() / result.simulations
-            nanosPerSimulation = 0.7 * nanosPerSimulation + 0.3 * measured
-        }
-        return result
     }
 
     /** The ring to play after [movesPlayed]. */
-    fun chooseRing(movesPlayed: ByteArray, timeBudgetMillis: Long, progress: AiProgress? = null): Int =
-        search(movesPlayed, timeBudgetMillis, progress).move
+    fun chooseRing(movesPlayed: ByteArray, simulations: Int, progress: AiProgress? = null): Int =
+        search(movesPlayed, simulations, progress).move
 }

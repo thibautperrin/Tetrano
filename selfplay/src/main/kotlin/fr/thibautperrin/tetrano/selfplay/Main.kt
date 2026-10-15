@@ -23,6 +23,7 @@ import kotlin.random.Random
  * - `vslegacy model=<file> level=100 games=N sims=N threads=N`
  * - `bench model=<file> sims=N`
  * - `match a=<file> b=<file> ...` (tournament games, see [tournamentMatch])
+ * - `puzzles data=<dir> model=<file> out=<file> ...` (the app's puzzle set, see [generatePuzzles])
  *
  * Output lines starting with `RESULT ` are machine-readable `key=value` pairs
  * read by tools/nn/loop.py.
@@ -39,6 +40,7 @@ fun main(args: Array<String>) {
         "vslegacy" -> vsLegacy(options)
         "bench" -> bench(options)
         "match" -> tournamentMatch(options)
+        "puzzles" -> generatePuzzles(options)
         else -> error("unknown command $command")
     }
 }
