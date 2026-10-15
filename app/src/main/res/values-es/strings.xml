@@ -24,13 +24,11 @@
     <string name="Adversary_Color">Color adversario</string>
     <string name="Two_Players">2 jugadores</string>
     <string name="One_Player">1 jugador</string>
-    <string name="Saved_Games">Respaldos</string>
     <string name="Challenge">Desafío</string>
     <string name="Joueur1">Jugador1</string>
     <string name="Joueur2">Jugador2</string>
     <string name="Level">nivel</string>
     <string name="Who_Begins">Quién empezar?</string>
-    <string name="Save_The_Game">Guardar el juego</string>
     <string name="Enter_A_Name">Introduzca el nombre del partido</string>
     <string name="Cancel">Cancelar</string>
     <string name="Settings_Saved">Ajustes guardados</string>
@@ -73,7 +71,6 @@
     <string name="Sentence_Confirm_Use_Star">¿Realmente desea utilizar una de sus estrellas para conseguir una pista?</string>
     <string name="All_Levels_Passed">Se las arregló todos los niveles. Ha terminado el modo desafío!</string>
     <string name="Sentence_No_Saved_Game">Usted no tiene ningún juego guardados.</string>
-    <string name="Watch">Visualizar</string>
     <string name="Delete">Remover</string>
     <string name="Rename">Reelegir</string>
     <string name="Confirm">Confirmar</string>
@@ -84,7 +81,6 @@
     <string name="Ring">Anillo</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
-    <string name="online_coming_soon">En línea (próximamente)</string>
     <string name="previous">Anterior</string>
     <string name="name_already_used">Ya existe una partida guardada con este nombre.</string>
 
@@ -93,8 +89,6 @@
     <string name="Internal_Error">Error interno. Lo siento.</string>
     <string name="Joueur1_Name">Nombre jugador1</string>
     <string name="Joueur2_Name">Nombre jugador2</string>
-    <string name="Game_Of">Parte de</string>
-    <string name="Analyse_Game">Analizar la partida</string>
     <string name="Review_Game">Revisar la partida</string>
     <string name="Analysing">Analizando…</string>
     <string name="Draw_Short">Tablas</string>
@@ -108,4 +102,52 @@
     <string name="Previous_Mistake">Error anterior</string>
     <string name="Next_Mistake">Error siguiente</string>
     <string name="Level_Neural">red neuronal</string>
+
+    <!-- Analysis, puzzles and the new settings (2026-10). -->
+    <string name="back">Atrás</string>
+    <string name="settings_section_player">Jugador</string>
+    <string name="settings_section_colors">Colores de los anillos</string>
+    <string name="settings_your_rings">Tus anillos</string>
+    <string name="settings_opponent_rings">Anillos del adversario</string>
+    <string name="settings_color">Color</string>
+    <string name="settings_color_unavailable">Usado por el otro jugador</string>
+    <string name="settings_section_neural">Nivel 101 (red neuronal)</string>
+    <string name="settings_neural_simulations">Variantes probadas por jugada</string>
+    <string name="settings_neural_explanation">Cuantas más variantes prueba el ordenador, más fuerte juega, pero más tiempo piensa. Por defecto: %1$d.</string>
+    <string name="Analyse_Games">Analizar partidas</string>
+    <string name="Puzzles">Problemas</string>
+    <string name="analysis_empty_board">Tablero vacío</string>
+    <string name="analysis_empty_board_hint">Juega ambos bandos, la red analiza cada posición</string>
+    <string name="analysis_no_games">Tus partidas terminadas se guardarán aquí automáticamente.</string>
+    <string name="analysis_rings_count">Anillos: %1$d</string>
+    <string name="analysis_result_wins">gana</string>
+    <string name="analysis_result_unfinished">Sin terminar</string>
+    <string name="analysis_title">Análisis</string>
+    <string name="analysis_game_over">Partida terminada</string>
+    <string name="analysis_variations">%1$s variantes probadas</string>
+    <string name="analysis_best_move">Jugada recomendada: anillo translúcido</string>
+    <string name="analysis_forced_win">Victoria forzada</string>
+    <string name="analysis_forced_draw">Tablas forzadas</string>
+    <string name="analysis_depth">Límite: %1$s</string>
+    <string name="analysis_reviewing">Revisando las jugadas… %1$d %%</string>
+    <string name="analysis_first">Primera jugada</string>
+    <string name="analysis_last">Última jugada</string>
+    <string name="analysis_variation_from">Variante desde la jugada %1$d</string>
+    <string name="analysis_back_to_game">Volver a la partida</string>
+    <string name="analysis_play_hint">Arrastra un anillo para probar una jugada, de cualquier bando.</string>
+    <string name="puzzle_correct">¡Correcto! Sigue.</string>
+    <string name="puzzle_stats">Resueltos: %1$d de %2$d</string>
+    <string name="puzzle_solved">¡Resuelto!</string>
+    <string name="puzzle_failed">No es una jugada ganadora</string>
+    <string name="puzzle_solution_shown">Una jugada ganadora se muestra como un anillo translúcido.</string>
+    <string name="puzzle_rating_change">Tu Elo: %1$d (%2$s)</string>
+    <string name="puzzle_difficulty">Elo del problema: %1$d</string>
+    <string name="puzzle_retry">Reintentar</string>
+    <string name="puzzle_next">Siguiente problema</string>
+    <string name="puzzle_retry_note">Los reintentos no cambian tu Elo.</string>
+    <string name="puzzle_explanations">Cada problema es una posición de una partida en la que puedes forzar la victoria: encuentra las jugadas ganadoras, el adversario se defiende lo mejor posible. Una jugada errónea termina el intento.\n\nTú y los problemas tenéis un Elo: los problemas se eligen para que resuelvas unos 3 de cada 4, y tu Elo sigue tus resultados (solo cuenta el primer intento de cada problema).</string>
+    <plurals name="puzzle_find_win">
+        <item quantity="one">Gana en %d jugada</item>
+        <item quantity="other">Gana en %d jugadas</item>
+    </plurals>
 </resources>

@@ -4,8 +4,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -39,6 +41,24 @@ class TetranoPreferencesDataSource @Inject constructor(
 
     /** AI difficulty, 0..101 (101 = neural network). Ports `StaticFields.LABEL_LEVEL` / `ApplicationTetrano.niveauJeu`. */
     val aiLevel: Flow<Int> = intFlow(Keys.AI_LEVEL, DEFAULT_AI_LEVEL)
+
+    /** Simulations ("variations tested") per move of the level-101 network in a game. */
+    val neuralSimulations: Flow<Int> = intFlow(Keys.NEURAL_SIMULATIONS, DEFAULT_NEURAL_SIMULATIONS)
+
+    /** Simulations the analysis screen runs on the position on display before it stops. */
+    val analysisSimulations: Flow<Int> = intFlow(Keys.ANALYSIS_SIMULATIONS, DEFAULT_ANALYSIS_SIMULATIONS)
+
+    /** The Puzzles mode's rating, history and puzzle in progress. */
+    val puzzleProgress: Flow<PuzzleProgress> = dataStore.data.map {
+        PuzzleProgress(
+            rating = it[Keys.PUZZLE_RATING] ?: PuzzleProgress.INITIAL_RATING,
+            attempts = it[Keys.PUZZLE_ATTEMPTS] ?: 0,
+            solved = it[Keys.PUZZLE_SOLVED] ?: 0,
+            seen = it[Keys.PUZZLE_SEEN]?.mapNotNull(String::toIntOrNull)?.toSet().orEmpty(),
+            currentId = it[Keys.PUZZLE_CURRENT] ?: 0,
+            currentSymmetry = it[Keys.PUZZLE_SYMMETRY] ?: 0,
+        )
+    }
 
     /** Challenge-mode hint currency. Ports `MemoryVarsChallenge.numberStars`. */
     val numberStars: Flow<Int> = intFlow(Keys.NUMBER_STARS, DEFAULT_NUMBER_STARS)
@@ -83,6 +103,20 @@ class TetranoPreferencesDataSource @Inject constructor(
     }
 
     suspend fun setAiLevel(level: Int) = setInt(Keys.AI_LEVEL, level)
+    suspend fun setNeuralSimulations(simulations: Int) = setInt(Keys.NEURAL_SIMULATIONS, simulations)
+    suspend fun setAnalysisSimulations(simulations: Int) = setInt(Keys.ANALYSIS_SIMULATIONS, simulations)
+
+    /** Writes [progress] whole, in one transaction. */
+    suspend fun setPuzzleProgress(progress: PuzzleProgress) {
+        dataStore.edit {
+            it[Keys.PUZZLE_RATING] = progress.rating
+            it[Keys.PUZZLE_ATTEMPTS] = progress.attempts
+            it[Keys.PUZZLE_SOLVED] = progress.solved
+            it[Keys.PUZZLE_SEEN] = progress.seen.mapTo(HashSet()) { id -> id.toString() }
+            it[Keys.PUZZLE_CURRENT] = progress.currentId
+            it[Keys.PUZZLE_SYMMETRY] = progress.currentSymmetry
+        }
+    }
     suspend fun setNumberStars(count: Int) = setInt(Keys.NUMBER_STARS, count)
 
     suspend fun setGamesPlayedTwoPlayers(count: Int) = setInt(Keys.GAMES_2P, count)
@@ -128,6 +162,14 @@ class TetranoPreferencesDataSource @Inject constructor(
         val PLAYER2_NAME = stringPreferencesKey("player2_name")
         val USER_NAME = stringPreferencesKey("user_name")
         val AI_LEVEL = intPreferencesKey("ai_level")
+        val NEURAL_SIMULATIONS = intPreferencesKey("neural_simulations")
+        val ANALYSIS_SIMULATIONS = intPreferencesKey("analysis_simulations")
+        val PUZZLE_RATING = floatPreferencesKey("puzzle_rating")
+        val PUZZLE_ATTEMPTS = intPreferencesKey("puzzle_attempts")
+        val PUZZLE_SOLVED = intPreferencesKey("puzzle_solved")
+        val PUZZLE_SEEN = stringSetPreferencesKey("puzzle_seen")
+        val PUZZLE_CURRENT = intPreferencesKey("puzzle_current")
+        val PUZZLE_SYMMETRY = intPreferencesKey("puzzle_symmetry")
         val NUMBER_STARS = intPreferencesKey("number_stars")
         val GAMES_2P = intPreferencesKey("games_two_players")
         val GAMES_COMPUTER = intPreferencesKey("games_against_computer")
@@ -141,5 +183,25 @@ class TetranoPreferencesDataSource @Inject constructor(
     companion object {
         const val DEFAULT_AI_LEVEL: Int = 10
         const val DEFAULT_NUMBER_STARS: Int = 3
+        const val DEFAULT_NEURAL_SIMULATIONS: Int = 512
+        const val DEFAULT_ANALYSIS_SIMULATIONS: Int = 5_000
+    }
+}
+
+/**
+ * The Puzzles mode's state: an Elo-like [rating], counters, the puzzles already
+ * attempted ([seen], by id) and the one on display ([currentId], 0 = none yet,
+ * shown under board symmetry [currentSymmetry]).
+ */
+data class PuzzleProgress(
+    val rating: Float = INITIAL_RATING,
+    val attempts: Int = 0,
+    val solved: Int = 0,
+    val seen: Set<Int> = emptySet(),
+    val currentId: Int = 0,
+    val currentSymmetry: Int = 0,
+) {
+    companion object {
+        const val INITIAL_RATING: Float = 1200f
     }
 }

@@ -8,15 +8,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import fr.thibautperrin.tetrano.domain.model.GameMode
+import fr.thibautperrin.tetrano.ui.analysis.AnalyseGamesRoute
+import fr.thibautperrin.tetrano.ui.analysis.AnalysisRoute
 import fr.thibautperrin.tetrano.ui.challenge.ChallengeRoute
 import fr.thibautperrin.tetrano.ui.game.GameRoute
 import fr.thibautperrin.tetrano.ui.game.ReviewRequest
 import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
+import fr.thibautperrin.tetrano.ui.puzzles.PuzzleRoute
 import fr.thibautperrin.tetrano.ui.rules.RulesRoute
 import fr.thibautperrin.tetrano.ui.rules.WinningExamplesRoute
-import fr.thibautperrin.tetrano.ui.savedgames.SavedGameViewerRoute
-import fr.thibautperrin.tetrano.ui.savedgames.SavedGamesRoute
 import fr.thibautperrin.tetrano.ui.settings.SettingsRoute
 import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
 import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
@@ -31,12 +32,11 @@ import fr.thibautperrin.tetrano.ui.setup.TwoPlayersSetupRoute
  *   viewer and the setup screen).
  */
 /** The review screen for a game that just ended. */
-private fun ReviewRequest.toRoute() = TetranoRoute.SavedGameViewer(
+private fun ReviewRequest.toRoute() = TetranoRoute.Analysis(
     rings = rings,
     userBegins = userBegins,
     userColor = userColor,
     adversaryColor = adversaryColor,
-    analyse = true,
 )
 
 @Composable
@@ -56,8 +56,9 @@ fun TetranoNavHost(
             PlayMenuRoute(
                 onNavigateToTwoPlayersSetup = { navController.navigate(TetranoRoute.TwoPlayersSetup()) },
                 onNavigateToComputerSetup = { navController.navigate(TetranoRoute.ComputerSetup()) },
-                onNavigateToSavedGames = { navController.navigate(TetranoRoute.SavedGames) },
+                onNavigateToAnalyseGames = { navController.navigate(TetranoRoute.AnalyseGames) },
                 onNavigateToChallenge = { navController.navigate(TetranoRoute.Challenge) },
+                onNavigateToPuzzles = { navController.navigate(TetranoRoute.Puzzles) },
             )
         }
         composable<TetranoRoute.TwoPlayersSetup> { backStackEntry ->
@@ -108,14 +109,14 @@ fun TetranoNavHost(
                 onExit = { navController.popBackStack() },
             )
         }
-        composable<TetranoRoute.SavedGames> {
-            SavedGamesRoute(
-                onWatch = { name -> navController.navigate(TetranoRoute.SavedGameViewer(name)) },
-                onExit = { navController.popBackStack() },
+        composable<TetranoRoute.AnalyseGames> {
+            AnalyseGamesRoute(
+                onOpenGame = { name -> navController.navigate(TetranoRoute.Analysis(savedGameName = name)) },
+                onOpenEmptyBoard = { navController.navigate(TetranoRoute.Analysis()) },
             )
         }
-        composable<TetranoRoute.SavedGameViewer> {
-            SavedGameViewerRoute(
+        composable<TetranoRoute.Analysis> {
+            AnalysisRoute(
                 onContinueTwoPlayers = { name, ringCount ->
                     navController.navigate(TetranoRoute.TwoPlayersSetup(name, ringCount))
                 },
@@ -124,6 +125,7 @@ fun TetranoNavHost(
                 },
             )
         }
+        composable<TetranoRoute.Puzzles> { PuzzleRoute() }
         composable<TetranoRoute.Settings> { SettingsRoute(onDone = { navController.popBackStack() }) }
         composable<TetranoRoute.Rules> {
             RulesRoute(

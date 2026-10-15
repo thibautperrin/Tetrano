@@ -16,13 +16,11 @@
     <string name="Adversary_Color">Farbe des Gegners</string>
     <string name="Two_Players">2 Spieler</string>
     <string name="One_Player">1 Spieler</string>
-    <string name="Saved_Games">Gespeicherte Spiele</string>
     <string name="Challenge">Herausforderung</string>
     <string name="Joueur1">Spieler1</string>
     <string name="Joueur2">Spieler2</string>
     <string name="Level">Schwierigkeitsgrad</string>
     <string name="Who_Begins">Wer soll anfangen?</string>
-    <string name="Save_The_Game">Spiel speichern</string>
     <string name="Enter_A_Name">gib einen Namen ein</string>
     <string name="Cancel">abbrechen</string>
     <string name="Settings_Saved">Einstellungen gespeichert</string>
@@ -65,7 +63,6 @@
     <string name="Sentence_Confirm_Use_Star">Wollen Sie wirklich zu einem Ihrer Sterne zu verwenden, um einen Anhaltspunkt zu bekommen?</string>
     <string name="All_Levels_Passed">Sie verwaltet alle Ebenen. Sie sind auf der Challenge-Modus abgeschlossen!</string>
     <string name="Sentence_No_Saved_Game">Sie haben keine gespeicherten Spiele.</string>
-    <string name="Watch">abspielen</string>
     <string name="Delete">löschen</string>
     <string name="Rename">umbenennen</string>
     <string name="Confirm">bestätigen</string>
@@ -76,7 +73,6 @@
     <string name="Ring">Ring</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
-    <string name="online_coming_soon">Online (bald verfügbar)</string>
     <string name="previous">Zurück</string>
     <string name="name_already_used">Ein gespeichertes Spiel trägt bereits diesen Namen.</string>
 
@@ -85,8 +81,6 @@
     <string name="Internal_Error">Interner Fehler. Entschuldigung.</string>
     <string name="Joueur1_Name">Spielername1</string>
     <string name="Joueur2_Name">Spielername2</string>
-    <string name="Game_Of">Spiel vom</string>
-    <string name="Analyse_Game">Partie analysieren</string>
     <string name="Review_Game">Partie ansehen</string>
     <string name="Analysing">Analyse läuft…</string>
     <string name="Draw_Short">Remis</string>
@@ -100,4 +94,52 @@
     <string name="Previous_Mistake">Vorheriger Fehler</string>
     <string name="Next_Mistake">Nächster Fehler</string>
     <string name="Level_Neural">neuronales Netz</string>
+
+    <!-- Analysis, puzzles and the new settings (2026-10). -->
+    <string name="back">Zurück</string>
+    <string name="settings_section_player">Spieler</string>
+    <string name="settings_section_colors">Ringfarben</string>
+    <string name="settings_your_rings">Deine Ringe</string>
+    <string name="settings_opponent_rings">Ringe des Gegners</string>
+    <string name="settings_color">Farbe</string>
+    <string name="settings_color_unavailable">Vom anderen Spieler verwendet</string>
+    <string name="settings_section_neural">Stufe 101 (neuronales Netz)</string>
+    <string name="settings_neural_simulations">Getestete Varianten pro Zug</string>
+    <string name="settings_neural_explanation">Je mehr Varianten der Computer testet, desto stärker spielt er, aber desto länger denkt er nach. Standard: %1$d.</string>
+    <string name="Analyse_Games">Partien analysieren</string>
+    <string name="Puzzles">Rätsel</string>
+    <string name="analysis_empty_board">Leeres Brett</string>
+    <string name="analysis_empty_board_hint">Spiele beide Seiten, das Netz analysiert jede Stellung</string>
+    <string name="analysis_no_games">Deine beendeten Partien werden hier automatisch gespeichert.</string>
+    <string name="analysis_rings_count">Ringe: %1$d</string>
+    <string name="analysis_result_wins">gewinnt</string>
+    <string name="analysis_result_unfinished">Unbeendet</string>
+    <string name="analysis_title">Analyse</string>
+    <string name="analysis_game_over">Partie beendet</string>
+    <string name="analysis_variations">%1$s Varianten getestet</string>
+    <string name="analysis_best_move">Empfohlener Zug: durchscheinender Ring</string>
+    <string name="analysis_forced_win">Erzwungener Sieg</string>
+    <string name="analysis_forced_draw">Erzwungenes Remis</string>
+    <string name="analysis_depth">Grenze: %1$s</string>
+    <string name="analysis_reviewing">Züge werden geprüft… %1$d %%</string>
+    <string name="analysis_first">Erster Zug</string>
+    <string name="analysis_last">Letzter Zug</string>
+    <string name="analysis_variation_from">Variante ab Zug %1$d</string>
+    <string name="analysis_back_to_game">Zurück zur Partie</string>
+    <string name="analysis_play_hint">Ziehe einen Ring, um einen Zug zu testen, für beide Seiten.</string>
+    <string name="puzzle_correct">Richtig! Weiter so.</string>
+    <string name="puzzle_stats">Gelöst: %1$d von %2$d</string>
+    <string name="puzzle_solved">Gelöst!</string>
+    <string name="puzzle_failed">Kein Gewinnzug</string>
+    <string name="puzzle_solution_shown">Ein Gewinnzug wird als durchscheinender Ring gezeigt.</string>
+    <string name="puzzle_rating_change">Deine Wertung: %1$d (%2$s)</string>
+    <string name="puzzle_difficulty">Rätselwertung: %1$d</string>
+    <string name="puzzle_retry">Nochmal</string>
+    <string name="puzzle_next">Nächstes Rätsel</string>
+    <string name="puzzle_retry_note">Weitere Versuche ändern deine Wertung nicht.</string>
+    <string name="puzzle_explanations">Jedes Rätsel ist eine Stellung aus einer Partie, in der du den Sieg erzwingen kannst: Finde die Gewinnzüge, der Gegner verteidigt sich so gut wie möglich. Ein falscher Zug beendet den Versuch.\n\nDu und die Rätsel habt eine Elo-Wertung: Die Rätsel werden so gewählt, dass du etwa 3 von 4 löst, und deine Wertung folgt deinen Ergebnissen (nur der erste Versuch an einem Rätsel zählt).</string>
+    <plurals name="puzzle_find_win">
+        <item quantity="one">Gewinne in %d Zug</item>
+        <item quantity="other">Gewinne in %d Zügen</item>
+    </plurals>
 </resources>

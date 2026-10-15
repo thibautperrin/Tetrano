@@ -25,13 +25,11 @@
     <string name="Adversary_Color">Adversary color</string>
     <string name="Two_Players">2 players</string>
     <string name="One_Player">1 player</string>
-    <string name="Saved_Games">Saved Games</string>
     <string name="Challenge">Challenge</string>
     <string name="Joueur1">Player1</string>
     <string name="Joueur2">Player2</string>
     <string name="Level">Level</string>
     <string name="Who_Begins">Who begins?</string>
-    <string name="Save_The_Game">Save the game</string>
     <string name="Enter_A_Name">Enter a name</string>
     <string name="Cancel">Cancel</string>
     <string name="Settings_Saved">Settings saved</string>
@@ -75,7 +73,6 @@
     <string name="Sentence_Confirm_Use_Star">Do you really want using one of your stars to get a piece of advice?</string>
     <string name="All_Levels_Passed">You have passed all the levels. You have finished the challenge mode.</string>
     <string name="Sentence_No_Saved_Game">You haven’t saved a game yet.</string>
-    <string name="Watch">Watch</string>
     <string name="Delete">Delete</string>
     <string name="Rename">Rename</string>
     <string name="Confirm">Confirm</string>
@@ -86,7 +83,6 @@
     <string name="Ring">Ring</string>
 
     <!-- New in the rewrite: no legacy equivalent. -->
-    <string name="online_coming_soon">Online (coming soon)</string>
     <string name="previous">Previous</string>
     <string name="name_already_used">A saved game already has this name.</string>
 
@@ -95,8 +91,6 @@
     <string name="Internal_Error">Internal Error. Sorry.</string>
     <string name="Joueur1_Name">Joueur 1 name ?</string>
     <string name="Joueur2_Name">Joueur 2 name ?</string>
-    <string name="Game_Of">Game of</string>
-    <string name="Analyse_Game">Analyse the game</string>
     <string name="Review_Game">Review the game</string>
     <string name="Analysing">Analysing…</string>
     <string name="Draw_Short">Draw</string>
@@ -110,4 +104,53 @@
     <string name="Previous_Mistake">Previous mistake</string>
     <string name="Next_Mistake">Next mistake</string>
     <string name="Level_Neural">neural network</string>
+
+    <!-- Analysis, puzzles and the new settings (2026-10). -->
+    <string name="back">Back</string>
+    <string name="settings_section_player">Player</string>
+    <string name="settings_section_colors">Ring colors</string>
+    <string name="settings_your_rings">Your rings</string>
+    <string name="settings_opponent_rings">Opponent\'s rings</string>
+    <string name="settings_color">Color</string>
+    <string name="settings_color_unavailable">Used by the other player</string>
+    <string name="settings_section_neural">Level 101 (neural network)</string>
+    <string name="settings_neural_simulations">Variations tested per move</string>
+    <string name="settings_neural_explanation">The more variations the computer tests, the stronger it plays, but the longer it thinks. Default: %1$d.</string>
+    <string name="Analyse_Games">Analyse games</string>
+    <string name="Puzzles">Puzzles</string>
+    <string name="analysis_empty_board">Empty board</string>
+    <string name="analysis_empty_board_hint">Play both sides, the network analyses each position</string>
+    <string name="analysis_no_games">Your finished games will be saved here automatically.</string>
+    <string name="analysis_rings_count">Rings: %1$d</string>
+    <string name="analysis_result_wins">wins</string>
+    <string name="analysis_result_unfinished">Unfinished</string>
+    <string name="analysis_title">Analysis</string>
+    <string name="analysis_game_over">Game over</string>
+    <string name="analysis_variations">%1$s variations tested</string>
+    <string name="analysis_best_move">Recommended move: translucent ring</string>
+    <string name="analysis_forced_win">Forced win</string>
+    <string name="analysis_forced_draw">Forced draw</string>
+    <string name="analysis_depth">Limit: %1$s</string>
+    <string name="analysis_reviewing">Reviewing the moves… %1$d %%</string>
+    <string name="analysis_first">First move</string>
+    <string name="analysis_last">Last move</string>
+    <string name="analysis_variation_from">Variation from move %1$d</string>
+    <string name="analysis_back_to_game">Back to the game</string>
+    <string name="analysis_play_hint">Drag a ring to try a move, for either side.</string>
+    <string name="puzzle_correct">Correct! Keep going.</string>
+    <string name="puzzle_stats">Solved: %1$d out of %2$d</string>
+    <string name="puzzle_solved">Solved!</string>
+    <string name="puzzle_failed">Not a winning move</string>
+    <string name="puzzle_solution_shown">A winning move is shown as a translucent ring.</string>
+    <string name="puzzle_rating_change">Your rating: %1$d (%2$s)</string>
+    <string name="puzzle_difficulty">Puzzle rating: %1$d</string>
+    <string name="puzzle_retry">Retry</string>
+    <string name="puzzle_next">Next puzzle</string>
+    <string name="puzzle_retry_note">Retries do not change your rating.</string>
+    <string name="puzzle_explanations">Each puzzle is a position from a game where you can force a win: find the winning moves, the opponent defends as well as possible. A wrong move ends the attempt.\n\nYou and the puzzles have an Elo rating: puzzles are chosen so that you solve about 3 out of 4, and your rating follows your results (only the first attempt at a puzzle counts).</string>
+    <string name="puzzle_rating" translatable="false">Elo %1$d</string>
+    <plurals name="puzzle_find_win">
+        <item quantity="one">Win in %d move</item>
+        <item quantity="other">Win in %d moves</item>
+    </plurals>
 </resources>

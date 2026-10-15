@@ -34,6 +34,10 @@ interface SavedGameDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(game: SavedGameEntity): Long
 
+    /** Inserts [game], or replaces the game saved under the same name. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(game: SavedGameEntity)
+
     @Query("UPDATE saved_games SET name = :newName WHERE name = :previousName")
     suspend fun rename(previousName: String, newName: String): Int
 

@@ -25,10 +25,12 @@ import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 fun LegacyTopBar(
     title: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
         title = title,
+        navigationIcon = navigationIcon,
         actions = actions,
         modifier = modifier,
         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
@@ -46,11 +48,13 @@ fun LegacyTopBar(
 fun LegacyTopBar(
     title: String,
     modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     LegacyTopBar(
         title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         modifier = modifier,
+        navigationIcon = navigationIcon,
         actions = actions,
     )
 }

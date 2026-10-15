@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.map
 
 /**
  * In-memory [SavedGameDao]: insertion-ordered like the real `ORDER BY rowid`
- * (a rename keeps the game's position), IGNORE on a duplicate insert, and
+ * (a rename keeps the game's position; an upsert, like REPLACE, moves it last),
+ * IGNORE on a duplicate insert, and
  * — like the real raw `UPDATE` — throws on a rename collision.
  */
 internal class FakeSavedGameDao : SavedGameDao {
@@ -24,6 +25,10 @@ internal class FakeSavedGameDao : SavedGameDao {
         if (getByName(game.name) != null) return -1L
         games.value = games.value + game
         return games.value.size.toLong()
+    }
+
+    override suspend fun upsert(game: SavedGameEntity) {
+        games.value = games.value.filterNot { it.name == game.name } + game
     }
 
     override suspend fun rename(previousName: String, newName: String): Int {

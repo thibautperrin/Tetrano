@@ -1,6 +1,8 @@
 package fr.thibautperrin.tetrano.domain.service
 
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import fr.thibautperrin.tetrano.data.assets.NeuralNets
+import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 import fr.thibautperrin.tetrano.domain.model.AiProgressState
 import fr.thibautperrin.tetrano.domain.model.GameMode
 import fr.thibautperrin.tetrano.domain.model.GameSessionEvent
@@ -19,6 +21,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GameSessionServiceTest {
@@ -35,6 +38,10 @@ class GameSessionServiceTest {
             object : NeuralNets {
                 override val net get() = error("level 101 is not used in these tests")
             },
+            // Only read at level 101.
+            TetranoPreferencesDataSource(
+                PreferenceDataStoreFactory.create(scope = backgroundScope) { File.createTempFile("prefs", ".preferences_pb") },
+            ),
         ),
     )
 

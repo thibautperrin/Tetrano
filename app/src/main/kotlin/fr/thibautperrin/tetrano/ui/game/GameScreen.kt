@@ -4,13 +4,10 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -23,7 +20,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,12 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
@@ -50,7 +44,6 @@ import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
 import fr.thibautperrin.tetrano.ui.components.StarBadge
 import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
-import java.util.Date
 
 /** Wires [GameViewModel] (created for [mode] via its assisted [GameViewModel.Factory]) to the stateless [GameScreen]. */
 @Composable
@@ -76,10 +69,7 @@ fun GameRoute(
     )
 }
 
-/**
- * The system bars and cutouts, but not the keyboard: the save dialog's
- * keyboard must not shrink the board behind it.
- */
+/** The system bars and cutouts, but not the keyboard. */
 private val GameInsets: WindowInsets
     @Composable get() = WindowInsets.systemBars.union(WindowInsets.displayCutout)
 
@@ -98,10 +88,7 @@ fun GameScreen(
     onExit: () -> Unit,
     onReview: (ReviewRequest) -> Unit = {},
 ) {
-    // Non-null while the save dialog is shown: the name being typed.
-    var saveNameDraft by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-    val gameOf = stringResource(R.string.Game_Of)
 
     BackHandler { onAction(GameAction.BackPressed) }
 
@@ -144,16 +131,7 @@ fun GameScreen(
                         )
                     },
                     actions = {
-                        GameMenu(
-                            mode = mode,
-                            onAction = onAction,
-                            onNavigateToSettings = onNavigateToSettings,
-                            onSaveClicked = {
-                                // JeuActivity: "<Game_Of> <short date>" (DateFormat.getDateFormat).
-                                val date = android.text.format.DateFormat.getDateFormat(context).format(Date())
-                                saveNameDraft = "$gameOf $date"
-                            },
-                        )
+                        GameMenu(mode = mode, onAction = onAction, onNavigateToSettings = onNavigateToSettings)
                     },
                 )
             }
@@ -170,18 +148,6 @@ fun GameScreen(
         )
     }
 
-    saveNameDraft?.let { draft ->
-        SaveDialog(
-            name = draft,
-            onNameChange = { saveNameDraft = it },
-            onSave = {
-                onAction(GameAction.SaveConfirmed(draft))
-                saveNameDraft = null
-            },
-            onDismiss = { saveNameDraft = null },
-        )
-    }
-
     uiModel.starDialogs.firstOrNull()?.let { dialog ->
         // One dialog window per award, not one window whose text changes.
         key(uiModel.starDialogs.size) {
@@ -192,13 +158,15 @@ fun GameScreen(
 
 private val TitleFontSize = 20.sp
 
-/** `menu_jeu.xml`: Cancel, Play again, Blink, Settings (hidden in 2-player mode), Save the game. */
+/**
+ * `menu_jeu.xml`: Cancel, Play again, Blink, Settings (hidden in 2-player mode). No "Save the
+ * game": a finished game is saved automatically.
+ */
 @Composable
 private fun GameMenu(
     mode: GameMode,
     onAction: (GameAction) -> Unit,
     onNavigateToSettings: () -> Unit,
-    onSaveClicked: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     IconButton(onClick = { expanded = true }) {
@@ -219,30 +187,7 @@ private fun GameMenu(
         item(R.string.Play_Again) { onAction(GameAction.PlayAgainClicked) }
         item(R.string.Mot_Clignoter) { onAction(GameAction.BlinkClicked) }
         if (mode == GameMode.VS_COMPUTER) item(R.string.action_settings, onNavigateToSettings)
-        item(R.string.Save_The_Game, onSaveClicked)
     }
-}
-
-/** `JeuActivity`'s `alertDialogSauvegarder`: saving is silent, no confirmation afterwards. */
-@Composable
-private fun SaveDialog(name: String, onNameChange: (String) -> Unit, onSave: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.Save_The_Game)) },
-        text = {
-            Column {
-                Text(stringResource(R.string.Enter_A_Name))
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = name, onValueChange = onNameChange, singleLine = true)
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onSave) { Text(stringResource(R.string.Save_The_Game)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.Cancel)) }
-        },
-    )
 }
 
 /** `ApplicationTetrano.displayMessageStars`: the star count as title, the award then `Explanation_Star`. */

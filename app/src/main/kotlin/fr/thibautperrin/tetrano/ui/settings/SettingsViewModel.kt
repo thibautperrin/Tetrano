@@ -19,17 +19,16 @@ import javax.inject.Inject
  * Backs [SettingsScreen] — replaces `SettingsActivity` (see
  * docs/GLOSSARY.md, docs/PLAN.md P8).
  *
- * - The name field starts empty with the saved name as its hint; saving
- *   an empty field keeps the saved name (`avantSortir()`).
+ * - The name field is pre-filled with the saved name; saving an empty
+ *   field keeps the saved name (`avantSortir()`).
  * - "User color and adversary color must differ": a color tap matching
- *   the other picker's current color is silently ignored, as in the
- *   legacy `tacheUtilisateurListener`/`tacheAdversaireListener`.
- * - The saved values load asynchronously: a color picked before they
- *   arrive is kept (typing never races with the load, the field isn't
- *   pre-filled).
- * - [SettingsAction.SaveClicked] (Confirm, and Back) persists everything
- *   once, then emits [saved] for the screen to toast `Settings_Saved`
- *   and close.
+ *   the other picker's current color is ignored, as in the legacy
+ *   `tacheUtilisateurListener`/`tacheAdversaireListener` (the screen
+ *   shows that color as unavailable).
+ * - The saved values load asynchronously: a value changed before they
+ *   arrive is kept.
+ * - [SettingsAction.SaveClicked] (Back) persists everything once, then
+ *   emits [saved] for the screen to toast `Settings_Saved` and close.
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -45,6 +44,8 @@ class SettingsViewModel @Inject constructor(
 
     private var userColorPicked = false
     private var adversaryColorPicked = false
+    private var nameTyped = false
+    private var simulationsPicked = false
     private var saving = false
 
     init {
@@ -52,11 +53,14 @@ class SettingsViewModel @Inject constructor(
             val name = preferences.userName.first()
             val userColor = preferences.userColor.first()
             val adversaryColor = preferences.adversaryColor.first()
+            val simulations = preferences.neuralSimulations.first()
             _uiState.update {
                 val newUserColor = if (userColorPicked) it.userColor else userColor
                 val newAdversaryColor = if (adversaryColorPicked) it.adversaryColor else adversaryColor
                 it.copy(
                     currentUserName = name,
+                    userNameDraft = if (nameTyped) it.userNameDraft else name,
+                    neuralSimulations = if (simulationsPicked) it.neuralSimulations else simulations,
                     userColor = newUserColor,
                     // A loaded color never breaks the "colors differ" rule.
                     adversaryColor = if (newAdversaryColor != newUserColor) newAdversaryColor else it.adversaryColor,
@@ -67,7 +71,14 @@ class SettingsViewModel @Inject constructor(
 
     fun onAction(action: SettingsAction) {
         when (action) {
-            is SettingsAction.UserNameChanged -> _uiState.update { it.copy(userNameDraft = action.name) }
+            is SettingsAction.UserNameChanged -> {
+                nameTyped = true
+                _uiState.update { it.copy(userNameDraft = action.name) }
+            }
+            is SettingsAction.NeuralSimulationsSelected -> {
+                simulationsPicked = true
+                _uiState.update { it.copy(neuralSimulations = action.simulations) }
+            }
             is SettingsAction.UserColorSelected -> selectUserColor(action.color)
             is SettingsAction.AdversaryColorSelected -> selectAdversaryColor(action.color)
             SettingsAction.SaveClicked -> save()
@@ -96,6 +107,7 @@ class SettingsViewModel @Inject constructor(
                 userColor = state.userColor,
                 adversaryColor = state.adversaryColor,
             )
+            preferences.setNeuralSimulations(state.neuralSimulations)
             _saved.send(Unit)
         }
     }

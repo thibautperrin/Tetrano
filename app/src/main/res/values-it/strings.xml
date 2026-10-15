@@ -16,13 +16,11 @@
     <string name="Adversary_Color">Colore avversario</string>
     <string name="Two_Players">2 giocatori</string>
     <string name="One_Player">1 giocatore</string>
-    <string name="Saved_Games">Partita Salvata</string>
     <string name="Challenge">Sfida</string>
     <string name="Joueur1">Giocatore1</string>
     <string name="Joueur2">Giocatore2</string>
     <string name="Level">Difficoltà </string>
     <string name="Who_Begins">Chi cominciare?</string>
-    <string name="Save_The_Game">Salvate il gioco</string>
     <string name="Enter_A_Name">Inserire un nome di partito</string>
     <string name="Cancel">Cancellare</string>
     <string name="Settings_Saved">Impostazioni salvate</string>
@@ -65,7 +63,6 @@
     <string name="Sentence_Confirm_Use_Star">Vuoi davvero di utilizzare una delle stelle per ottenere un indizio?</string>
     <string name="All_Levels_Passed">Sei riuscito a tutti i livelli. È terminata la modalità di sfida!</string>
     <string name="Sentence_No_Saved_Game">Non avete nessun gioco salvati.</string>
-    <string name="Watch">Visualizzare</string>
     <string name="Delete">Rimuovere</string>
     <string name="Rename">Rinominare</string>
     <string name="Confirm">Confermare</string>
@@ -76,7 +73,6 @@
     <string name="Ring">Anello</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
-    <string name="online_coming_soon">Online (prossimamente)</string>
     <string name="previous">Precedente</string>
     <string name="name_already_used">Esiste già una partita salvata con questo nome.</string>
 
@@ -85,8 +81,6 @@
     <string name="Internal_Error">Errore interno. Scusate</string>
     <string name="Joueur1_Name">Nome giocatore1?</string>
     <string name="Joueur2_Name">Nome giocatore2?</string>
-    <string name="Game_Of">Parte del</string>
-    <string name="Analyse_Game">Analizza la partita</string>
     <string name="Review_Game">Rivedi la partita</string>
     <string name="Analysing">Analisi in corso…</string>
     <string name="Draw_Short">Patta</string>
@@ -100,4 +94,52 @@
     <string name="Previous_Mistake">Errore precedente</string>
     <string name="Next_Mistake">Errore successivo</string>
     <string name="Level_Neural">rete neurale</string>
+
+    <!-- Analysis, puzzles and the new settings (2026-10). -->
+    <string name="back">Indietro</string>
+    <string name="settings_section_player">Giocatore</string>
+    <string name="settings_section_colors">Colori degli anelli</string>
+    <string name="settings_your_rings">I tuoi anelli</string>
+    <string name="settings_opponent_rings">Anelli dell\'avversario</string>
+    <string name="settings_color">Colore</string>
+    <string name="settings_color_unavailable">Usato dall\'altro giocatore</string>
+    <string name="settings_section_neural">Livello 101 (rete neurale)</string>
+    <string name="settings_neural_simulations">Varianti testate per mossa</string>
+    <string name="settings_neural_explanation">Più varianti il computer testa, più gioca forte, ma più a lungo riflette. Predefinito: %1$d.</string>
+    <string name="Analyse_Games">Analizza partite</string>
+    <string name="Puzzles">Problemi</string>
+    <string name="analysis_empty_board">Tavoliere vuoto</string>
+    <string name="analysis_empty_board_hint">Gioca per entrambi, la rete analizza ogni posizione</string>
+    <string name="analysis_no_games">Le tue partite finite verranno salvate qui automaticamente.</string>
+    <string name="analysis_rings_count">Anelli: %1$d</string>
+    <string name="analysis_result_wins">vince</string>
+    <string name="analysis_result_unfinished">Non finita</string>
+    <string name="analysis_title">Analisi</string>
+    <string name="analysis_game_over">Partita finita</string>
+    <string name="analysis_variations">%1$s varianti testate</string>
+    <string name="analysis_best_move">Mossa consigliata: anello traslucido</string>
+    <string name="analysis_forced_win">Vittoria forzata</string>
+    <string name="analysis_forced_draw">Patta forzata</string>
+    <string name="analysis_depth">Limite: %1$s</string>
+    <string name="analysis_reviewing">Revisione delle mosse… %1$d %%</string>
+    <string name="analysis_first">Prima mossa</string>
+    <string name="analysis_last">Ultima mossa</string>
+    <string name="analysis_variation_from">Variante dalla mossa %1$d</string>
+    <string name="analysis_back_to_game">Torna alla partita</string>
+    <string name="analysis_play_hint">Trascina un anello per provare una mossa, per entrambe le parti.</string>
+    <string name="puzzle_correct">Giusto! Continua.</string>
+    <string name="puzzle_stats">Risolti: %1$d su %2$d</string>
+    <string name="puzzle_solved">Risolto!</string>
+    <string name="puzzle_failed">Non è una mossa vincente</string>
+    <string name="puzzle_solution_shown">Una mossa vincente è mostrata come un anello traslucido.</string>
+    <string name="puzzle_rating_change">Il tuo Elo: %1$d (%2$s)</string>
+    <string name="puzzle_difficulty">Elo del problema: %1$d</string>
+    <string name="puzzle_retry">Riprova</string>
+    <string name="puzzle_next">Prossimo problema</string>
+    <string name="puzzle_retry_note">I nuovi tentativi non cambiano il tuo Elo.</string>
+    <string name="puzzle_explanations">Ogni problema è una posizione di una partita in cui puoi forzare la vittoria: trova le mosse vincenti, l\'avversario si difende al meglio. Una mossa sbagliata termina il tentativo.\n\nTu e i problemi avete un Elo: i problemi sono scelti perché tu ne risolva circa 3 su 4, e il tuo Elo segue i tuoi risultati (conta solo il primo tentativo di ogni problema).</string>
+    <plurals name="puzzle_find_win">
+        <item quantity="one">Vinci in %d mossa</item>
+        <item quantity="other">Vinci in %d mosse</item>
+    </plurals>
 </resources>

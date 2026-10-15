@@ -27,8 +27,7 @@ import fr.thibautperrin.tetrano.ui.theme.LegacyColors
  * with its baseline at 35% of the height — so the label scales with the
  * button and can never overflow it.
  *
- * @param enabled false greys the button out and makes it inert (the
- *   postponed online mode).
+ * @param enabled false greys the button out and makes it inert.
  */
 @Composable
 fun IconTextButton(
