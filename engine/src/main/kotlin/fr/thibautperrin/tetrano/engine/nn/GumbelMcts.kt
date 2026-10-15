@@ -73,6 +73,9 @@ class GumbelMcts(
         internal var valueSum: FloatArray = EMPTY_FLOAT
         internal var totalVisits = 0
 
+        /** Simulations run through this node so far (all searches of a reused root included). */
+        val simulations: Int get() = totalVisits
+
         /** Network value for the player to move (0 when exact or without network). */
         var netValue: Float = 0f
             internal set
@@ -99,6 +102,8 @@ class GumbelMcts(
         val simulations: Int,
         /** Per legal move: completed Q from the root player's point of view (NaN for occupied cells). */
         val moveValues: FloatArray,
+        /** Per cell: simulations through that root move, over every search of the root. */
+        val visits: IntArray = IntArray(64),
     )
 
     private val workspace = net?.newWorkspace()
@@ -123,13 +128,29 @@ class GumbelMcts(
         deadlineNanos: Long = Long.MAX_VALUE,
         noise: Boolean = config.gumbelNoise,
         onSimulation: ((Int, Int) -> Boolean)? = null,
+    ): Result = search(Node(mine, theirs), simulations, deadlineNanos, noise, onSimulation)
+
+    /** A root for [search] that can be searched again: each search adds to its tree (analysis). */
+    fun newRoot(mine: Long, theirs: Long): Node = Node(mine, theirs)
+
+    /**
+     * Like the other [search], on [root]: a root already searched keeps its tree, so searching
+     * it again with [simulations] more refines the previous result. Not with Gumbel noise.
+     */
+    fun search(
+        root: Node,
+        simulations: Int,
+        deadlineNanos: Long = Long.MAX_VALUE,
+        noise: Boolean = config.gumbelNoise,
+        onSimulation: ((Int, Int) -> Boolean)? = null,
     ): Result {
-        val root = Node(mine, theirs)
-        expand(root, config.vcfBudgetRoot)
-        if (root.status == Status.UNKNOWN && root.moves.size == 1) {
-            // A forced move: one simulation is enough for its exact outcome (e.g. the
-            // block only delays an opponent VCF) to reach the root through the solver.
-            simulate(root, 0)
+        if (!root.expanded && root.status == Status.UNKNOWN) {
+            expand(root, config.vcfBudgetRoot)
+            if (root.status == Status.UNKNOWN && root.moves.size == 1) {
+                // A forced move: one simulation is enough for its exact outcome (e.g. the
+                // block only delays an opponent VCF) to reach the root through the solver.
+                simulate(root, 0)
+            }
         }
         if (root.status == Status.WIN) preferShortestWin(root)
         if (root.status != Status.UNKNOWN || root.moves.size <= 1) {
@@ -463,9 +484,11 @@ class GumbelMcts(
             }
             for (i in 0 until n) policy[root.moves[i]] = scores[i] / total
         }
+        val visits = IntArray(64)
         for (i in 0 until n) {
             prior[root.moves[i]] = exp(root.logits[i])
             moveValues[root.moves[i]] = completedQ(root, i)
+            visits[root.moves[i]] = root.visits[i]
         }
         val value = when (root.status) {
             Status.UNKNOWN -> mixedValue(root)
@@ -477,7 +500,7 @@ class GumbelMcts(
             Status.DRAW -> floatArrayOf(0f, 1f, 0f)
             Status.UNKNOWN -> root.netWdl.copyOf()
         }
-        return Result(move, root.status, value, wdl, policy, prior, simulations, moveValues)
+        return Result(move, root.status, value, wdl, policy, prior, simulations, moveValues, visits)
     }
 
     companion object {

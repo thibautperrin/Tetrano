@@ -11,10 +11,33 @@ package fr.thibautperrin.tetrano.engine.nn
  * Two verdicts are exact rather than estimated, from the tactics solver:
  * [Verdict.MISSED_WIN] (a forced win existed and was not kept) and
  * [Verdict.ALLOWED_WIN] (the move gave the opponent a forced win).
+ *
+ * The evaluation of each position ([Evaluation]) and the verdict on a move
+ * ([judge]) are separate, so that a deeper evaluation of a position (the
+ * analysis screen keeps searching the position on display) can refine the
+ * verdicts of the moves leading to and from it.
  */
 class GameReview(net: QubicNet, private val simulations: Int = 96) {
 
     enum class Verdict { BEST, GOOD, INACCURACY, MISTAKE, BLUNDER, MISSED_WIN, ALLOWED_WIN }
+
+    /** What a search (or the end of the game) says about one position, for the player to move. */
+    class Evaluation(
+        /** Win, draw, loss probabilities for the player to move (exact one-hot when proven). */
+        val wdl: FloatArray,
+        /** Search value for the player to move, in [-1, 1]. */
+        val value: Float,
+        val status: GumbelMcts.Status,
+        /** The best move, or -1 when the game is over. */
+        val bestRing: Int,
+        /** Simulations behind this evaluation (0 for a finished game or a proven position). */
+        val simulations: Int,
+    ) {
+        companion object {
+            fun of(result: GumbelMcts.Result) =
+                Evaluation(result.netWdl, result.value, result.status, result.move, result.simulations)
+        }
+    }
 
     /** Analysis of one position (before move [ply]) and of the move played there, if any. */
     class PositionReview(
@@ -32,6 +55,9 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
         val verdict: Verdict?,
     )
 
+    /** A verdict on a move and the expected score it lost (0..1). */
+    class Judgement(val expectedScoreLoss: Float, val verdict: Verdict)
+
     private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f))
 
     /**
@@ -44,69 +70,60 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
         onPosition: ((index: Int, total: Int) -> Boolean)? = null,
     ): List<PositionReview> {
         val count = moves.size
-        val results = ArrayList<GumbelMcts.Result?>(count + 1)
+        val evaluations = ArrayList<Evaluation>(count + 1)
         for (i in 0..count) {
-            val position = Position.after(moves, i)
-            val finished = i > 0 && Tactics.wonWith(position.theirs, moves[i - 1].toInt())
-            val full = (position.mine or position.theirs) == -1L
-            results += if (finished || full) null else mcts.search(position.mine, position.theirs, simulations)
+            evaluations += evaluate(moves, i)
             if (onPosition != null && !onPosition(i, count + 1)) break
         }
-        return List(results.size) { i ->
-            val r = results[i]
-            val lastFinished = r == null && i > 0
-            val wdl: FloatArray
-            val value: Float
-            val status: GumbelMcts.Status
-            if (r == null) {
-                // Game over: the player to move has lost (line completed) or drawn (full board).
-                val lost = i > 0 && Tactics.wonWith(Position.after(moves, i).theirs, moves[i - 1].toInt())
-                status = if (lost) GumbelMcts.Status.LOSS else GumbelMcts.Status.DRAW
-                value = GumbelMcts.exactValue(status)
-                wdl = if (lost) floatArrayOf(0f, 0f, 1f) else floatArrayOf(0f, 1f, 0f)
-            } else {
-                status = r.status
-                value = r.value
-                wdl = r.netWdl
-            }
+        return List(evaluations.size) { i ->
+            val e = evaluations[i]
             val played = if (i < count) moves[i].toInt() else -1
-            var loss = 0f
-            var verdict: Verdict? = null
-            if (r != null && played >= 0 && i + 1 < results.size) {
-                val next = results[i + 1]
-                val nextStatus = next?.status ?: if (Tactics.wonWith(Position.after(moves, i + 1).theirs, played)) {
-                    GumbelMcts.Status.LOSS
-                } else {
-                    GumbelMcts.Status.DRAW
-                }
-                val nextValue = next?.value ?: GumbelMcts.exactValue(nextStatus)
-                val before = (value + 1f) / 2f
-                val after = (1f - nextValue) / 2f
-                loss = (before - after).coerceAtLeast(0f)
-                verdict = when {
-                    r.status == GumbelMcts.Status.WIN && nextStatus != GumbelMcts.Status.LOSS -> Verdict.MISSED_WIN
-                    r.status != GumbelMcts.Status.LOSS && nextStatus == GumbelMcts.Status.WIN &&
-                        hasSafeMove(Position.after(moves, i)) -> Verdict.ALLOWED_WIN
-                    played == r.move -> Verdict.BEST
-                    loss >= BLUNDER -> Verdict.BLUNDER
-                    loss >= MISTAKE -> Verdict.MISTAKE
-                    loss >= INACCURACY -> Verdict.INACCURACY
-                    else -> Verdict.GOOD
-                }
-            }
-            if (lastFinished) verdict = null
-            PositionReview(i, wdl, value, status, r?.move ?: -1, played, loss, verdict)
+            val judgement = if (played >= 0 && i + 1 < evaluations.size) judge(moves, i, e, evaluations[i + 1]) else null
+            PositionReview(
+                i, e.wdl, e.value, e.status, e.bestRing, played,
+                judgement?.expectedScoreLoss ?: 0f, judgement?.verdict,
+            )
         }
     }
 
+    /** The position after the first [count] of [moves], searched with this review's simulations. */
+    fun evaluate(moves: ByteArray, count: Int): Evaluation {
+        finalEvaluation(moves, count)?.let { return it }
+        val position = Position.after(moves, count)
+        return Evaluation.of(mcts.search(position.mine, position.theirs, simulations))
+    }
+
+    /**
+     * Verdict on move [ply] of [moves], from the evaluations of the positions before ([before])
+     * and after it ([after]).
+     */
+    fun judge(moves: ByteArray, ply: Int, before: Evaluation, after: Evaluation): Judgement {
+        val played = moves[ply].toInt()
+        val beforeScore = (before.value + 1f) / 2f
+        val afterScore = (1f - after.value) / 2f
+        val loss = (beforeScore - afterScore).coerceAtLeast(0f)
+        val verdict = when {
+            before.status == GumbelMcts.Status.WIN && after.status != GumbelMcts.Status.LOSS -> Verdict.MISSED_WIN
+            before.status != GumbelMcts.Status.LOSS && after.status == GumbelMcts.Status.WIN &&
+                hasSafeMove(Position.after(moves, ply)) -> Verdict.ALLOWED_WIN
+            played == before.bestRing -> Verdict.BEST
+            loss >= BLUNDER -> Verdict.BLUNDER
+            loss >= MISTAKE -> Verdict.MISTAKE
+            loss >= INACCURACY -> Verdict.INACCURACY
+            else -> Verdict.GOOD
+        }
+        return Judgement(loss, verdict)
+    }
+
     private val vcf = Vcf(16)
+    private val safeMoves = HashMap<Position, Boolean>()
 
     /**
      * True iff the player to move has a move after which the opponent has no immediate win
      * and no VCF. Otherwise every move concedes a forced win: the position was already lost
      * (the mistake came earlier) and the move played is not to blame.
      */
-    private fun hasSafeMove(position: Position): Boolean {
+    private fun hasSafeMove(position: Position): Boolean = safeMoves.getOrPut(position) {
         val mine = position.mine
         val theirs = position.theirs
         val block = Tactics.threats(theirs, mine)
@@ -115,10 +132,10 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
             val cell = java.lang.Long.numberOfTrailingZeros(candidates)
             candidates = candidates and (candidates - 1)
             val after = mine or (1L shl cell)
-            if (Tactics.wonWith(after, cell)) return true
-            if (vcf.solve(theirs, after, SAFE_MOVE_VCF_BUDGET) == Vcf.NONE) return true
+            if (Tactics.wonWith(after, cell)) return@getOrPut true
+            if (vcf.solve(theirs, after, SAFE_MOVE_VCF_BUDGET) == Vcf.NONE) return@getOrPut true
         }
-        return false
+        false
     }
 
     companion object {
@@ -126,5 +143,20 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
         const val INACCURACY = 0.08f
         const val MISTAKE = 0.18f
         const val BLUNDER = 0.35f
+
+        /**
+         * The exact evaluation of the position after the first [count] of [moves] if the game
+         * is over there (the last move completed a line, or the board is full), else null.
+         */
+        fun finalEvaluation(moves: ByteArray, count: Int): Evaluation? {
+            val position = Position.after(moves, count)
+            val lost = count > 0 && Tactics.wonWith(position.theirs, moves[count - 1].toInt())
+            val full = (position.mine or position.theirs) == -1L
+            if (!lost && !full) return null
+            // Game over: the player to move has lost (line completed) or drawn (full board).
+            val status = if (lost) GumbelMcts.Status.LOSS else GumbelMcts.Status.DRAW
+            val wdl = if (lost) floatArrayOf(0f, 0f, 1f) else floatArrayOf(0f, 1f, 0f)
+            return Evaluation(wdl, GumbelMcts.exactValue(status), status, -1, 0)
+        }
     }
 }
