@@ -15,15 +15,12 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.IconTextButton
 import fr.thibautperrin.tetrano.ui.components.TetranoBackground
@@ -31,25 +28,23 @@ import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
 import fr.thibautperrin.tetrano.ui.theme.isLargeScreen
 
-/** Wires [PlayMenuViewModel] to the stateless [PlayMenuScreen]. */
+/** Turns [PlayMenuScreen]'s actions into navigation. */
 @Composable
 fun PlayMenuRoute(
     onNavigateToTwoPlayersSetup: () -> Unit,
     onNavigateToComputerSetup: () -> Unit,
-    onNavigateToSavedGames: () -> Unit,
+    onNavigateToAnalyseGames: () -> Unit,
     onNavigateToChallenge: () -> Unit,
-    viewModel: PlayMenuViewModel = hiltViewModel(),
+    onNavigateToPuzzles: () -> Unit,
 ) {
-    val uiModel by viewModel.uiState.collectAsState()
     PlayMenuScreen(
-        uiModel = uiModel,
         onAction = { action ->
             when (action) {
                 PlayMenuAction.TwoPlayersClicked -> onNavigateToTwoPlayersSetup()
                 PlayMenuAction.OnePlayerClicked -> onNavigateToComputerSetup()
-                PlayMenuAction.SavedGamesClicked -> onNavigateToSavedGames()
+                PlayMenuAction.AnalyseGamesClicked -> onNavigateToAnalyseGames()
                 PlayMenuAction.ChallengeClicked -> onNavigateToChallenge()
-                PlayMenuAction.OnlineClicked -> Unit
+                PlayMenuAction.PuzzlesClicked -> onNavigateToPuzzles()
             }
         },
     )
@@ -57,15 +52,13 @@ fun PlayMenuRoute(
 
 /**
  * Ports `JouerActivity` (`activity_jouer.xml` and its `layout-land`,
- * `layout-large`, `layout-large-land` variants) minus the Bluetooth button
- * (removed, see docs/PLAN.md §10): `BoutonsJouer` buttons on the
- * `fond_inverse` collage, no title bar (`Theme.Black.NoTitleBar`).
- * - Portrait: one column — 2 players, 1 player, Online, Saved games, Challenge.
- * - Landscape or large screen: two columns — [1 player, 2 players, Saved games]
- *   | [Online, Challenge].
- *
- * "Online" is the artwork alone (its label is part of the picture), inert
- * while [PlayMenuUiModel.onlineAvailable] is false.
+ * `layout-large`, `layout-large-land` variants) minus the Bluetooth and
+ * Online buttons: `BoutonsJouer` buttons on the `fond_inverse` collage, no
+ * title bar (`Theme.Black.NoTitleBar`). "Saved games" became "Analyse
+ * games" (finished games are saved automatically), and "Puzzles" is new.
+ * - Portrait: one column — 2 players, 1 player, Analyse games, Challenge, Puzzles.
+ * - Landscape or large screen: two columns — [1 player, 2 players, Analyse games]
+ *   | [Challenge, Puzzles].
  *
  * The 2:1 buttons take the full column width when they all fit; otherwise
  * they shrink (label included) until they do, and only if that would make
@@ -73,7 +66,7 @@ fun PlayMenuRoute(
  * `ScrollView`.
  */
 @Composable
-fun PlayMenuScreen(uiModel: PlayMenuUiModel, onAction: (PlayMenuAction) -> Unit) {
+fun PlayMenuScreen(onAction: (PlayMenuAction) -> Unit) {
     val dimens = LocalLegacyDimens.current
     val landscape = isLandscape()
     val large = isLargeScreen()
@@ -88,18 +81,13 @@ fun PlayMenuScreen(uiModel: PlayMenuUiModel, onAction: (PlayMenuAction) -> Unit)
 
     val twoPlayers = PlayButton(R.drawable.bouton_2_joueurs, R.string.Two_Players, PlayMenuAction.TwoPlayersClicked)
     val onePlayer = PlayButton(R.drawable.bouton_1_joueur, R.string.One_Player, PlayMenuAction.OnePlayerClicked)
-    val online = PlayButton(
-        R.drawable.bouton_jeu_online,
-        label = null,
-        action = PlayMenuAction.OnlineClicked,
-        enabled = uiModel.onlineAvailable,
-    )
-    val savedGames = PlayButton(R.drawable.bouton_partie_sauvegarde, R.string.Saved_Games, PlayMenuAction.SavedGamesClicked)
+    val analyse = PlayButton(R.drawable.bouton_analyse, R.string.Analyse_Games, PlayMenuAction.AnalyseGamesClicked)
     val challenge = PlayButton(R.drawable.bouton_challenge, R.string.Challenge, PlayMenuAction.ChallengeClicked)
+    val puzzles = PlayButton(R.drawable.bouton_puzzle, R.string.Puzzles, PlayMenuAction.PuzzlesClicked)
     val columns = if (twoColumns) {
-        listOf(listOf(onePlayer, twoPlayers, savedGames), listOf(online, challenge))
+        listOf(listOf(onePlayer, twoPlayers, analyse), listOf(challenge, puzzles))
     } else {
-        listOf(listOf(twoPlayers, onePlayer, online, savedGames, challenge))
+        listOf(listOf(twoPlayers, onePlayer, analyse, challenge, puzzles))
     }
 
     TetranoBackground {
@@ -131,13 +119,10 @@ fun PlayMenuScreen(uiModel: PlayMenuUiModel, onAction: (PlayMenuAction) -> Unit)
                         modifier = Modifier.weight(1f),
                     ) {
                         for (button in column) {
-                            val label = button.label?.let { stringResource(it) }
                             IconTextButton(
                                 icon = painterResource(button.artwork),
-                                text = label,
+                                text = stringResource(button.label),
                                 onClick = { onAction(button.action) },
-                                enabled = button.enabled,
-                                contentDescription = label ?: stringResource(R.string.online_coming_soon),
                                 modifier = Modifier
                                     .padding(dimens.tinyMargin)
                                     .width(buttonWidth),
@@ -152,9 +137,8 @@ fun PlayMenuScreen(uiModel: PlayMenuUiModel, onAction: (PlayMenuAction) -> Unit)
 
 private class PlayButton(
     @DrawableRes val artwork: Int,
-    @StringRes val label: Int?,
+    @StringRes val label: Int,
     val action: PlayMenuAction,
-    val enabled: Boolean = true,
 )
 
 /** Below this the label gets hard to read: scroll instead of shrinking further. */

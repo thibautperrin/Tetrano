@@ -53,6 +53,26 @@ class SavedGameService @Inject constructor(
         }
     }
 
+    /** Overwrites the game saved as [name] (or saves it, if there is none), keeping that name. */
+    suspend fun replace(
+        name: String,
+        ringsPlayed: ByteArray,
+        userBegins: Boolean,
+        userColor: Int,
+        adversaryColor: Int,
+    ) {
+        savedGameDao.upsert(
+            SavedGameEntity(
+                name = name,
+                rings = ringsPlayed,
+                userBegins = userBegins,
+                userColor = userColor,
+                adversaryColor = adversaryColor,
+                createdAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
     /**
      * Ports `DAOSavedGame.rename`. False if [newName] is blank or already
      * taken by another saved game: a rename never overwrites — checked

@@ -2,66 +2,81 @@ package fr.thibautperrin.tetrano.ui.settings
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
-import androidx.compose.ui.unit.min
-import androidx.compose.ui.unit.times
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
-import fr.thibautperrin.tetrano.ui.components.ColorBlobRow
-import fr.thibautperrin.tetrano.ui.components.FitText
-import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
-import fr.thibautperrin.tetrano.ui.theme.LegacyDimens
-import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
+import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
+import java.text.NumberFormat
+import kotlin.math.roundToInt
 
 /**
- * Wires [SettingsViewModel] to the stateless [SettingsScreen]. Confirm and
- * Back both save; once saved, toasts `Settings_Saved` and calls [onDone]
- * (`boutonValider` → `finish()`, `onBackPressed`).
+ * Wires [SettingsViewModel] to the stateless [SettingsScreen]. Back (the
+ * arrow or the system gesture) saves; once saved, toasts `Settings_Saved`
+ * and calls [onDone].
  */
 @Composable
 fun SettingsRoute(onDone: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
@@ -80,156 +95,216 @@ fun SettingsRoute(onDone: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
 }
 
 /**
- * Ports `SettingsActivity` (see docs/GLOSSARY.md, docs/PLAN.md P8) and its
- * `activity_settings` layout, in a scrolling column under the dark action
- * bar (`action_settings`):
- * - "User name" label + a 10-ems field — label, text and hint (the saved
- *   name) in the user's color;
- * - "User color" / "Adversary color" titles in their respective colors,
- *   each above a row of 8 [ColorBlobRow] blots;
- * - the yellow Confirm button with blue text.
- *
- * The blots take the full width like the legacy `button_tache_style`,
- * unless that would push the page past the window's height (landscape):
- * they then shrink, down to a touchable size, before the page scrolls.
+ * The settings, as three cards on a soft background under the app's dark
+ * bar: the player's name; both ring colors, each a row of swatches next to
+ * a ring drawn in the chosen color (the other player's color is shown as
+ * unavailable, since both must differ); and the level-101 network's
+ * thinking, the number of variations it tests per move.
  */
 @Composable
 fun SettingsScreen(uiModel: SettingsUiModel, onAction: (SettingsAction) -> Unit) {
-    val dimens = LocalLegacyDimens.current
-    val userColor = Color(uiModel.userColor)
-    val adversaryColor = Color(uiModel.adversaryColor)
-
     Scaffold(
-        containerColor = LegacyColors.Page,
+        containerColor = PageColor,
         contentWindowInsets = WindowInsets.safeDrawing,
-        topBar = { LegacyTopBar(title = stringResource(R.string.action_settings)) },
+        topBar = {
+            LegacyTopBar(
+                title = { Text(stringResource(R.string.action_settings)) },
+                navigationIcon = {
+                    IconButton(onClick = { onAction(SettingsAction.SaveClicked) }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    }
+                },
+            )
+        },
     ) { padding ->
-        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(padding)) {
-            val contentWidth = (maxWidth - 2 * dimens.screenMargin).coerceAtLeast(0.dp)
-            val blobSize = blobSize(contentWidth, maxHeight, dimens)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState()),
+            contentAlignment = Alignment.TopCenter,
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(dimens.screenMargin),
+                    .widthIn(max = 640.dp)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                UserNameRow(
-                    draft = uiModel.userNameDraft,
-                    hint = uiModel.currentUserName.ifBlank { stringResource(R.string.User) },
-                    color = userColor,
-                    fieldWidth = min(tenEms(dimens.body), contentWidth * 0.6f),
-                    onValueChange = { onAction(SettingsAction.UserNameChanged(it)) },
-                )
-                ColorTitle(stringResource(R.string.User_Color), userColor)
-                ColorBlobRow(
-                    onColorSelected = { onAction(SettingsAction.UserColorSelected(it.toArgb())) },
-                    modifier = Modifier.width(blobSize * BLOB_COUNT).align(Alignment.CenterHorizontally),
-                )
-                ColorTitle(stringResource(R.string.Adversary_Color), adversaryColor)
-                ColorBlobRow(
-                    onColorSelected = { onAction(SettingsAction.AdversaryColorSelected(it.toArgb())) },
-                    modifier = Modifier.width(blobSize * BLOB_COUNT).align(Alignment.CenterHorizontally),
-                )
-                LegacyButton(
-                    text = stringResource(R.string.Confirm),
-                    onClick = { onAction(SettingsAction.SaveClicked) },
-                    textColor = LegacyColors.TextBlue,
-                    fontSize = dimens.title3,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = dimens.tinyMargin),
+                PlayerCard(uiModel, onAction)
+                ColorsCard(uiModel, onAction)
+                NeuralCard(uiModel, onAction)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsCard(title: String, content: @Composable () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = TitleColor)
+            content()
+        }
+    }
+}
+
+@Composable
+private fun PlayerCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> Unit) {
+    val focusManager = LocalFocusManager.current
+    SettingsCard(stringResource(R.string.settings_section_player)) {
+        OutlinedTextField(
+            value = uiModel.userNameDraft,
+            onValueChange = { onAction(SettingsAction.UserNameChanged(it)) },
+            label = { Text(stringResource(R.string.User_Name)) },
+            placeholder = { Text(uiModel.currentUserName.ifBlank { stringResource(R.string.User) }) },
+            singleLine = true,
+            leadingIcon = { RingPreview(Color(uiModel.userColor), Modifier.size(24.dp)) },
+            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun ColorsCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> Unit) {
+    SettingsCard(stringResource(R.string.settings_section_colors)) {
+        ColorChoice(
+            label = stringResource(R.string.settings_your_rings),
+            selected = uiModel.userColor,
+            unavailable = uiModel.adversaryColor,
+            onSelected = { onAction(SettingsAction.UserColorSelected(it)) },
+        )
+        ColorChoice(
+            label = stringResource(R.string.settings_opponent_rings),
+            selected = uiModel.adversaryColor,
+            unavailable = uiModel.userColor,
+            onSelected = { onAction(SettingsAction.AdversaryColorSelected(it)) },
+        )
+    }
+}
+
+/** A label with a ring in the [selected] color, above the 8 swatches of the legacy palette. */
+@Composable
+private fun ColorChoice(label: String, selected: Int, unavailable: Int, onSelected: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            RingPreview(Color(selected), Modifier.size(28.dp))
+            Spacer(Modifier.size(10.dp))
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = BodyColor)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            for (color in TetranoRingColors.selectable) {
+                val argb = color.toArgb()
+                Swatch(
+                    color = color,
+                    isSelected = argb == selected,
+                    isUnavailable = argb == unavailable,
+                    onClick = { onSelected(argb) },
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
     }
 }
 
-/** `TextNomUtilisateur` + `editTextNomUtilisateur`. */
 @Composable
-private fun UserNameRow(
-    draft: String,
-    hint: String,
-    color: Color,
-    fieldWidth: Dp,
-    onValueChange: (String) -> Unit,
-) {
-    val dimens = LocalLegacyDimens.current
-    val focusManager = LocalFocusManager.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        FitText(
-            text = stringResource(R.string.User_Name),
-            maxFontSize = dimens.body,
-            color = color,
-            maxLines = 2,
-            modifier = Modifier.weight(1f, fill = false),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        BasicTextField(
-            value = draft,
-            onValueChange = onValueChange,
-            singleLine = true,
-            textStyle = TextStyle(color = color, fontSize = dimens.body),
-            cursorBrush = SolidColor(color),
-            interactionSource = interactionSource,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            modifier = Modifier.width(fieldWidth),
-            decorationBox = { innerTextField ->
-                Column {
-                    Box(modifier = Modifier.padding(vertical = 8.dp)) {
-                        // setHint(nomUtilisateur) + setHintTextColor(couleurUtilisateur).
-                        if (draft.isEmpty()) FitText(text = hint, maxFontSize = dimens.body, color = color)
-                        innerTextField()
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(if (focused) 2.dp else 1.dp)
-                            .background(if (focused) color else UnfocusedUnderline),
-                    )
-                }
+private fun Swatch(color: Color, isSelected: Boolean, isUnavailable: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val description = stringResource(if (isUnavailable) R.string.settings_color_unavailable else R.string.settings_color)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .widthIn(max = 48.dp)
+            .aspectRatio(1f)
+            .alpha(if (isUnavailable) 0.25f else 1f)
+            .clip(CircleShape)
+            .border(BorderStroke(if (isSelected) 3.dp else 0.dp, if (isSelected) TitleColor else Color.Transparent), CircleShape)
+            .padding(if (isSelected) 4.dp else 0.dp)
+            .clip(CircleShape)
+            .background(color)
+            .clickable(enabled = !isUnavailable, role = Role.RadioButton, onClick = onClick)
+            .semantics {
+                contentDescription = description
+                this.selected = isSelected
             },
+    ) {
+        if (isSelected) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = null,
+                tint = if (color.luminance() > 0.5f) Color.Black else Color.White,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+/** A board ring: a thick circle in [color]. */
+@Composable
+fun RingPreview(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val stroke = size.minDimension * 0.22f
+        drawCircle(
+            color = color,
+            radius = (size.minDimension - stroke) / 2f,
+            center = Offset(size.width / 2f, size.height / 2f),
+            style = Stroke(width = stroke),
         )
     }
 }
 
-/** `TextCouleurUtilisateur` / `TextCouleurAdversaire`: `Taille_titre_3`, `Petite_marge` above. */
 @Composable
-private fun ColorTitle(text: String, color: Color) {
-    val dimens = LocalLegacyDimens.current
-    FitText(
-        text = text,
-        maxFontSize = dimens.title3,
-        color = color,
-        maxLines = 2,
-        modifier = Modifier.padding(top = dimens.smallMargin),
-    )
+private fun NeuralCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> Unit) {
+    val choices = SettingsUiModel.SIMULATION_CHOICES
+    val index = choices.indexOfFirst { it >= uiModel.neuralSimulations }.takeIf { it >= 0 } ?: choices.lastIndex
+    val format = NumberFormat.getIntegerInstance()
+    SettingsCard(stringResource(R.string.settings_section_neural)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.settings_neural_simulations),
+                style = MaterialTheme.typography.bodyLarge,
+                color = BodyColor,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                format.format(choices[index]),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TitleColor,
+            )
+        }
+        Slider(
+            value = index.toFloat(),
+            onValueChange = { onAction(SettingsAction.NeuralSimulationsSelected(choices[it.roundToInt()])) },
+            valueRange = 0f..choices.lastIndex.toFloat(),
+            steps = choices.size - 2,
+            colors = SliderDefaults.colors(
+                thumbColor = TitleColor,
+                activeTrackColor = TitleColor,
+                activeTickColor = Color.White,
+                inactiveTickColor = TitleColor,
+            ),
+        )
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Text(format.format(choices.first()), fontSize = 12.sp, color = HintColor, modifier = Modifier.weight(1f))
+            Text(format.format(choices.last()), fontSize = 12.sp, color = HintColor)
+        }
+        Spacer(Modifier.height(2.dp))
+        Text(
+            stringResource(R.string.settings_neural_explanation, SettingsUiModel.DEFAULT_NEURAL_SIMULATIONS),
+            style = MaterialTheme.typography.bodyMedium,
+            color = HintColor,
+        )
+    }
 }
 
-/** `android:ems="10"`: ten times the text size. */
-@Composable
-private fun tenEms(textSize: TextUnit): Dp = with(LocalDensity.current) { textSize.toDp() * 10 }
-
-/**
- * A blot's side: 1/8 of the width (legacy), or less when the page would
- * otherwise overflow [availableHeight] — but never under a touchable size.
- */
-@Composable
-private fun blobSize(contentWidth: Dp, availableHeight: Dp, dimens: LegacyDimens): Dp {
-    val density = LocalDensity.current
-    fun line(size: TextUnit): Dp = with(density) { size.toDp() } * LINE_HEIGHT_FACTOR
-    val fixedHeight = 2 * dimens.screenMargin +
-        max(line(dimens.body) + 18.dp, 40.dp) +
-        2 * (dimens.smallMargin + line(dimens.title3)) +
-        dimens.tinyMargin + max(line(dimens.title3) + 12.dp, 48.dp)
-    val fullWidth = contentWidth / BLOB_COUNT
-    val fitting = (availableHeight - fixedHeight) / 2
-    return min(fullWidth, max(fitting, MIN_BLOB_SIZE)).coerceAtLeast(0.dp)
-}
-
-private const val BLOB_COUNT = 8
-private const val LINE_HEIGHT_FACTOR = 1.3f
-private val MIN_BLOB_SIZE = 40.dp
-private val UnfocusedUnderline = Color(0x8A000000)
+private val PageColor = Color(0xFFF2F3F7)
+private val TitleColor = Color(0xFF1F2A44)
+private val BodyColor = Color(0xFF2B2B2B)
+private val HintColor = Color(0xFF6B7280)

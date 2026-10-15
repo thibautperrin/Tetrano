@@ -8,6 +8,8 @@ import fr.thibautperrin.tetrano.data.assets.ChallengeLevels
 import fr.thibautperrin.tetrano.data.assets.ChallengeLevelsDataSource
 import fr.thibautperrin.tetrano.data.assets.NeuralNetDataSource
 import fr.thibautperrin.tetrano.data.assets.NeuralNets
+import fr.thibautperrin.tetrano.data.assets.PuzzleCatalog
+import fr.thibautperrin.tetrano.data.assets.PuzzleDataSource
 import javax.inject.Singleton
 
 @Module
@@ -21,4 +23,8 @@ abstract class DataBindingsModule {
     @Binds
     @Singleton
     abstract fun bindNeuralNets(impl: NeuralNetDataSource): NeuralNets
+
+    @Binds
+    @Singleton
+    abstract fun bindPuzzleCatalog(impl: PuzzleDataSource): PuzzleCatalog
 }

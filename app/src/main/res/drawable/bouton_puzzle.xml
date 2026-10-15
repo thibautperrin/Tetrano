@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Play-menu artwork for "Puzzles": a jigsaw piece holding a ring, in the 500x250 frame and
+     black style of the traced 2015 buttons (artwork in the lower half). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="100dp"
+    android:viewportWidth="500"
+    android:viewportHeight="250">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M186,132 L230,132 A20,20 0 1,1 270,132 L314,132 L314,164 A20,20 0 1,1 314,204 L314,236 L270,236 A20,20 0 1,0 230,236 L186,236 L186,204 A20,20 0 1,0 186,164 Z M220,184 A30,30 0 1,0 280,184 A30,30 0 1,0 220,184 Z M234,184 A16,16 0 1,0 266,184 A16,16 0 1,0 234,184 Z" />
+    <!-- two loose pieces' outlines, as if just fitted -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="5"
+        android:strokeLineJoin="round"
+        android:pathData="M90,150 L130,150 L130,166 A14,14 0 1,1 130,194 L130,210 L90,210 Z M370,150 L410,150 L410,210 L370,210 L370,194 A14,14 0 1,0 370,166 Z" />
+</vector>

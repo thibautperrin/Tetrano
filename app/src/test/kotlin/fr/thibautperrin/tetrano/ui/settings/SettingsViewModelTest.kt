@@ -51,13 +51,25 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun loadsTheSavedValuesAsHintAndColorsWithAnEmptyField() = runBlocking {
+    fun loadsTheSavedValues() = runBlocking {
         preferences.setUserSettings("Bob", GREEN, BLACK)
+        preferences.setNeuralSimulations(2048)
         val state = loadedViewModel().uiState.value
         assertEquals("Bob", state.currentUserName)
-        assertEquals("", state.userNameDraft)
+        assertEquals("Bob", state.userNameDraft)
         assertEquals(GREEN, state.userColor)
         assertEquals(BLACK, state.adversaryColor)
+        assertEquals(2048, state.neuralSimulations)
+    }
+
+    @Test
+    fun savingPersistsTheNumberOfVariations() = runBlocking {
+        preferences.setUserSettings("Bob", GREEN, BLACK)
+        val viewModel = loadedViewModel()
+        viewModel.onAction(SettingsAction.NeuralSimulationsSelected(128))
+        viewModel.onAction(SettingsAction.SaveClicked)
+        withTimeout(5_000) { viewModel.saved.first() }
+        assertEquals(128, preferences.neuralSimulations.first())
     }
 
     @Test
@@ -74,6 +86,7 @@ class SettingsViewModelTest {
     fun savingAnEmptyNameKeepsTheSavedOne() = runBlocking {
         preferences.setUserSettings("Bob", GREEN, BLACK)
         val viewModel = loadedViewModel()
+        viewModel.onAction(SettingsAction.UserNameChanged(""))
         viewModel.onAction(SettingsAction.UserColorSelected(RED))
         viewModel.onAction(SettingsAction.SaveClicked)
         withTimeout(5_000) { viewModel.saved.first() }

@@ -26,13 +26,11 @@
     <string name="Adversary_Color">противник цвет</string>
     <string name="Two_Players">2 игроков</string>
     <string name="One_Player">1 игрок</string>
-    <string name="Saved_Games">сохраненные игры</string>
     <string name="Challenge">вызов</string>
     <string name="Joueur1">игрок1</string>
     <string name="Joueur2">игрок2</string>
     <string name="Level">уровень</string>
     <string name="Who_Begins">Кто начнет?</string>
-    <string name="Save_The_Game">Сохранить игру</string>
     <string name="Enter_A_Name">Введите имя</string>
     <string name="Cancel">отменить</string>
     <string name="Settings_Saved">Параметры сохраняются</string>
@@ -75,7 +73,6 @@
     <string name="Sentence_Confirm_Use_Star">Вы действительно хотите использовать один из ваших звезд, чтобы получить ключ?</string>
     <string name="All_Levels_Passed">Вам удалось все уровни. Вы закончили режим вызов!</string>
     <string name="Sentence_No_Saved_Game">Вы не имеют никаких сохраненных игр.</string>
-    <string name="Watch">Визуализируйте</string>
     <string name="Delete">удалить</string>
     <string name="Rename">переименовать</string>
     <string name="Confirm">подтвердить</string>
@@ -86,7 +83,6 @@
     <string name="Ring">кольцо</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
-    <string name="online_coming_soon">Онлайн (скоро)</string>
     <string name="previous">Предыдущий</string>
     <string name="name_already_used">Сохранённая игра с таким именем уже существует.</string>
 
@@ -95,8 +91,6 @@
     <string name="Internal_Error">Внутренняя ошибка. Извините.</string>
     <string name="Joueur1_Name">имя игрока1</string>
     <string name="Joueur2_Name">имя игрока2</string>
-    <string name="Game_Of">Часть</string>
-    <string name="Analyse_Game">Анализировать партию</string>
     <string name="Review_Game">Просмотреть партию</string>
     <string name="Analysing">Анализ…</string>
     <string name="Draw_Short">Ничья</string>
@@ -110,4 +104,54 @@
     <string name="Previous_Mistake">Предыдущая ошибка</string>
     <string name="Next_Mistake">Следующая ошибка</string>
     <string name="Level_Neural">нейросеть</string>
+
+    <!-- Analysis, puzzles and the new settings (2026-10). -->
+    <string name="back">Назад</string>
+    <string name="settings_section_player">Игрок</string>
+    <string name="settings_section_colors">Цвета колец</string>
+    <string name="settings_your_rings">Ваши кольца</string>
+    <string name="settings_opponent_rings">Кольца соперника</string>
+    <string name="settings_color">Цвет</string>
+    <string name="settings_color_unavailable">Занят другим игроком</string>
+    <string name="settings_section_neural">Уровень 101 (нейросеть)</string>
+    <string name="settings_neural_simulations">Вариантов на ход</string>
+    <string name="settings_neural_explanation">Чем больше вариантов проверяет компьютер, тем сильнее он играет, но тем дольше думает. По умолчанию: %1$d.</string>
+    <string name="Analyse_Games">Анализ партий</string>
+    <string name="Puzzles">Задачи</string>
+    <string name="analysis_empty_board">Пустая доска</string>
+    <string name="analysis_empty_board_hint">Играйте за обе стороны, сеть анализирует каждую позицию</string>
+    <string name="analysis_no_games">Ваши завершённые партии будут автоматически сохраняться здесь.</string>
+    <string name="analysis_rings_count">Колец: %1$d</string>
+    <string name="analysis_result_wins">побеждает</string>
+    <string name="analysis_result_unfinished">Не окончена</string>
+    <string name="analysis_title">Анализ</string>
+    <string name="analysis_game_over">Партия окончена</string>
+    <string name="analysis_variations">Проверено вариантов: %1$s</string>
+    <string name="analysis_best_move">Рекомендуемый ход: полупрозрачное кольцо</string>
+    <string name="analysis_forced_win">Форсированная победа</string>
+    <string name="analysis_forced_draw">Форсированная ничья</string>
+    <string name="analysis_depth">Предел: %1$s</string>
+    <string name="analysis_reviewing">Проверка ходов… %1$d %%</string>
+    <string name="analysis_first">Первый ход</string>
+    <string name="analysis_last">Последний ход</string>
+    <string name="analysis_variation_from">Вариант с хода %1$d</string>
+    <string name="analysis_back_to_game">К партии</string>
+    <string name="analysis_play_hint">Перетащите кольцо, чтобы попробовать ход за любую сторону.</string>
+    <string name="puzzle_correct">Верно! Продолжайте.</string>
+    <string name="puzzle_stats">Решено: %1$d из %2$d</string>
+    <string name="puzzle_solved">Решено!</string>
+    <string name="puzzle_failed">Это не выигрывающий ход</string>
+    <string name="puzzle_solution_shown">Выигрывающий ход показан полупрозрачным кольцом.</string>
+    <string name="puzzle_rating_change">Ваш рейтинг: %1$d (%2$s)</string>
+    <string name="puzzle_difficulty">Рейтинг задачи: %1$d</string>
+    <string name="puzzle_retry">Ещё раз</string>
+    <string name="puzzle_next">Следующая задача</string>
+    <string name="puzzle_retry_note">Повторные попытки не меняют рейтинг.</string>
+    <string name="puzzle_explanations">Каждая задача — позиция из партии, где вы можете форсировать победу: найдите выигрывающие ходы, соперник защищается как можно лучше. Неверный ход завершает попытку.\n\nУ вас и у задач есть рейтинг Эло: задачи подбираются так, чтобы вы решали примерно 3 из 4, а ваш рейтинг следует за результатами (учитывается только первая попытка решения задачи).</string>
+    <plurals name="puzzle_find_win">
+        <item quantity="one">Выиграйте за %d ход</item>
+        <item quantity="few">Выиграйте за %d хода</item>
+        <item quantity="many">Выиграйте за %d ходов</item>
+        <item quantity="other">Выиграйте за %d хода</item>
+    </plurals>
 </resources>

@@ -1,6 +1,7 @@
 package fr.thibautperrin.tetrano.domain.service
 
 import fr.thibautperrin.tetrano.data.assets.NeuralNets
+import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 import fr.thibautperrin.tetrano.di.DefaultDispatcher
 import fr.thibautperrin.tetrano.engine.BoardState
 import fr.thibautperrin.tetrano.engine.ai.Ai
@@ -8,6 +9,7 @@ import fr.thibautperrin.tetrano.engine.ai.AiProgress
 import fr.thibautperrin.tetrano.engine.ai.AiSearchPhase
 import fr.thibautperrin.tetrano.engine.nn.NeuralPlayer
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -21,12 +23,14 @@ import javax.inject.Singleton
  * P6/§6.3).
  *
  * Level [NEURAL_LEVEL] is not the legacy AI: it is [NeuralPlayer] (the
- * trained network plus a tree search), which plays either side.
+ * trained network plus a tree search), which plays either side, testing as
+ * many variations per move as [TetranoPreferencesDataSource.neuralSimulations] says.
  */
 @Singleton
 class AiService @Inject constructor(
     @param:DefaultDispatcher private val dispatcher: CoroutineDispatcher,
     private val neuralNets: NeuralNets,
+    private val preferences: TetranoPreferencesDataSource,
 ) {
     private val neuralLock = Any()
     private var neuralPlayer: NeuralPlayer? = null
@@ -64,10 +68,11 @@ class AiService @Inject constructor(
             override fun isCancelled(): Boolean = !scope.isActive
         }
         if (level >= NEURAL_LEVEL) {
+            val simulations = preferences.neuralSimulations.first()
             // NeuralPlayer is not thread-safe; only one computer move is ever searched at a time anyway.
             synchronized(neuralLock) {
                 val player = neuralPlayer ?: NeuralPlayer(neuralNets.net).also { neuralPlayer = it }
-                return@withContext player.chooseRing(movesPlayed, NEURAL_THINKING_MILLIS, progress)
+                return@withContext player.chooseRing(movesPlayed, simulations, progress)
             }
         }
         val board = BoardState()
@@ -82,8 +87,5 @@ class AiService @Inject constructor(
     companion object {
         /** The neural-network level, one above the legacy maximum of 100. */
         const val NEURAL_LEVEL: Int = 101
-
-        /** Thinking time per move at [NEURAL_LEVEL]. */
-        const val NEURAL_THINKING_MILLIS: Long = 2_000
     }
 }

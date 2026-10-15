@@ -38,23 +38,26 @@ sealed interface TetranoRoute {
     @Serializable
     data object Challenge : TetranoRoute
 
+    /** The saved games (finished games are saved automatically) and the empty board, to analyse. */
     @Serializable
-    data object SavedGames : TetranoRoute
+    data object AnalyseGames : TetranoRoute
 
     /**
-     * Watches a saved game ([savedGameName]) or, for a game that was not saved (reviewing a game
+     * Analyses a saved game ([savedGameName]) or, for a game that was not saved (reviewing a game
      * that just ended), the game given by [rings] (ring numbers, comma-separated, in play order)
-     * and its players' colors. [analyse] starts the level-101 review right away.
+     * and its players' colors; with neither, the empty board.
      */
     @Serializable
-    data class SavedGameViewer(
+    data class Analysis(
         val savedGameName: String? = null,
         val rings: String? = null,
         val userBegins: Boolean = true,
         val userColor: Int = 0,
         val adversaryColor: Int = 0,
-        val analyse: Boolean = false,
     ) : TetranoRoute
+
+    @Serializable
+    data object Puzzles : TetranoRoute
 
     @Serializable
     data object Settings : TetranoRoute

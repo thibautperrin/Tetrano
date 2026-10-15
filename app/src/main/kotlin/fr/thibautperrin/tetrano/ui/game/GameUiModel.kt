@@ -62,7 +62,6 @@ sealed interface GameAction {
     data object ReviewClicked : GameAction
     data object ReviewHandled : GameAction
     data object CancelClicked : GameAction
-    data class SaveConfirmed(val name: String) : GameAction
     data object StarDialogDismissed : GameAction
     data object InternalErrorShown : GameAction
     data object BackPressed : GameAction

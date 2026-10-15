@@ -36,6 +36,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.text.DateFormat
+import java.util.Date
 
 /**
  * Backs [GameScreen] for both [GameMode.TWO_PLAYERS] and
@@ -75,12 +77,16 @@ import kotlinx.coroutines.sync.withLock
  * [TetranoPreferencesDataSource] live, so coming back from Settings applies
  * them (`actualiserReglages`).
  *
+ * A finished game is saved automatically ([saveIfFinished]), named after
+ * the date and time it ended; finishing it again after a Cancel replaces
+ * that save rather than adding another ([KEY_SAVED_NAME]).
+ *
  * Process-death survival (docs/PLAN.md P8, acceptance criterion A6): unlike
  * [fr.thibautperrin.tetrano.ui.challenge.ChallengeViewModel], which
  * delegates to the already-persisted
  * [fr.thibautperrin.tetrano.domain.service.ChallengeService], this
  * ViewModel's [session] is purely in-memory ([GameSessionService] isn't
- * backed by storage until an explicit [GameAction.SaveConfirmed]), so an
+ * backed by storage until the game ends), so an
  * in-progress game — including moves played past whatever [savedGameName]
  * pointed at — would otherwise vanish if the process is killed while
  * backgrounded. [savedStateHandle] mirrors the moves, the starting player
@@ -153,7 +159,6 @@ class GameViewModel @AssistedInject constructor(
             GameAction.BlinkClicked -> ifReady { startBlink(session.blinkingRings()) }
             GameAction.ReviewClicked -> ifReady { requestReview() }
             GameAction.ReviewHandled -> _uiState.update { it.copy(reviewRequest = null) }
-            is GameAction.SaveConfirmed -> ifReady { save(action.name) }
             GameAction.StarDialogDismissed -> _uiState.update { it.copy(starDialogs = it.starDialogs.drop(1)) }
             GameAction.InternalErrorShown -> _uiState.update { it.copy(showInternalError = false) }
             GameAction.BackPressed -> back()
@@ -228,6 +233,7 @@ class GameViewModel @AssistedInject constructor(
         when (event) {
             is GameSessionEvent.ComputerPlayed -> {
                 persistSessionState()
+                saveIfFinished()
                 viewModelScope.launch {
                     animationLock.withLock { animateComputerMove(event.ring) }
                 }
@@ -266,6 +272,7 @@ class GameViewModel @AssistedInject constructor(
         val played = guarded { session.play(ring) } ?: return
         if (!played) return
         persistSessionState()
+        saveIfFinished()
         val state = session.state.value
         render(state)
         if (state.isFinished) startBlink(state.blinkingRings)
@@ -304,6 +311,7 @@ class GameViewModel @AssistedInject constructor(
                 cancelBlink()
                 session.restart(changingBeginner = true)
                 savedStateHandle[KEY_GAME_RECORDED] = false
+                savedStateHandle.remove<String>(KEY_SAVED_NAME)
                 persistSessionState()
                 render(session.state.value)
             }
@@ -460,17 +468,28 @@ class GameViewModel @AssistedInject constructor(
         _uiState.update { it.copy(reviewRequest = request) }
     }
 
-    /** `sauvegarderPartiePourPlusTard`: silent, a taken name gets a " (n)" suffix. */
-    private fun save(name: String) {
+    /**
+     * Saves the game once it is over, named after the current date and time (in the
+     * device's locale), with player 1 = the user; a game of this screen already saved (then
+     * taken back with Cancel and finished again) is replaced under the same name.
+     */
+    private fun saveIfFinished() {
+        if (!session.state.value.isFinished) return
+        val rings = session.playedRings()
+        val userBegins = session.startingPlayer() == 1
+        val userColor = player1Color.toArgb()
+        val adversaryColor = player2Color.toArgb()
         viewModelScope.launch {
             guarded {
-                savedGameService.save(
-                    name = name,
-                    ringsPlayed = session.playedRings(),
-                    userBegins = session.startingPlayer() == 1,
-                    userColor = player1Color.toArgb(),
-                    adversaryColor = player2Color.toArgb(),
-                )
+                val previous = savedStateHandle.get<String>(KEY_SAVED_NAME)
+                val name = if (previous != null) {
+                    savedGameService.replace(previous, rings, userBegins, userColor, adversaryColor)
+                    previous
+                } else {
+                    val date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date())
+                    savedGameService.save(date, rings, userBegins, userColor, adversaryColor)
+                }
+                savedStateHandle[KEY_SAVED_NAME] = name
             }
         }
     }
@@ -515,5 +534,6 @@ class GameViewModel @AssistedInject constructor(
         const val KEY_PLAYER1_COLOR = "game_player1_color"
         const val KEY_PLAYER2_COLOR = "game_player2_color"
         const val KEY_GAME_RECORDED = "game_recorded"
+        const val KEY_SAVED_NAME = "game_saved_name"
     }
 }

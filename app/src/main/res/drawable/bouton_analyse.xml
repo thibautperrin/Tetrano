@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Play-menu artwork for "Analyse games": a board under a magnifying glass, in the 500x250
+     frame and black line style of the traced 2015 buttons (artwork in the lower half). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="100dp"
+    android:viewportWidth="500"
+    android:viewportHeight="250">
+    <!-- 4x4 board -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="6"
+        android:pathData="M120,112 L240,112 L240,232 L120,232 Z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="3"
+        android:pathData="M150,112 L150,232 M180,112 L180,232 M210,112 L210,232 M120,142 L240,142 M120,172 L240,172 M120,202 L240,202" />
+    <!-- a few rings -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="5"
+        android:pathData="M125,127 A10,10 0 1,0 145,127 A10,10 0 1,0 125,127 Z M185,157 A10,10 0 1,0 205,157 A10,10 0 1,0 185,157 Z M155,217 A10,10 0 1,0 175,217 A10,10 0 1,0 155,217 Z M215,187 A10,10 0 1,0 235,187 A10,10 0 1,0 215,187 Z" />
+    <path
+        android:strokeColor="#FF5A5A5A"
+        android:strokeWidth="3"
+        android:pathData="M188,127 A7,7 0 1,0 202,127 A7,7 0 1,0 188,127 Z M128,187 A7,7 0 1,0 142,187 A7,7 0 1,0 128,187 Z" />
+    <!-- magnifying glass -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="12"
+        android:pathData="M268,158 A50,50 0 1,0 368,158 A50,50 0 1,0 268,158 Z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="20"
+        android:strokeLineCap="round"
+        android:pathData="M354,194 L400,238" />
+    <!-- rising evaluation inside the lens -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M292,178 L310,162 L326,172 L346,140 M334,140 L346,140 L346,152" />
+</vector>
