@@ -51,6 +51,12 @@ DEFAULTS = {
     # "0.2,0.8": always random_plies random moves, kept only if the network's direct evaluation
     # gives the side to move a win probability in that range (drawn again otherwise).
     "disputed": "",
+    # "schedule": the selfplay tool's opening schedule (cycles of 10 000 games: empty board, every
+    # 2- and 3-move position up to symmetry, 4 to 10 random moves...; see selfplay Openings.kt),
+    # disputed then bounding the first player's win probability; random_plies is then unused.
+    # Game i of the run gets slot i of the schedule (state.json counts the games: schedule_games).
+    "openings": "",
+    "schedule_seed": 1,
     "threads": max(1, (os.cpu_count() or 4) - 2),
     "batch": 1024,
     "reuse": 4.0,
@@ -225,10 +231,12 @@ def clean_up(run, cfg, gen, kept_data):
 
 # ---- self-play ----
 
-def selfplay_args(cfg, model, games, out, seed):
+def selfplay_args(cfg, model, games, out, seed, offset=0):
     return (["selfplay", f"model={model}", f"games={games}", f"sims={cfg['sims']}",
              f"random_plies={cfg['random_plies']}", f"threads={cfg['threads']}", f"out={out}", f"seed={seed}"]
-            + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else []))
+            + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else [])
+            + ([f"openings={cfg['openings']}", f"offset={offset}", f"schedule_seed={cfg['schedule_seed']}"]
+               if cfg["openings"] else []))
 
 
 SUMMED = ("games", "positions", "firstWins", "secondWins", "draws", "evals", "openingDraws", "openingsKept")
@@ -277,7 +285,8 @@ def chunked_selfplay(run, cfg, state, gen, prev_model, out, deadline):
         chunk, meta = Path(f"{stem}.bin"), Path(f"{stem}.json")
         if not (chunk.exists() and meta.exists()):
             tmp = Path(f"{stem}.bin.tmp")  # the java tool itself writes <out>.tmp, then renames it to <out>
-            res = java(cfg, selfplay_args(cfg, prev_model, games, tmp, gen * 1000 + i + 1), deadline)
+            offset = state.get("schedule_games", 0) + sum(plan[:i])
+            res = java(cfg, selfplay_args(cfg, prev_model, games, tmp, gen * 1000 + i + 1, offset), deadline)
             write_atomic(meta, json.dumps(res))
             os.replace(tmp, chunk)
             log(run, f"gen {gen} self-play chunk {i + 1}/{len(plan)}: {res}")
@@ -361,11 +370,14 @@ def main():
                 if cfg["chunk_games"] > 0:
                     res = chunked_selfplay(run, cfg, state, gen, prev_model, out, deadline)
                 else:
-                    res = java(cfg, selfplay_args(cfg, prev_model, cfg["games"], out, gen + 1), deadline)
+                    res = java(cfg, selfplay_args(cfg, prev_model, cfg["games"], out, gen + 1,
+                                                  state.get("schedule_games", 0)), deadline)
                 row.update(res)
                 row["selfplay_s"] = round(time.time() - phase_start)
                 log(run, f"gen {gen} self-play: {res}")
                 state.pop("chunk_plan", None)
+                if cfg["openings"]:
+                    state["schedule_games"] = state.get("schedule_games", 0) + int(res["games"])
                 state.update(phase="train", selfplay=res, compute_s=state["compute_s"] + time.time() - phase_start)
                 save_state(run, state)
                 remove_partials(run, gen)

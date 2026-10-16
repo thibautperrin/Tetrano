@@ -18,12 +18,15 @@ import kotlin.random.Random
 /**
  * Usage: `selfplay <command> key=value...`
  *
- * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N random_plies=5 [disputed=0.2,0.8]`
+ * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N random_plies=5 [disputed=0.2,0.8]
+ *   [openings=schedule offset=N schedule_seed=N]` (with `openings=schedule`, [OpeningSchedule]'s
+ *   openings, `disputed=` giving the first player's win range, and `random_plies` unused)
  * - `arena a=<file|none> b=<file|none> games=N sims=N threads=N`
  * - `vslegacy model=<file> level=100 games=N sims=N threads=N`
  * - `bench model=<file> sims=N`
  * - `match a=<file> b=<file> ...` (tournament games, see [tournamentMatch])
  * - `puzzles data=<dir> model=<file> out=<file> ...` (the app's puzzle set, see [generatePuzzles])
+ * - `openings [schedule_seed=N] [cycle=N]` (summary of a cycle of [OpeningSchedule])
  *
  * Output lines starting with `RESULT ` are machine-readable `key=value` pairs
  * read by tools/nn/loop.py.
@@ -41,6 +44,7 @@ fun main(args: Array<String>) {
         "bench" -> bench(options)
         "match" -> tournamentMatch(options)
         "puzzles" -> generatePuzzles(options)
+        "openings" -> printOpeningSchedule(options)
         else -> error("unknown command $command")
     }
 }
@@ -70,7 +74,7 @@ private class Position(
 private class PlayedGame(val positions: List<Position>, val winner: Int, val plies: Int)
 
 /** A uniformly random free cell of a board that has one. */
-private fun randomFreeCell(occupied: Long, rng: Random): Int {
+internal fun randomFreeCell(occupied: Long, rng: Random): Int {
     val free = (occupied).inv()
     var index = rng.nextInt(java.lang.Long.bitCount(free))
     var bits = free
@@ -82,7 +86,7 @@ private fun randomFreeCell(occupied: Long, rng: Random): Int {
  * Openings kept only when they are "disputed": the network's direct evaluation (one forward pass,
  * no search) gives the side to move a win probability in [minWin, maxWin].
  */
-private class DisputedFilter(val net: QubicNet, val minWin: Float, val maxWin: Float) {
+internal class DisputedFilter(val net: QubicNet, val minWin: Float, val maxWin: Float) {
     val attempts = AtomicLong(0)
     val accepted = AtomicLong(0)
 
@@ -96,6 +100,15 @@ private class DisputedFilter(val net: QubicNet, val minWin: Float, val maxWin: F
             attempts.incrementAndGet()
             net.evaluate(mine, theirs, workspace, logits, wdl)
             val ok = wdl[0] in minWin..maxWin
+            if (ok) accepted.incrementAndGet()
+            return ok
+        }
+
+        /** Like [accepts], on the first player's win probability ([firstToMove]: the side to move is it). */
+        fun acceptsFirstPlayer(mine: Long, theirs: Long, firstToMove: Boolean): Boolean {
+            attempts.incrementAndGet()
+            net.evaluate(mine, theirs, workspace, logits, wdl)
+            val ok = (if (firstToMove) wdl[0] else wdl[2]) in minWin..maxWin
             if (ok) accepted.incrementAndGet()
             return ok
         }
@@ -124,7 +137,10 @@ private fun playGame(
     maxRandomPlies: Int,
     rng: Random,
     judge: DisputedFilter.Judge? = null,
-): PlayedGame {
+): PlayedGame = playGame(mcts, sims, randomStart(maxRandomPlies, rng, judge))
+
+/** 0..[maxRandomPlies] random moves, or with a [judge] exactly [maxRandomPlies], drawn until disputed. */
+private fun randomStart(maxRandomPlies: Int, rng: Random, judge: DisputedFilter.Judge?): Start {
     var mine: Long
     var theirs: Long
     var ply: Int
@@ -143,6 +159,14 @@ private fun playGame(
             ply++
         }
     } while (over || (judge != null && !judge.accepts(mine, theirs)))
+    return Start(mine, theirs, ply)
+}
+
+/** Plays a self-play game from [start] (whose moves are not recorded) to its real end. */
+private fun playGame(mcts: GumbelMcts, sims: Int, start: Start): PlayedGame {
+    var mine = start.mine
+    var theirs = start.theirs
+    var ply = start.ply
     val positions = ArrayList<Position>()
     while (true) {
         val result = mcts.search(mine, theirs, sims)
@@ -192,6 +216,9 @@ private fun selfPlay(options: Map<String, String>) {
     val seed = options.long("seed", System.nanoTime())
     val randomPlies = options.int("random_plies", 5)
     val filter = DisputedFilter.parse(options["disputed"], net)
+    // openings=schedule: the openings of OpeningSchedule; this call plays games offset.. of the run.
+    val schedule = if (options["openings"] == "schedule") OpeningSchedule(options.long("schedule_seed", 1L)) else null
+    val offset = options.long("offset", 0L)
     val outFile = File(options["out"] ?: error("out= required"))
     val tmp = File(outFile.path + ".tmp")
     val started = System.nanoTime()
@@ -207,8 +234,15 @@ private fun selfPlay(options: Map<String, String>) {
                 val rng = Random(seed * 1000 + t)
                 val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
                 val judge = filter?.Judge()
-                while (next.getAndIncrement() < games) {
-                    val game = playGame(mcts, sims, randomPlies, rng, judge)
+                val openings = schedule?.let { OpeningMaker(it, judge, rng) }
+                while (true) {
+                    val index = next.getAndIncrement()
+                    if (index >= games) break
+                    val game = if (openings != null) {
+                        playGame(mcts, sims, openings.start(offset + index))
+                    } else {
+                        playGame(mcts, sims, randomPlies, rng, judge)
+                    }
                     val buffer = ByteBuffer.allocate(game.positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
                     encode(game, buffer)
                     synchronized(file) {

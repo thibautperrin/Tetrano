@@ -103,17 +103,35 @@ dossier `runs/big`) :
    sont gardées pour le test). AdamW, lots de 1024, lr 1e-3 (montée sur 500 pas) puis cosinus
    jusqu'à 2e-5 en 24 000 pas (~7 époques), mêmes pertes que `train.py`. `--extra-data runs/main/data
    --extra-last N` ajoute d'anciennes parties (plus faibles) — à donner au premier lancement.
-2. **Duel de contrôle** : le 64 × 10 pré-entraîné contre night512 gen 46 (48 × 6), 1000 parties à
-   128 simulations sur les ouvertures aléatoires appariées du mode B de `night.py`. Résultat ajouté
-   à `runs/big/report.md` (`--no-check` pour le sauter).
-3. **Auto-jeu sans fin** (`loop.py` sur `runs/big`, depuis `pretrain/pretrain.pt`) : 512 simulations,
-   500 parties par génération jouées par tranches de 100, ouvertures disputées (20-80 %), toutes les
-   données gardées ; fenêtre 300 000 positions + 10 000 par génération (max 1,5 M), démarrée avec
-   les 10 dernières générations de night512 (copiées en `gen_-00NN.bin`) ; lr 2e-4 jusqu'à la
-   génération 60 puis cosinus jusqu'à 2e-5 à la génération 300 (puis constant) ; contrôle Elo
-   contre gen 46 toutes les 10 générations (400 parties, 128 simulations, Elo 1000 = gen 46).
+2. **Auto-jeu sans fin** (`loop.py` sur `runs/big`, depuis `pretrain/pretrain.pt`), entraînement
+   seulement (aucun match de test) : 512 simulations, 500 parties par génération jouées par tranches
+   de 100, toutes les données gardées ; fenêtre 300 000 positions + 10 000 par génération
+   (max 1,5 M), démarrée avec les 10 dernières générations de night512 (copiées en `gen_-00NN.bin`) ;
+   lr 2e-4 jusqu'à la génération 60 puis cosinus jusqu'à 2e-5 à la génération 300 (puis constant).
    500 parties plutôt que 1000 : une génération du 64 × 10 coûte déjà ~3 fois plus cher que celle
    du 48 × 6, et le réseau est mis à jour deux fois plus souvent.
+
+### Ouvertures de l'auto-jeu (`openings=schedule`)
+
+Pour la diversité, les parties suivent un calendrier par cycles de 10 000 (`selfplay/.../Openings.kt`,
+résumé d'un cycle : commande `selfplay openings`) :
+
+| Parties / 10 000 | Départ |
+|---|---|
+| 200 | plateau vierge |
+| 8 | un mauvais premier coup (une des 48 cases sur 4 alignements seulement) |
+| 35 | 2 coups : chacune des 35 positions distinctes à symétrie près, une fois |
+| 757 | 3 coups : chacune des 757 positions distinctes à symétrie près, une fois |
+| 2000 / 2000 | 4 / 5 coups aléatoires |
+| 2000 | 6 coups aléatoires, sans coup forcé au départ |
+| 1000 / 1000 / 500 / 500 | 7 / 8 / 9 / 10 coups, sans coup forcé, ni partie finie ou gagnée d'avance (VCF) |
+
+À partir de 4 coups, 80 % de chaque groupe sont « disputés » : l'évaluation directe du réseau donne
+au premier joueur 20 à 80 % de victoire (sinon nouveau tirage). Les positions à 1, 2 et 3 coups sont
+présentées sous une symétrie tirée au hasard. Chaque groupe est étalé régulièrement sur le cycle
+(deux parties consécutives n'ont jamais le même nombre de coups d'ouverture ; une partie sur plateau
+vierge toutes les ~50) et l'ordre change à chaque cycle. La partie n° i du run a toujours la case i du
+calendrier (`schedule_games` dans `state.json`), quel que soit le découpage en tranches.
 
 ### Démarrer, arrêter
 
@@ -126,7 +144,7 @@ dossier `runs/big`) :
   java/python enfants sont dans un « job » Windows : ils meurent avec le processus principal, quelle
   que soit la façon dont il s'arrête.
 - **Où en est-on ?** `.venv/Scripts/python autotrain.py --status` : phase, pas du pré-entraînement
-  ou génération en cours, dernières pertes, derniers contrôles Elo.
+  ou génération en cours, dernières pertes, avancement du calendrier d'ouvertures.
 
 ### Reprise
 
@@ -135,7 +153,6 @@ Relancer la même commande suffit, rien n'est perdu au-delà de quelques minutes
 - pré-entraînement : état complet (poids, Adam, pas, générateurs aléatoires) dans
   `runs/big/pretrain/state.pt` tous les 250 pas (~4 min) ; une reprise est équivalente à un
   entraînement sans interruption ; une fois fini (`pretrain/done.json`) il n'est plus refait ;
-- duel de contrôle : refait en entier s'il a été interrompu (~6 min) ;
 - auto-jeu : les tranches de 100 parties finies sont gardées (`data/partial/`), seule la tranche en
   cours est rejouée ; l'entraînement d'une génération (~1 min) est refait.
 
@@ -148,8 +165,7 @@ fermée, `taskkill /F`, coupure) laisse un état cohérent.
 |---|---|
 | `runs/big/log.txt` | journal de toutes les phases |
 | `runs/big/pretrain/report.md`, `curve.csv` | pré-entraînement : pertes entraînement/test tous les 1000 pas (et celles de gen 46 sur le même test pour comparer) |
-| `runs/big/report.md` | duel de contrôle après pré-entraînement |
-| `runs/big/metrics.csv` | une ligne par génération d'auto-jeu (`elo_vs_reference` : 1000 = gen 46) |
+| `runs/big/metrics.csv` | une ligne par génération d'auto-jeu |
 | `runs/big/models/gen_XXXX.bin` | le modèle de chaque génération |
 
 ### Mettre un modèle 64 × 10 dans l'appli
@@ -166,13 +182,11 @@ téléphone qu'avec le 48 × 6.
 
 - Pré-entraînement : 0,9 à 1,1 s par pas mesuré pour le 64 × 10 (0,39 s pour le 48 × 6) ⇒
   24 000 pas ≈ **7 h** (évaluations comprises, ~35 s chacune).
-- Duel de contrôle : ~6 min.
 - Auto-jeu : une simulation MCTS Kotlin coûte ~3,0 ms pour le 64 × 10 (extrapolé de 0,97 ms en
   48 × 6 et 2,33 ms en 64 × 8 ; `selfplay bench` : 3,1 ms contre 0,96 ms pour gen 46), soit ~3,1 fois
   le 48 × 6. night512 jouait 1000 parties à 512 simulations en ~800 s ⇒ 500 parties du 64 × 10
   ≈ 21 min (une tranche de 100 ≈ 4 min), + ~1 min d'entraînement : **~22 min par génération**,
-  ~2,7 générations par heure, ~65 par 24 h de calcul ; contrôle Elo : +2 à 3 min toutes les
-  10 générations. Palier de lr (60 générations) ≈ 23 h de calcul, fin de la descente
+  ~2,7 générations par heure, ~65 par 24 h de calcul. Palier de lr (60 générations) ≈ 23 h de calcul, fin de la descente
   (300 générations) ≈ 4,7 jours.
 - Disque : ~2,3 Mo de données et 1,1 Mo de modèle par génération (+ un point de contrôle de
   3,4 Mo toutes les 10).
