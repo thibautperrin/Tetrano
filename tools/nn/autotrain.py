@@ -5,24 +5,26 @@
     .venv/Scripts/python autotrain.py --status
     .venv/Scripts/python autotrain.py --stop             # or double-click autotrain-stop.bat
 
-Phases (each one skipped once done, so re-running resumes where it stopped):
+Phases (each one skipped once done, so re-running resumes where it stopped), training only (no
+test match):
 1. pretrain.py: supervised pre-training of a fresh 64 x 10 network on the night512 + weekend games
    (<run>/pretrain/, about 6 h).
-2. Check duel: pre-trained 64 x 10 against night512 gen 46 (48 x 6), 1000 games at 128 simulations
-   on paired random openings (night.py's mode B); appended to <run>/report.md (--no-check: skipped).
-3. Open-ended self-play training: loop.py on <run> from <run>/pretrain/pretrain.pt, 512 simulations
-   on disputed openings, 500 games per generation in chunks of 100 (a stop loses at most one
-   chunk, a few minutes), learning rate by generation (2e-4 until 60, cosine to 2e-5 at 300), Elo
-   check against gen 46 every 10 generations.
+2. Open-ended self-play training: loop.py on <run> from <run>/pretrain/pretrain.pt, 512 simulations,
+   500 games per generation in chunks of 100 (a stop loses at most one chunk, a few minutes),
+   learning rate by generation (2e-4 until 60, cosine to 2e-5 at 300). Openings from the selfplay
+   tool's schedule (cycles of 10 000 games, see selfplay/.../Openings.kt): 200 from the empty
+   board, 8 after one bad first move, the 35 positions after 2 moves and the 757 after 3 moves
+   (each once, under a random symmetry), 2000 each after 4, 5 and 6 random moves, 1000 each after
+   7 and 8, 500 each after 9 and 10 (from 6 moves: no forced move to start with; from 7: no
+   finished game nor forced win; 80 % of each of these groups with the first player at 20-80 % of
+   winning for the network), short and long openings alternating.
 
 The process runs at below-normal priority (inherited by its children), keeps Windows from
 idle-sleeping, and writes <run>/autotrain.pid. Its children (pretrain/loop python, java) are in a
 kill-on-close job object: they die with it however it ends (Ctrl+C, closed console, taskkill).
 """
 import argparse
-import contextlib
 import datetime as dt
-import io
 import json
 import os
 import re
@@ -39,16 +41,16 @@ SELFPLAY_LIB = HERE.parents[1] / "selfplay" / "build" / "install" / "selfplay" /
 NIGHT = Path("runs/night512")
 REFERENCE = NIGHT / "models" / "gen_0046.bin"
 WARM_FILES = 10
-CHECK_SEED = 20261011  # the openings of night.py's mode B and of the weekend tournament
 
 # Phase 3 (loop.py options). See README.md, section "Réseau 64 × 10", for the reasons.
 LOOP = {
     "hidden": 64, "layers": 10,
     "sims": 512, "games": 500, "chunk_games": 100, "random_plies": 5, "disputed": "0.2,0.8",
+    "openings": "schedule", "schedule_seed": 20261016,
     "keep_data": 1, "keep_checkpoint_every": 10,
     "lr_peak": 2e-4, "lr_final": 2e-5, "lr_hold_gens": 60, "lr_decay_gens": 300,
     "window_base": 300_000, "window_per_gen": 10_000, "window_max": 1_500_000,
-    "elo_every": 10, "elo_reference": str(REFERENCE), "elo_games": 400, "elo_sims": 128,
+    "elo_every": 0,  # training only: no test match
 }
 
 
@@ -154,12 +156,6 @@ def status(run):
         c = curve[-1]
         print(f"   last evaluation (step {c['step']}): test value {c['test_value']} policy {c['test_policy']} "
               f"accuracy {100 * float(c['test_value_acc']):.1f} %")
-    check = run / "check" / "result.json"
-    if check.exists():
-        r = json.loads(check.read_text())
-        print(f"2. check duel vs gen 46: score {100 * r['score']:.1f} % => Elo {r['elo']:+.0f} ({r['openings']} openings)")
-    else:
-        print("2. check duel vs gen 46: not done")
     state = run / "state.json"
     if state.exists():
         s = json.loads(state.read_text())
@@ -167,20 +163,19 @@ def status(run):
         if s["phase"] == "selfplay" and s.get("chunk_plan"):
             n = len(list((run / "data" / "partial").glob(f"gen_{s['generation']:04d}_c*.bin")))
             extra = f" (chunk {n} / {len(s['chunk_plan'])} done)"
-        print(f"3. self-play training: generation {s['generation']}, phase {s['phase']}{extra}, "
+        print(f"2. self-play training: generation {s['generation']}, phase {s['phase']}{extra}, "
               f"compute {s['compute_s'] / 3600:.1f} h")
         rows = last_csv_rows(run / "metrics.csv")
         if rows:
             r = rows[-1]
+            if s.get("schedule_games") is not None:
+                print(f"   scheduled openings: {s['schedule_games']} games played "
+                      f"(cycle {s['schedule_games'] // 10000 + 1}, {s['schedule_games'] % 10000} / 10000)")
             print(f"   gen {r['generation']}: lr {r['lr']}, train value {r['value_loss']} policy {r['policy_loss']}, "
                   f"fresh value {r['fresh_value_loss']} policy {r['fresh_policy_loss']}, "
                   f"{r['games']} games in {r['selfplay_s']} s")
-            elo = [x for x in rows if x.get("elo_vs_reference")]
-            if elo:
-                print("   Elo vs gen 46 (= 1000): " + ", ".join(f"gen {x['generation']} {x['elo_vs_reference']}"
-                                                         for x in elo[-5:]))
     else:
-        print("3. self-play training: not started")
+        print("2. self-play training: not started")
     logf = run / "log.txt"
     if logf.exists():
         print("last log lines:")
@@ -220,51 +215,6 @@ def pretrain(run, args, until_iso):
     return False
 
 
-def check_duel(run, deadline, n_games=1000):
-    out = run / "check"
-    if (out / "result.json").exists():
-        return True
-    out.mkdir(exist_ok=True)
-    games = out / "games.txt"
-    if not games.exists():
-        log(run, f"phase 2: check duel, pre-trained 64x10 vs night512 gen 46 ({n_games} games, 128 simulations)")
-        threads = max(1, (os.cpu_count() or 4) - 2)
-        cmd = ["java", "-Xmx4g", "-cp", str(SELFPLAY_LIB / "*"), "fr.thibautperrin.tetrano.selfplay.MainKt", "match",
-               f"a={run / 'pretrain' / 'pretrain.bin'}", f"b={REFERENCE}", f"games={n_games}", "sims=128",
-               f"threads={threads}", "openings=random", f"seed={CHECK_SEED}", "offset=0", f"games_out={games}.tmp"]
-        t = time.time()
-        try:
-            proc = winproc.run_child(cmd, timeout=None if deadline is None else max(1.0, deadline - time.time()))
-        except subprocess.TimeoutExpired:
-            log(run, "stop time reached during the check duel (it will be redone)")
-            return False
-        if proc.returncode != 0:
-            log(run, f"check duel failed: {proc.stdout}{proc.stderr}")
-            return False
-        os.replace(f"{games}.tmp", games)
-        log(run, f"check duel played in {time.time() - t:.0f} s")
-    import duel_analysis
-    import numpy as np
-    g = duel_analysis.load(games)
-    buffer = io.StringIO()
-    with contextlib.redirect_stdout(buffer):
-        duel_analysis.mode_b(g, "big64x10", "gen46", np.random.default_rng(1))
-    pairs = np.array([duel_analysis.score_a(g[k]) + duel_analysis.score_a(g[k + 1]) for k in range(0, len(g) - 1, 2)])
-    score = float(pairs.mean() / 2)
-    result = {"score": score, "elo": duel_analysis.elo(score), "openings": len(pairs),
-              "date": f"{dt.datetime.now():%Y-%m-%d %H:%M}"}
-    report = run / "report.md"
-    head = "" if report.exists() else f"# Réseau 64 × 10 ({run})\n\n"
-    with open(report, "a", encoding="utf-8") as f:
-        f.write(head + f"## Contrôle après pré-entraînement ({result['date']})\n\n"
-                "64 × 10 pré-entraîné (A, `pretrain/pretrain.bin`) contre night512 gen 46 (B, 48 × 6), "
-                f"128 simulations chacun, {len(pairs)} ouvertures aléatoires de 5 coups jouées dans les deux sens "
-                f"(graine {CHECK_SEED}, comme le mode B de night.py).\n\n```\n{buffer.getvalue().strip()}\n```\n\n")
-    write_atomic(out / "result.json", json.dumps(result, indent=1))
-    log(run, f"check duel: 64x10 score {100 * score:.1f} % => Elo {result['elo']:+.0f} vs gen 46 (report: {report})")
-    return True
-
-
 def self_play_training(run, until_iso, deadline):
     if not (run / "state.json").exists():
         (run / "data").mkdir(parents=True, exist_ok=True)
@@ -275,7 +225,7 @@ def self_play_training(run, until_iso, deadline):
             if not target.exists():
                 shutil.copy(f, f"{target}.tmp")
                 os.replace(f"{target}.tmp", target)
-    log(run, "phase 3: self-play training (loop.py)")
+    log(run, "phase 2: self-play training (loop.py)")
     cmd = [sys.executable, "-u", "loop.py", "--run", str(run),
            "--init-checkpoint", str(run / "pretrain" / "pretrain.pt")]
     for key, value in LOOP.items():
@@ -299,8 +249,6 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--run", default="runs/big")
     ap.add_argument("--until", help="stop by itself at this local time: HH:MM (next occurrence) or ISO datetime")
-    ap.add_argument("--no-check", action="store_true", help="skip the check duel after pre-training")
-    ap.add_argument("--check-games", type=int, default=1000, help=argparse.SUPPRESS)  # smoke tests
     ap.add_argument("--extra-data", help="pretrain.py --extra-data (first launch only), e.g. runs/main/data")
     ap.add_argument("--extra-last", type=int, default=0)
     ap.add_argument("--normal-priority", action="store_true")
@@ -339,10 +287,6 @@ def main():
         if not pretrain(run, args, until_iso):
             log(run, "pre-training not finished; run autotrain again to resume")
             return 0
-        if not args.no_check and not check_duel(run, deadline, args.check_games):
-            if deadline is not None and time.time() >= deadline:
-                return 0
-            log(run, "check duel not done (it will be retried at the next launch); going on")
         if deadline is not None and time.time() >= deadline:
             log(run, "stop time reached")
             return 0
