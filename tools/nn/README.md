@@ -198,6 +198,33 @@ comme avant) ; `--lr-hold-gens A --lr-decay-gens B` (lr par génération : palie
 cosinus jusqu'à `lr_final` en B, quel que soit `--stop-at` ; 0 = comportement d'avant, lié à
 l'heure d'arrêt). Les anciens runs et `config.json` restent valides.
 
+## Battle petit réseau contre gros réseau, PC et téléphones (`battle.py`)
+
+`battle.bat` (ou `.venv/Scripts/python -u battle.py [--until 05:00]`) enchaîne, en reprenant là où
+il s'est arrêté (`runs/battle/state.json`) :
+
+1. **Pré-entraînement du petit réseau** (48 × 6, gen 46 de l'appli) sur les parties à 512
+   simulations du gros réseau (`runs/big/data` gen 0-334, gen 335-336 gardées pour le test) :
+   6000 pas de 1024, lr 1e-4 → 1e-5 (≈ 40 min) → `runs/battle/small_ft/small_ft.{pt,bin}`.
+2. **Battle** jusqu'à `--until` (fixé au premier lancement) : `selfplay battle` (voir
+   `selfplay/.../Battle.kt`), A = petit réseau à 2048 simulations, B = gros réseau (gen 336) à
+   512, recherche du niveau 101 de l'appli. Chaque ouverture du calendrier de l'auto-jeu
+   (`Openings.kt`, même répartition sur 10 000, graine 20261020 ; « disputée » = moyenne des deux
+   réseaux entre 20 et 80 %) est jouée deux fois (A premier joueur, puis B). PC : 14 parties en
+   parallèle. Téléphones adb (y compris branchés en cours de route) : le tool selfplay en dex
+   (`d8` sur les jars de `installDist` → `runs/battle/phone/classes.dex`) lancé par
+   `app_process` dans `/data/local/tmp/tetrano_battle`, une partie à la fois comme dans l'appli
+   (le téléphone doit rester allumé sur secteur : option développeur « Rester activé »). Après
+   l'heure, plus de nouvelle paire ; celles en cours se terminent.
+3. **Analyse** → `runs/battle/report.md` : score et Elo par appareil et par type d'ouverture,
+   paires de même issue, temps par coup (moyenne, médiane, 90e centile, ms par simulation).
+4. **Entraînement** des deux réseaux sur les positions des paires dont les deux parties ont la
+   même issue (`same.bin`, 5 % gardés pour le test), 2 passages, lr 3e-5 (petit) / 2e-5 (gros)
+   → `runs/battle/after/` ; rien n'est mis dans l'appli ni dans `runs/big`.
+
+`battle.py --status` pour le suivi, `battle-stop.bat` (ou `--stop`) pour tout arrêter, téléphones
+compris.
+
 ## Puzzles
 
 `app/src/main/res/raw/puzzles.bin` est produit par la commande `puzzles` de l'outil d'auto-jeu, à

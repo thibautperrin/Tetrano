@@ -125,10 +125,14 @@ internal class OpeningSchedule(private val seed: Long) {
     }
 }
 
-/** Builds the start of each scheduled game (one per thread: its VCF solver and network judge). */
+/**
+ * Builds the start of each scheduled game (one per thread: its VCF solver and network judge).
+ * [disputed] tells whether a position (side to move: [Start.mine]) is disputed, given whether the
+ * first player is to move.
+ */
 internal class OpeningMaker(
     private val schedule: OpeningSchedule,
-    private val judge: DisputedFilter.Judge?,
+    private val disputed: ((mine: Long, theirs: Long, firstToMove: Boolean) -> Boolean)?,
     private val rng: Random,
 ) {
     private val vcf = Vcf(16)
@@ -177,7 +181,7 @@ internal class OpeningMaker(
                 continue
             }
             if (plies >= OpeningSchedule.NO_FORCED_WIN_FROM && vcf.solve(mine, theirs, VCF_BUDGET) != Vcf.NONE) continue
-            if (disputed && !checkNotNull(judge) { "disputed openings need a model" }.acceptsFirstPlayer(mine, theirs, plies % 2 == 0)) {
+            if (disputed && !checkNotNull(this.disputed) { "disputed openings need a model" }(mine, theirs, plies % 2 == 0)) {
                 continue
             }
             return Start(mine, theirs, plies)

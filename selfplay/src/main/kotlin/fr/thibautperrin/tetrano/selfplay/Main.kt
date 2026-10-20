@@ -27,6 +27,7 @@ import kotlin.random.Random
  * - `match a=<file> b=<file> ...` (tournament games, see [tournamentMatch])
  * - `puzzles data=<dir> model=<file> out=<file> ...` (the app's puzzle set, see [generatePuzzles])
  * - `openings [schedule_seed=N] [cycle=N]` (summary of a cycle of [OpeningSchedule])
+ * - `battle a=<file> b=<file> sims_a=N sims_b=N out=<dir> ...` (paired games on scheduled openings, see [battle])
  *
  * Output lines starting with `RESULT ` are machine-readable `key=value` pairs
  * read by tools/nn/loop.py.
@@ -45,6 +46,7 @@ fun main(args: Array<String>) {
         "match" -> tournamentMatch(options)
         "puzzles" -> generatePuzzles(options)
         "openings" -> printOpeningSchedule(options)
+        "battle" -> battle(options)
         else -> error("unknown command $command")
     }
 }
@@ -52,16 +54,16 @@ fun main(args: Array<String>) {
 private fun Map<String, String>.int(key: String, default: Int) = this[key]?.toInt() ?: default
 private fun Map<String, String>.long(key: String, default: Long) = this[key]?.toLong() ?: default
 
-private fun loadNet(path: String?): QubicNet? =
+internal fun loadNet(path: String?): QubicNet? =
     if (path == null || path == "none") null else File(path).inputStream().use { QubicNet.load(it) }
 
 /** Bytes per recorded position — must match tools/nn/data.py. */
 const val RECORD_SIZE = 8 + 8 + 4 + 64 * 2 + 4
 
-private const val FLAG_POLICY = 1
-private const val FLAG_EXACT = 2
+internal const val FLAG_POLICY = 1
+internal const val FLAG_EXACT = 2
 
-private class Position(
+internal class Position(
     val mine: Long,
     val theirs: Long,
     val ply: Int,
@@ -71,7 +73,7 @@ private class Position(
 )
 
 /** A self-play game: recorded positions, the winner (0 first, 1 second, -1 draw) and its length in plies. */
-private class PlayedGame(val positions: List<Position>, val winner: Int, val plies: Int)
+internal class PlayedGame(val positions: List<Position>, val winner: Int, val plies: Int)
 
 /** A uniformly random free cell of a board that has one. */
 internal fun randomFreeCell(occupied: Long, rng: Random): Int {
@@ -188,7 +190,7 @@ private fun playGame(mcts: GumbelMcts, sims: Int, start: Start): PlayedGame {
 }
 
 /** Writes a game's positions; the free byte holds the plies left until the end (moves-left target). */
-private fun encode(game: PlayedGame, out: ByteBuffer) {
+internal fun encode(game: PlayedGame, out: ByteBuffer) {
     val winner = game.winner
     for (p in game.positions) {
         val mover = p.ply % 2
@@ -234,7 +236,7 @@ private fun selfPlay(options: Map<String, String>) {
                 val rng = Random(seed * 1000 + t)
                 val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
                 val judge = filter?.Judge()
-                val openings = schedule?.let { OpeningMaker(it, judge, rng) }
+                val openings = schedule?.let { OpeningMaker(it, judge?.let { j -> j::acceptsFirstPlayer }, rng) }
                 while (true) {
                     val index = next.getAndIncrement()
                     if (index >= games) break
