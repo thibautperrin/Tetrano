@@ -105,7 +105,8 @@ dossier `runs/big`) :
    --extra-last N` ajoute d'anciennes parties (plus faibles) — à donner au premier lancement.
 2. **Auto-jeu sans fin** (`loop.py` sur `runs/big`, depuis `pretrain/pretrain.pt`), entraînement
    seulement (aucun match de test) : 512 simulations, 500 parties par génération jouées par tranches
-   de 100, toutes les données gardées ; fenêtre 300 000 positions + 10 000 par génération
+   de 100 (jusqu'à la génération 336 ; depuis, voir « Recherche adaptative » ci-dessous), toutes les
+   données gardées ; fenêtre 300 000 positions + 10 000 par génération
    (max 1,5 M), démarrée avec les 10 dernières générations de night512 (copiées en `gen_-00NN.bin`) ;
    lr 2e-4 jusqu'à la génération 60 puis cosinus jusqu'à 2e-5 à la génération 300 (puis constant).
    500 parties plutôt que 1000 : une génération du 64 × 10 coûte déjà ~3 fois plus cher que celle
@@ -191,10 +192,33 @@ téléphone qu'avec le 48 × 6.
 - Disque : ~2,3 Mo de données et 1,1 Mo de modèle par génération (+ un point de contrôle de
   3,4 Mo toutes les 10).
 
+### Recherche adaptative et symétries (depuis la génération 337)
+
+- **Symétries** : `GumbelMcts` regroupe les coups équivalents par une des 192 symétries qui laissent
+  la position inchangée (toutes à la racine, puis celles du parent qui fixent le coup joué) : un seul
+  coup par classe dans l'arbre (prior sommé), le coup joué est une case de la classe tirée au hasard,
+  et la cible de politique est répartie à égalité sur la classe. Le réseau est exactement
+  équivariant (vérifié : écarts de 1e-7), donc rien n'est perdu.
+- **Budget adaptatif** (`searchAdaptive`, `adaptive=1`) : 64 simulations, puis 128, 256… jusqu'à
+  2048 tant que la recherche hésite, c'est-à-dire jusqu'à ce que le même coup (à symétrie près) soit
+  choisi 4 tours de suite, ou 2 seulement si la position est décidée (|Q| ≥ 0,8). Règle choisie avec
+  `selfplay rounds` + `adaptive_rules.py` sur 1000 positions de la battle (gros réseau), contre une
+  recherche de 2048 : regret 0,0046 pour 468 simulations en moyenne, là où une recherche fixe en
+  demande ~950 (0,0109 à 512, 0,0037 à 1024). Une règle « le meilleur coup devance les autres de X »
+  était pire qu'un budget fixe (tout ou rien : arrêt à 64 à tort, ou 2048 quand plusieurs coups se
+  valent).
+- **Cibles de politique** (`policy_min_sims=256`) : seules les recherches d'au moins 256 simulations
+  donnent une cible de politique ; toutes donnent la valeur.
+- **Une génération = un appel java** (`stream=1`, `resume=1`) : les parties sont écrites une par
+  une (`data/partial/gen_XXXX_stream.bin` + `.idx`), un arrêt ne perd que les parties en cours et la
+  reprise joue les manquantes : plus d'attente en fin de tranche.
+- Les 546 796 positions de la battle (`gen_0336_battle.bin`) sont dans la fenêtre d'entraînement.
+
 ### Options ajoutées à `loop.py`
 
-`--chunk-games N` (auto-jeu par appels java de N parties, reprise par tranche ; 0 = un seul appel,
-comme avant) ; `--lr-hold-gens A --lr-decay-gens B` (lr par génération : palier jusqu'à A,
+`--stream 1` (une génération = un appel java repris partie par partie) ; `--adaptive 1
+--policy-min-sims N` (recherche adaptative jusqu'à `--sims`) ; `--chunk-games N` (auto-jeu par
+appels java de N parties, reprise par tranche ; 0 = un seul appel, comme avant) ; `--lr-hold-gens A --lr-decay-gens B` (lr par génération : palier jusqu'à A,
 cosinus jusqu'à `lr_final` en B, quel que soit `--stop-at` ; 0 = comportement d'avant, lié à
 l'heure d'arrêt). Les anciens runs et `config.json` restent valides.
 

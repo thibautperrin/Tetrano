@@ -19,11 +19,12 @@ data class Position(val mine: Long, val theirs: Long) {
 }
 
 /**
- * The level-101 player: [GumbelMcts] guided by [QubicNet], searching a
- * fixed number of simulations per move (the "variations tested", a user
- * setting). Plays either side. Deterministic except for its first moves,
- * sampled (Gumbel noise) among the best ones so that openings vary from
- * game to game. Not thread-safe.
+ * The level-101 player: [GumbelMcts] guided by [QubicNet], searching each move
+ * with [GumbelMcts.searchAdaptive]: 64 simulations, doubled while the search
+ * hesitates, up to the "variations tested" (a user setting). Plays either
+ * side. Deterministic except for its first moves, sampled (Gumbel noise)
+ * among the best ones so that openings vary from game to game, and for the
+ * choice among moves alike by a symmetry of the position. Not thread-safe.
  */
 class NeuralPlayer(
     net: QubicNet,
@@ -32,18 +33,19 @@ class NeuralPlayer(
 ) {
     private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false))
 
-    /** The full search result for the player to move after [movesPlayed], with [simulations] simulations. */
+    /** The full search result for the player to move after [movesPlayed], with at most [simulations] simulations. */
     fun search(movesPlayed: ByteArray, simulations: Int, progress: AiProgress? = null): GumbelMcts.Result {
         val position = Position.after(movesPlayed)
-        return mcts.search(
+        return mcts.searchAdaptive(
             position.mine,
             position.theirs,
             simulations.coerceAtLeast(1),
             noise = movesPlayed.size < variedOpeningPlies,
-        ) { done, total ->
-            progress?.onProgress(AiSearchPhase.NEURAL_SEARCH, done, total)
-            progress?.isCancelled() != true
-        }
+            onSimulation = { done, total ->
+                progress?.onProgress(AiSearchPhase.NEURAL_SEARCH, done, total)
+                progress?.isCancelled() != true
+            },
+        )
     }
 
     /** The ring to play after [movesPlayed]. */

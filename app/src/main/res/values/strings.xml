@@ -114,8 +114,8 @@
     <string name="settings_color">Color</string>
     <string name="settings_color_unavailable">Used by the other player</string>
     <string name="settings_section_neural">Level 101 (neural network)</string>
-    <string name="settings_neural_simulations">Variations tested per move</string>
-    <string name="settings_neural_explanation">The more variations the computer tests, the stronger it plays, but the longer it thinks. Default: %1$d.</string>
+    <string name="settings_neural_simulations">Maximum variations per move</string>
+    <string name="settings_neural_explanation">The computer tests 64 variations, then twice as many each time the best move is not clear yet, up to this maximum. The higher it is, the stronger it plays in difficult positions, but the longer it can think. Default: %1$d.</string>
     <string name="Analyse_Games">Analyse games</string>
     <string name="Puzzles">Puzzles</string>
     <string name="analysis_empty_board">Empty board</string>
@@ -127,7 +127,7 @@
     <string name="analysis_title">Analysis</string>
     <string name="analysis_game_over">Game over</string>
     <string name="analysis_variations">%1$s variations tested</string>
-    <string name="analysis_best_move">Recommended move: translucent ring</string>
+    <string name="analysis_best_move">Dashed rings: the moves, more visible the more recommended (rank · chance of winning). Press the board to read a ring.</string>
     <string name="analysis_forced_win">Forced win</string>
     <string name="analysis_forced_draw">Forced draw</string>
     <string name="analysis_depth">Limit: %1$s</string>

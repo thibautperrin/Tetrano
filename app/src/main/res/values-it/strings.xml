@@ -104,8 +104,8 @@
     <string name="settings_color">Colore</string>
     <string name="settings_color_unavailable">Usato dall\'altro giocatore</string>
     <string name="settings_section_neural">Livello 101 (rete neurale)</string>
-    <string name="settings_neural_simulations">Varianti testate per mossa</string>
-    <string name="settings_neural_explanation">Più varianti il computer testa, più gioca forte, ma più a lungo riflette. Predefinito: %1$d.</string>
+    <string name="settings_neural_simulations">Varianti testate per mossa (massimo)</string>
+    <string name="settings_neural_explanation">Il computer testa 64 varianti, poi il doppio finché la mossa migliore non è chiara, fino a questo massimo. Più è alto, più gioca forte nelle posizioni difficili, ma più a lungo può riflettere. Predefinito: %1$d.</string>
     <string name="Analyse_Games">Analizza partite</string>
     <string name="Puzzles">Problemi</string>
     <string name="analysis_empty_board">Tavoliere vuoto</string>
@@ -117,7 +117,7 @@
     <string name="analysis_title">Analisi</string>
     <string name="analysis_game_over">Partita finita</string>
     <string name="analysis_variations">%1$s varianti testate</string>
-    <string name="analysis_best_move">Mossa consigliata: anello traslucido</string>
+    <string name="analysis_best_move">Anelli tratteggiati: le mosse, tanto più visibili quanto più consigliate (posizione · probabilità di vincere). Premere sulla scacchiera per leggere un anello.</string>
     <string name="analysis_forced_win">Vittoria forzata</string>
     <string name="analysis_forced_draw">Patta forzata</string>
     <string name="analysis_depth">Limite: %1$s</string>

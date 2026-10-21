@@ -111,8 +111,8 @@
     <string name="settings_color">Couleur</string>
     <string name="settings_color_unavailable">Prise par l\'autre joueur</string>
     <string name="settings_section_neural">Niveau 101 (réseau de neurones)</string>
-    <string name="settings_neural_simulations">Variations testées par coup</string>
-    <string name="settings_neural_explanation">Plus l\'ordinateur teste de variations, plus il joue fort, mais plus il réfléchit longtemps. Par défaut : %1$d.</string>
+    <string name="settings_neural_simulations">Variations testées par coup (maximum)</string>
+    <string name="settings_neural_explanation">L\'ordinateur teste 64 variations, puis deux fois plus tant que le meilleur coup n\'est pas clair, jusqu\'à ce maximum. Plus il est élevé, plus il joue fort dans les positions difficiles, mais plus il peut réfléchir longtemps. Par défaut : %1$d.</string>
     <string name="Analyse_Games">Analyser les parties</string>
     <string name="Puzzles">Puzzles</string>
     <string name="analysis_empty_board">Plateau vide</string>
@@ -124,7 +124,7 @@
     <string name="analysis_title">Analyse</string>
     <string name="analysis_game_over">Partie terminée</string>
     <string name="analysis_variations">%1$s variations testées</string>
-    <string name="analysis_best_move">Coup conseillé : anneau translucide</string>
+    <string name="analysis_best_move">Anneaux en pointillés : les coups, d\'autant plus visibles qu\'ils sont recommandés (rang · chance de gagner). Appuyez sur le plateau pour lire un anneau.</string>
     <string name="analysis_forced_win">Victoire forcée</string>
     <string name="analysis_forced_draw">Nulle forcée</string>
     <string name="analysis_depth">Limite : %1$s</string>

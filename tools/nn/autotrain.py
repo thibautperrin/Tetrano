@@ -9,8 +9,10 @@ Phases (each one skipped once done, so re-running resumes where it stopped), tra
 test match):
 1. pretrain.py: supervised pre-training of a fresh 64 x 10 network on the night512 + weekend games
    (<run>/pretrain/, about 6 h).
-2. Open-ended self-play training: loop.py on <run> from <run>/pretrain/pretrain.pt, 512 simulations,
-   500 games per generation in chunks of 100 (a stop loses at most one chunk, a few minutes),
+2. Open-ended self-play training: loop.py on <run> from <run>/pretrain/pretrain.pt, adaptive search
+   (64 simulations doubled up to 2048 while it hesitates; policy targets from searches of 256 or
+   more), 500 games per generation in one java call written game by game (a stop loses only the
+   games under way; 512 fixed simulations in chunks of 100 until generation 336),
    learning rate by generation (2e-4 until 60, cosine to 2e-5 at 300). Openings from the selfplay
    tool's schedule (cycles of 10 000 games, see selfplay/.../Openings.kt): 200 from the empty
    board, 8 after one bad first move, the 35 positions after 2 moves and the 757 after 3 moves
@@ -45,7 +47,10 @@ WARM_FILES = 10
 # Phase 3 (loop.py options). See README.md, section "Réseau 64 × 10", for the reasons.
 LOOP = {
     "hidden": 64, "layers": 10,
-    "sims": 512, "games": 500, "chunk_games": 100, "random_plies": 5, "disputed": "0.2,0.8",
+    # Adaptive search (64 simulations, doubled up to 2048 while it hesitates), each generation one
+    # java call resumed game by game.
+    "sims": 2048, "adaptive": 1, "policy_min_sims": 256, "stream": 1,
+    "games": 500, "chunk_games": 100, "random_plies": 5, "disputed": "0.2,0.8",
     "openings": "schedule", "schedule_seed": 20261016,
     "keep_data": 1, "keep_checkpoint_every": 10,
     "lr_peak": 2e-4, "lr_final": 2e-5, "lr_hold_gens": 60, "lr_decay_gens": 300,
@@ -160,7 +165,11 @@ def status(run):
     if state.exists():
         s = json.loads(state.read_text())
         extra = ""
-        if s["phase"] == "selfplay" and s.get("chunk_plan"):
+        index = run / "data" / "partial" / f"gen_{s['generation']:04d}_stream.bin.idx"
+        if s["phase"] == "selfplay" and index.exists():
+            n = sum(1 for line in index.read_text().splitlines() if line.endswith(";"))
+            extra = f" ({n} / {LOOP['games']} games played)"
+        elif s["phase"] == "selfplay" and s.get("chunk_plan"):
             n = len(list((run / "data" / "partial").glob(f"gen_{s['generation']:04d}_c*.bin")))
             extra = f" (chunk {n} / {len(s['chunk_plan'])} done)"
         print(f"2. self-play training: generation {s['generation']}, phase {s['phase']}{extra}, "

@@ -59,7 +59,54 @@ class GumbelMctsTest {
         val config = GumbelMcts.Config(gumbelNoise = false)
         val a = GumbelMcts(net, config).search(bits(0, 21), bits(42), 40)
         val b = GumbelMcts(net, config).search(bits(0, 21), bits(42), 40)
-        assertEquals(a.move, b.move)
+        // The same move up to a symmetry of the position (0, 21, 42 are on a main diagonal).
+        assertEquals(a.moveClass[a.move], b.moveClass[b.move])
         assertTrue(a.simulations in 1..40)
+    }
+
+    @Test
+    fun equivalentMovesAreOneMove() {
+        val r = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false)).search(0L, 0L, 64)
+        // The empty board has two classes of moves: the 16 cells on 7 lines and the 48 on 4.
+        assertEquals(setOf(0, 1), r.moveClass.toSet())
+        for (c in 0 until 64) {
+            val same = (0 until 64).filter { r.moveClass[it] == r.moveClass[c] }
+            for (d in same) {
+                assertEquals(r.policy[c], r.policy[d], 1e-6f)
+                assertEquals(r.moveValues[c], r.moveValues[d], 1e-6f)
+                assertEquals(r.visits[c], r.visits[d])
+            }
+        }
+        assertEquals(1f, r.policy.sum(), 1e-3f)
+        assertEquals(7, QubicGeometry.cellDegree(r.move))
+    }
+
+    @Test
+    fun playsEveryCellOfTheBestClass() {
+        val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false), Random(3))
+        val played = (0 until 200).map { mcts.search(0L, 0L, 16).move }.toSet()
+        assertTrue(played.size > 8)
+        assertTrue(played.all { QubicGeometry.cellDegree(it) == 7 })
+    }
+
+    @Test
+    fun adaptiveSearchStopsOnceSettled() {
+        val position = bits(0, 21) to bits(42, 5)
+        val never = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, stableRounds = 99, decidedValue = 2f))
+            .searchAdaptive(position.first, position.second, 512)
+        assertEquals(512, never.simulations)
+        val always = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, stableRounds = 1))
+            .searchAdaptive(position.first, position.second, 512)
+        assertEquals(64, always.simulations)
+        val rounds = ArrayList<Int>()
+        GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false)).searchAdaptive(
+            position.first, position.second, 2048,
+            stopRule = { rounds += it.simulations; false },
+        )
+        assertEquals(listOf(64, 128, 256, 512, 1024), rounds.take(5))
+        // A forced move needs no search.
+        val forced = GumbelMcts(net).searchAdaptive(bits(0, 21), bits(60, 61, 62), 512)
+        assertEquals(63, forced.move)
+        assertTrue(forced.simulations <= 1)
     }
 }

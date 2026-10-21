@@ -19,8 +19,11 @@ import kotlin.random.Random
  * Usage: `selfplay <command> key=value...`
  *
  * - `selfplay model=<file|none> games=N sims=N threads=N out=<file> seed=N random_plies=5 [disputed=0.2,0.8]
- *   [openings=schedule offset=N schedule_seed=N]` (with `openings=schedule`, [OpeningSchedule]'s
- *   openings, `disputed=` giving the first player's win range, and `random_plies` unused)
+ *   [openings=schedule offset=N schedule_seed=N] [adaptive=1 policy_min_sims=N] [resume=1]` (with
+ *   `openings=schedule`, [OpeningSchedule]'s openings, `disputed=` giving the first player's win
+ *   range, and `random_plies` unused; with `adaptive=1`, [GumbelMcts.searchAdaptive] up to `sims`,
+ *   the policy target kept only from searches of at least `policy_min_sims`; with `resume=1`, see
+ *   [selfPlay])
  * - `arena a=<file|none> b=<file|none> games=N sims=N threads=N`
  * - `vslegacy model=<file> level=100 games=N sims=N threads=N`
  * - `bench model=<file> sims=N`
@@ -47,6 +50,8 @@ fun main(args: Array<String>) {
         "puzzles" -> generatePuzzles(options)
         "openings" -> printOpeningSchedule(options)
         "battle" -> battle(options)
+        "calibrate" -> calibrate(options)
+        "rounds" -> rounds(options)
         else -> error("unknown command $command")
     }
 }
@@ -56,6 +61,18 @@ private fun Map<String, String>.long(key: String, default: Long) = this[key]?.to
 
 internal fun loadNet(path: String?): QubicNet? =
     if (path == null || path == "none") null else File(path).inputStream().use { QubicNet.load(it) }
+
+/** How each move of a self-play game is searched. */
+internal class SearchSpec(
+    /** Simulations, or the maximum with [adaptive]. */
+    val sims: Int,
+    val adaptive: Boolean = false,
+    /** Searches of fewer simulations record no policy target (only the value). */
+    val policyMinSims: Int = 0,
+) {
+    fun search(mcts: GumbelMcts, mine: Long, theirs: Long): GumbelMcts.Result =
+        if (adaptive) mcts.searchAdaptive(mine, theirs, sims) else mcts.search(mine, theirs, sims)
+}
 
 /** Bytes per recorded position — must match tools/nn/data.py. */
 const val RECORD_SIZE = 8 + 8 + 4 + 64 * 2 + 4
@@ -135,11 +152,11 @@ internal class DisputedFilter(val net: QubicNet, val minWin: Float, val maxWin: 
  */
 private fun playGame(
     mcts: GumbelMcts,
-    sims: Int,
+    spec: SearchSpec,
     maxRandomPlies: Int,
     rng: Random,
     judge: DisputedFilter.Judge? = null,
-): PlayedGame = playGame(mcts, sims, randomStart(maxRandomPlies, rng, judge))
+): PlayedGame = playGame(mcts, spec, randomStart(maxRandomPlies, rng, judge))
 
 /** 0..[maxRandomPlies] random moves, or with a [judge] exactly [maxRandomPlies], drawn until disputed. */
 private fun randomStart(maxRandomPlies: Int, rng: Random, judge: DisputedFilter.Judge?): Start {
@@ -165,17 +182,17 @@ private fun randomStart(maxRandomPlies: Int, rng: Random, judge: DisputedFilter.
 }
 
 /** Plays a self-play game from [start] (whose moves are not recorded) to its real end. */
-private fun playGame(mcts: GumbelMcts, sims: Int, start: Start): PlayedGame {
+private fun playGame(mcts: GumbelMcts, spec: SearchSpec, start: Start): PlayedGame {
     var mine = start.mine
     var theirs = start.theirs
     var ply = start.ply
     val positions = ArrayList<Position>()
     while (true) {
-        val result = mcts.search(mine, theirs, sims)
+        val result = spec.search(mcts, mine, theirs)
         val mover = ply % 2
         val flags = when (result.status) {
             GumbelMcts.Status.WIN -> FLAG_POLICY or FLAG_EXACT
-            GumbelMcts.Status.UNKNOWN -> if (result.simulations == 0) 0 else FLAG_POLICY
+            GumbelMcts.Status.UNKNOWN -> if (result.simulations == 0 || result.simulations < spec.policyMinSims) 0 else FLAG_POLICY
             else -> FLAG_EXACT
         }
         positions += Position(mine, theirs, ply, result.policy, result.value, flags)
@@ -210,10 +227,20 @@ internal fun encode(game: PlayedGame, out: ByteBuffer) {
     }
 }
 
+/**
+ * Self-play games written to `out=`. Normally to `<out>.tmp`, renamed at the end. With `resume=1`,
+ * straight to `out` with a line per finished game in `<out>.idx` (game index, end offset in out,
+ * winner, plies): a run stopped at any moment is resumed by the same command, which truncates
+ * out after the last listed game and plays only the missing ones; RESULT then counts all games.
+ */
 private fun selfPlay(options: Map<String, String>) {
     val net = loadNet(options["model"])
     val games = options.int("games", 100)
-    val sims = options.int("sims", 48)
+    val spec = SearchSpec(
+        sims = options.int("sims", 48),
+        adaptive = options["adaptive"] == "1",
+        policyMinSims = options.int("policy_min_sims", 0),
+    )
     val threads = options.int("threads", Runtime.getRuntime().availableProcessors() - 2)
     val seed = options.long("seed", System.nanoTime())
     val randomPlies = options.int("random_plies", 5)
@@ -222,53 +249,99 @@ private fun selfPlay(options: Map<String, String>) {
     val schedule = if (options["openings"] == "schedule") OpeningSchedule(options.long("schedule_seed", 1L)) else null
     val offset = options.long("offset", 0L)
     val outFile = File(options["out"] ?: error("out= required"))
-    val tmp = File(outFile.path + ".tmp")
+    val resume = options["resume"] == "1"
+    val tmp = if (resume) outFile else File(outFile.path + ".tmp")
+    val index = File(outFile.path + ".idx")
     val started = System.nanoTime()
-    val next = AtomicInteger(0)
     val positionsCount = AtomicLong(0)
     val wins = IntArray(3) // first, second, draw
     var plySum = 0L
     val evaluations = AtomicLong(0)
-    FileOutputStream(tmp).use { file ->
-        val pool = Executors.newFixedThreadPool(threads)
-        repeat(threads) { t ->
-            pool.execute {
-                val rng = Random(seed * 1000 + t)
-                val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
-                val judge = filter?.Judge()
-                val openings = schedule?.let { OpeningMaker(it, judge?.let { j -> j::acceptsFirstPlayer }, rng) }
-                while (true) {
-                    val index = next.getAndIncrement()
-                    if (index >= games) break
-                    val game = if (openings != null) {
-                        playGame(mcts, sims, openings.start(offset + index))
-                    } else {
-                        playGame(mcts, sims, randomPlies, rng, judge)
-                    }
-                    val buffer = ByteBuffer.allocate(game.positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
-                    encode(game, buffer)
-                    synchronized(file) {
-                        file.write(buffer.array())
-                        wins[if (game.winner == -1) 2 else game.winner]++
-                        plySum += game.plies
-                    }
-                    positionsCount.addAndGet(game.positions.size.toLong())
-                }
-                evaluations.addAndGet(mcts.evaluations)
+    val done = HashSet<Int>()
+    if (resume) {
+        var end = 0L
+        if (index.exists()) {
+            // A line cut by a kill is ignored (its game is played again).
+            for (line in index.readLines().filter { it.endsWith(";") }) {
+                val (g, e, winner, plies) = line.removeSuffix(";").split(" ").map { it.toLong() }
+                done += g.toInt()
+                end = maxOf(end, e)
+                wins[if (winner == -1L) 2 else winner.toInt()]++
+                plySum += plies
             }
+            index.writeText(index.readLines().filter { it.endsWith(";") }.joinToString("") { "$it\n" })
         }
-        pool.shutdown()
-        pool.awaitTermination(7, TimeUnit.DAYS)
+        if (outFile.exists()) java.io.RandomAccessFile(outFile, "rw").use { it.setLength(end) }
+        positionsCount.set(end / RECORD_SIZE)
     }
-    check(outFile.delete() || !outFile.exists())
-    check(tmp.renameTo(outFile)) { "cannot rename $tmp" }
+    val todo = (0 until games).filter { it !in done }
+    val next = AtomicInteger(0)
+    val failure = java.util.concurrent.atomic.AtomicReference<Throwable>()
+    FileOutputStream(tmp, resume).use { file ->
+        FileOutputStream(index, true).use { indexOut ->
+            val pool = Executors.newFixedThreadPool(threads)
+            repeat(threads) { t ->
+                pool.execute(failFast(failure) {
+                    // A resumed run draws other openings than the first attempt.
+                    val rng = Random(seed * 1000 + t + done.size * 1_000_003L)
+                    val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
+                    val judge = filter?.Judge()
+                    val openings = schedule?.let { OpeningMaker(it, judge?.let { j -> j::acceptsFirstPlayer }, rng) }
+                    while (true) {
+                        val k = next.getAndIncrement()
+                        if (k >= todo.size || failure.get() != null) break
+                        val g = todo[k]
+                        val game = if (openings != null) {
+                            playGame(mcts, spec, openings.start(offset + g))
+                        } else {
+                            playGame(mcts, spec, randomPlies, rng, judge)
+                        }
+                        val buffer = ByteBuffer.allocate(game.positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
+                        encode(game, buffer)
+                        synchronized(file) {
+                            file.write(buffer.array())
+                            if (resume) {
+                                val end = file.channel.position()
+                                indexOut.write("$g $end ${game.winner} ${game.plies};\n".toByteArray())
+                            }
+                            wins[if (game.winner == -1) 2 else game.winner]++
+                            plySum += game.plies
+                        }
+                        positionsCount.addAndGet(game.positions.size.toLong())
+                    }
+                    evaluations.addAndGet(mcts.evaluations)
+                })
+            }
+            pool.shutdown()
+            pool.awaitTermination(7, TimeUnit.DAYS)
+        }
+    }
+    failure.get()?.let { throw IllegalStateException("a self-play thread failed", it) }
+    if (!resume) {
+        check(outFile.delete() || !outFile.exists())
+        check(tmp.renameTo(outFile)) { "cannot rename $tmp" }
+        index.delete()
+    }
     val seconds = (System.nanoTime() - started) / 1e9
     println(
         "RESULT games=$games positions=${positionsCount.get()} firstWins=${wins[0]} secondWins=${wins[1]} " +
             "draws=${wins[2]} avgPlies=${"%.1f".format(java.util.Locale.ROOT, plySum.toDouble() / games)} " +
             "evals=${evaluations.get()} seconds=${"%.1f".format(java.util.Locale.ROOT, seconds)}" +
+            (if (resume) " resumedGames=${done.size}" else "") +
             (filter?.let { " openingDraws=${it.attempts.get()} openingsKept=${it.accepted.get()}" } ?: ""),
     )
+}
+
+/**
+ * [body] for a pool thread: its first exception is kept in [failure] (to be thrown by the caller
+ * once the pool is done) and stops the other threads at their next game.
+ */
+internal fun failFast(failure: java.util.concurrent.atomic.AtomicReference<Throwable>, body: () -> Unit) = Runnable {
+    try {
+        if (failure.get() == null) body()
+    } catch (t: Throwable) {
+        failure.compareAndSet(null, t)
+    }
 }
 
 /** A player choosing a move for the side to move (mine/theirs from its point of view). */

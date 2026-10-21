@@ -114,8 +114,8 @@
     <string name="settings_color">Цвет</string>
     <string name="settings_color_unavailable">Занят другим игроком</string>
     <string name="settings_section_neural">Уровень 101 (нейросеть)</string>
-    <string name="settings_neural_simulations">Вариантов на ход</string>
-    <string name="settings_neural_explanation">Чем больше вариантов проверяет компьютер, тем сильнее он играет, но тем дольше думает. По умолчанию: %1$d.</string>
+    <string name="settings_neural_simulations">Максимум вариантов на ход</string>
+    <string name="settings_neural_explanation">Компьютер проверяет 64 варианта, затем вдвое больше, пока лучший ход не станет ясен, вплоть до этого максимума. Чем он выше, тем сильнее компьютер играет в трудных позициях, но тем дольше может думать. По умолчанию: %1$d.</string>
     <string name="Analyse_Games">Анализ партий</string>
     <string name="Puzzles">Задачи</string>
     <string name="analysis_empty_board">Пустая доска</string>
@@ -127,7 +127,7 @@
     <string name="analysis_title">Анализ</string>
     <string name="analysis_game_over">Партия окончена</string>
     <string name="analysis_variations">Проверено вариантов: %1$s</string>
-    <string name="analysis_best_move">Рекомендуемый ход: полупрозрачное кольцо</string>
+    <string name="analysis_best_move">Пунктирные кольца — ходы: чем сильнее ход рекомендован, тем он заметнее (место · шанс выиграть). Нажмите на доску, чтобы прочитать кольцо.</string>
     <string name="analysis_forced_win">Форсированная победа</string>
     <string name="analysis_forced_draw">Форсированная ничья</string>
     <string name="analysis_depth">Предел: %1$s</string>

@@ -75,6 +75,34 @@ internal object BoardDrawing {
         }
     }
 
+    /** The radius of a ring of size [ringSize] (0..3). */
+    fun ringRadius(side: Float, ringSize: Int): Float = side * SHORTEST_RADIUS + side * DIFF_RADIUS * ringSize
+
+    /** The stroke width of the rings. */
+    fun ringStroke(side: Float): Float = side * THICKNESS_RINGS
+
+    /** The ring (0..63) whose resting circle is nearest to [position] over the grid, or -1 off the grid. */
+    fun ringAt(side: Float, position: Offset): Int {
+        if (position.x < 0f || position.y < 0f || position.x > side || position.y > side) return -1
+        val cellX = (position.x * 4 / side).toInt().coerceIn(0, 3)
+        val cellY = (position.y * 4 / side).toInt().coerceIn(0, 3)
+        val distance = (position - cellCenter(side, cellX, cellY)).getDistance()
+        val ringSize = (0 until 4).minBy { kotlin.math.abs(distance - ringRadius(side, it)) }
+        return cellX + 4 * cellY + 16 * ringSize
+    }
+
+    /**
+     * Where a ring's small label goes: on its circle, in the corner of its size (top right for
+     * the smallest, then counterclockwise) so that the 4 labels of a cell do not overlap.
+     */
+    fun labelAnchor(side: Float, ringNumber: Int): Offset {
+        val ringSize = (ringNumber / 16) % 4
+        val center = cellCenter(side, ringNumber % 4, (ringNumber / 4) % 4)
+        val angle = Math.toRadians(-45.0 - 90.0 * ringSize)
+        val r = ringRadius(side, ringSize)
+        return Offset(center.x + r * kotlin.math.cos(angle).toFloat(), center.y + r * kotlin.math.sin(angle).toFloat())
+    }
+
     /** The center, in pixels, of grid cell ([cellX], [cellY]) (each 0..3). Ports the position half of `dessineAnneauPlace`. */
     fun cellCenter(side: Float, cellX: Int, cellY: Int): Offset {
         val distance = side * DISTANCE_RING_CENTERS

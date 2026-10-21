@@ -14,7 +14,8 @@ import kotlin.random.Random
 
 /**
  * `battle a=<file> b=<file> sims_a=N sims_b=N out=<dir> [label=pc threads=N offset=0 schedule_seed=N
- * until=<epoch ms> max_pairs=N noisy_plies=4 seed=N]`
+ * until=<epoch ms> max_pairs=N noisy_plies=4 seed=N adaptive_a=1 adaptive_b=1]` (`adaptive_x=1`:
+ * [GumbelMcts.searchAdaptive] up to that side's simulations)
  *
  * Network A against network B, each searching like level 101 in the app (deterministic
  * [GumbelMcts], Gumbel noise only while fewer than `noisy_plies` rings are on the board). Pair p
@@ -64,6 +65,7 @@ internal fun battle(options: Map<String, String>) {
     }
 
     val stats = BattleStats()
+    val failure = java.util.concurrent.atomic.AtomicReference<Throwable>()
     val started = System.nanoTime()
     println("battle $label: A ${options["a"]} ($simsA sims) vs B ${options["b"]} ($simsB sims), $threads threads, " +
         "pairs from $offset, ${done.size} already played")
@@ -72,7 +74,7 @@ internal fun battle(options: Map<String, String>) {
             FileOutputStream(File(dir, "diff.bin"), true).use { diffOut ->
                 val pool = Executors.newFixedThreadPool(threads)
                 repeat(threads) { t ->
-                    pool.execute {
+                    pool.execute(failFast(failure) {
                         val rng = Random(seed * 1_000_003L + offset + t * 7919L)
                         val judgeA = Judge(netA)
                         val judgeB = Judge(netB)
@@ -81,9 +83,10 @@ internal fun battle(options: Map<String, String>) {
                         }, rng)
                         val mctsA = GumbelMcts(netA, GumbelMcts.Config(gumbelNoise = false), Random(rng.nextLong()))
                         val mctsB = GumbelMcts(netB, GumbelMcts.Config(gumbelNoise = false), Random(rng.nextLong()))
-                        val a = Side(mctsA, simsA)
-                        val b = Side(mctsB, simsB)
+                        val a = Side(mctsA, simsA, options["adaptive_a"] == "1")
+                        val b = Side(mctsB, simsB, options["adaptive_b"] == "1")
                         while (true) {
+                            if (failure.get() != null) break
                             val p = takePair() ?: break
                             val slot = schedule.slot(p)
                             val start = openings.start(p)
@@ -101,13 +104,14 @@ internal fun battle(options: Map<String, String>) {
                                     "results ${legs[0].game.winner} ${legs[1].game.winner} | ${stats.summary()}")
                             }
                         }
-                    }
+                    })
                 }
                 pool.shutdown()
                 pool.awaitTermination(30, TimeUnit.DAYS)
             }
         }
     }
+    failure.get()?.let { throw IllegalStateException("a battle thread failed", it) }
     val result = "RESULT battle label=$label pairs=${stats.pairs} ${stats.summary()} " +
         "seconds=${"%.1f".format(Locale.ROOT, (System.nanoTime() - started) / 1e9)}"
     println(result)
@@ -115,7 +119,10 @@ internal fun battle(options: Map<String, String>) {
 }
 
 /** A network's player in the battle (one per thread). */
-private class Side(val mcts: GumbelMcts, val sims: Int)
+private class Side(val mcts: GumbelMcts, val sims: Int, val adaptive: Boolean = false) {
+    fun search(mine: Long, theirs: Long, noise: Boolean): GumbelMcts.Result =
+        if (adaptive) mcts.searchAdaptive(mine, theirs, sims, noise = noise) else mcts.search(mine, theirs, sims, noise = noise)
+}
 
 /** One forward pass: the first player's win probability. */
 private class Judge(private val net: QubicNet) {
@@ -144,7 +151,7 @@ private fun playLeg(start: Start, first: Side, second: Side, firstIsA: Boolean, 
     while (true) {
         val side = if (ply % 2 == 0) first else second
         val t = System.nanoTime()
-        val result = side.mcts.search(mine, theirs, side.sims, noise = ply < noisyPlies)
+        val result = side.search(mine, theirs, noise = ply < noisyPlies)
         nanos += System.nanoTime() - t
         sims += result.simulations
         val flags = when (result.status) {

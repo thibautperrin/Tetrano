@@ -112,8 +112,8 @@
     <string name="settings_color">Color</string>
     <string name="settings_color_unavailable">Usado por el otro jugador</string>
     <string name="settings_section_neural">Nivel 101 (red neuronal)</string>
-    <string name="settings_neural_simulations">Variantes probadas por jugada</string>
-    <string name="settings_neural_explanation">Cuantas más variantes prueba el ordenador, más fuerte juega, pero más tiempo piensa. Por defecto: %1$d.</string>
+    <string name="settings_neural_simulations">Variantes probadas por jugada (máximo)</string>
+    <string name="settings_neural_explanation">El ordenador prueba 64 variantes y luego el doble mientras la mejor jugada no esté clara, hasta este máximo. Cuanto más alto, más fuerte juega en las posiciones difíciles, pero más tiempo puede pensar. Por defecto: %1$d.</string>
     <string name="Analyse_Games">Analizar partidas</string>
     <string name="Puzzles">Problemas</string>
     <string name="analysis_empty_board">Tablero vacío</string>
@@ -125,7 +125,7 @@
     <string name="analysis_title">Análisis</string>
     <string name="analysis_game_over">Partida terminada</string>
     <string name="analysis_variations">%1$s variantes probadas</string>
-    <string name="analysis_best_move">Jugada recomendada: anillo translúcido</string>
+    <string name="analysis_best_move">Anillos discontinuos: las jugadas, más visibles cuanto más recomendadas (puesto · probabilidad de ganar). Pulse el tablero para leer un anillo.</string>
     <string name="analysis_forced_win">Victoria forzada</string>
     <string name="analysis_forced_draw">Tablas forzadas</string>
     <string name="analysis_depth">Límite: %1$s</string>
