@@ -13,7 +13,7 @@ import fr.thibautperrin.tetrano.domain.service.LiveAnalysisService
 import fr.thibautperrin.tetrano.domain.service.SavedGameService
 import fr.thibautperrin.tetrano.engine.nn.GameReview
 import fr.thibautperrin.tetrano.engine.nn.GumbelMcts
-import fr.thibautperrin.tetrano.ui.components.GhostRing
+import fr.thibautperrin.tetrano.ui.components.RingHint
 import fr.thibautperrin.tetrano.ui.navigation.TetranoRoute
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 /**
  * Backs [AnalysisScreen]: a game (a save, a game that just ended, or the
@@ -319,7 +320,10 @@ class AnalysisViewModel @Inject constructor(
                 },
             )
         }
-        val ghost = liveUi?.bestRing?.takeIf { it >= 0 && rings[it].toInt() == 0 }?.let { GhostRing(it, toMove) }
+        // Every free slot as the search sees it (moves alike by symmetry share rank and values).
+        val hints = if (gameOver) emptyList() else snapshot?.hints.orEmpty()
+            .filter { rings[it.ring].toInt() == 0 }
+            .map { RingHint(it.ring, toMove, it.share, it.rank, it.expectedScore?.let { s -> (s * 100).roundToInt() }) }
         val branch = divergence()
         val onMain = onMainLine()
         val review = if (freePlay && main.isEmpty()) {
@@ -345,7 +349,8 @@ class AnalysisViewModel @Inject constructor(
                     rings = rings,
                     player1Color = Color(game.userColor),
                     player2Color = Color(game.adversaryColor),
-                    ghostRing = ghost,
+                    ghostRing = null,
+                    hints = hints,
                     trayPlayer = if (gameOver) 0 else toMove,
                     dragEnabled = !gameOver,
                 ),

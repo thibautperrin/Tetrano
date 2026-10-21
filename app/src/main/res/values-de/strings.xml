@@ -104,8 +104,8 @@
     <string name="settings_color">Farbe</string>
     <string name="settings_color_unavailable">Vom anderen Spieler verwendet</string>
     <string name="settings_section_neural">Stufe 101 (neuronales Netz)</string>
-    <string name="settings_neural_simulations">Getestete Varianten pro Zug</string>
-    <string name="settings_neural_explanation">Je mehr Varianten der Computer testet, desto stärker spielt er, aber desto länger denkt er nach. Standard: %1$d.</string>
+    <string name="settings_neural_simulations">Maximal getestete Varianten pro Zug</string>
+    <string name="settings_neural_explanation">Der Computer testet 64 Varianten und verdoppelt sie, solange der beste Zug nicht klar ist, bis zu diesem Maximum. Je höher es ist, desto stärker spielt er in schwierigen Stellungen, aber desto länger kann er nachdenken. Standard: %1$d.</string>
     <string name="Analyse_Games">Partien analysieren</string>
     <string name="Puzzles">Rätsel</string>
     <string name="analysis_empty_board">Leeres Brett</string>
@@ -117,7 +117,7 @@
     <string name="analysis_title">Analyse</string>
     <string name="analysis_game_over">Partie beendet</string>
     <string name="analysis_variations">%1$s Varianten getestet</string>
-    <string name="analysis_best_move">Empfohlener Zug: durchscheinender Ring</string>
+    <string name="analysis_best_move">Gestrichelte Ringe: die Züge, umso sichtbarer, je mehr sie empfohlen werden (Rang · Gewinnchance). Auf das Brett drücken, um einen Ring zu lesen.</string>
     <string name="analysis_forced_win">Erzwungener Sieg</string>
     <string name="analysis_forced_draw">Erzwungenes Remis</string>
     <string name="analysis_depth">Grenze: %1$s</string>

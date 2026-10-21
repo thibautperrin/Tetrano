@@ -46,7 +46,14 @@ DEFAULTS = {
     # > 0: a generation's self-play runs as successive java calls of chunk_games games each
     # (data/partial/), so that stopping loses at most one chunk; 0: one call.
     "chunk_games": 0,
+    # 1: a generation's self-play is one java call writing game by game (data/partial/
+    # gen_XXXX_stream.bin + .idx), resumed at the game after a stop; chunk_games is then unused.
+    "stream": 0,
     "sims": 48,
+    # 1: GumbelMcts.searchAdaptive, 64 simulations doubled up to sims while the search hesitates;
+    # the policy target is kept only from searches of at least policy_min_sims simulations.
+    "adaptive": 0,
+    "policy_min_sims": 0,
     "random_plies": 5,
     # "0.2,0.8": always random_plies random moves, kept only if the network's direct evaluation
     # gives the side to move a win probability in that range (drawn again otherwise).
@@ -236,7 +243,8 @@ def selfplay_args(cfg, model, games, out, seed, offset=0):
              f"random_plies={cfg['random_plies']}", f"threads={cfg['threads']}", f"out={out}", f"seed={seed}"]
             + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else [])
             + ([f"openings={cfg['openings']}", f"offset={offset}", f"schedule_seed={cfg['schedule_seed']}"]
-               if cfg["openings"] else []))
+               if cfg["openings"] else [])
+            + ([f"adaptive=1", f"policy_min_sims={cfg['policy_min_sims']}"] if cfg["adaptive"] else []))
 
 
 SUMMED = ("games", "positions", "firstWins", "secondWins", "draws", "evals", "openingDraws", "openingsKept")
@@ -299,6 +307,26 @@ def chunked_selfplay(run, cfg, state, gen, prev_model, out, deadline):
                 shutil.copyfileobj(src, dst, 1 << 22)
     os.replace(tmp, out)
     return aggregate(results)
+
+
+def stream_file(run, gen):
+    return partial_dir(run) / f"gen_{gen:04d}_stream.bin"
+
+
+def streamed_selfplay(run, cfg, state, gen, prev_model, out, deadline):
+    """The generation's self-play as one java call writing game by game (resume=1): a stop at any
+    moment loses only the games under way, and the next call plays the missing ones."""
+    part = stream_file(run, gen)
+    part.parent.mkdir(parents=True, exist_ok=True)
+    index = Path(f"{part}.idx")
+    if index.exists():
+        done = sum(1 for line in index.read_text().splitlines() if line.endswith(";"))
+        log(run, f"gen {gen} self-play: resuming after {done} games")
+    res = java(cfg, selfplay_args(cfg, prev_model, cfg["games"], part, gen + 1, state.get("schedule_games", 0))
+               + ["resume=1"], deadline)
+    os.replace(part, out)
+    index.unlink(missing_ok=True)
+    return res
 
 
 def main():
@@ -367,7 +395,9 @@ def main():
             phase_start = time.time()
 
             if state["phase"] == "selfplay":
-                if cfg["chunk_games"] > 0:
+                if cfg["stream"]:
+                    res = streamed_selfplay(run, cfg, state, gen, prev_model, out, deadline)
+                elif cfg["chunk_games"] > 0:
                     res = chunked_selfplay(run, cfg, state, gen, prev_model, out, deadline)
                 else:
                     res = java(cfg, selfplay_args(cfg, prev_model, cfg["games"], out, gen + 1,

@@ -32,7 +32,17 @@ class LiveAnalysisService @Inject constructor(
         val simulations: Int,
         /** Whether the search has stopped (budget reached, or the position is proven or over). */
         val finished: Boolean,
+        /** Every legal move, as the search sees it so far. */
+        val hints: List<MoveHint> = emptyList(),
     )
+
+    /**
+     * A legal move: [rank] 1 for the recommended move, then by the search's preference (moves
+     * equivalent by a symmetry of the position share their rank and values), null if the search
+     * did not look at it; [share]: how much the search recommends it (its improved policy),
+     * relative to the recommended move (0..1); [expectedScore] of the player to move after it (win 1, draw ½, loss 0), if known.
+     */
+    class MoveHint(val ring: Int, val rank: Int?, val share: Float, val expectedScore: Float?)
 
     /**
      * Searches the position after [moves] up to [maxSimulations] simulations; a cold flow
@@ -57,11 +67,39 @@ class LiveAnalysisService @Inject constructor(
             val finished = result.status != GumbelMcts.Status.UNKNOWN || done >= maxSimulations ||
                 done == before || !coroutineActive
             val evaluation = GameReview.Evaluation(result.netWdl, result.value, result.status, result.move, done)
-            emit(Snapshot(searchWdl(result), evaluation, done, finished))
+            emit(Snapshot(searchWdl(result), evaluation, done, finished, hints(result)))
             if (finished) return@flow
             target = minOf(maxSimulations, done + done.coerceIn(FIRST_STEP, MAX_STEP))
         }
     }.flowOn(dispatcher)
+
+    /** [MoveHint]s of [result]: its classes of equivalent moves ranked, the chosen one first. */
+    private fun hints(result: GumbelMcts.Result): List<MoveHint> {
+        if (result.move < 0) return emptyList()
+        if (result.status != GumbelMcts.Status.UNKNOWN && result.visits.all { it == 0 }) {
+            // Proven before any search (a win by tactics, a forced reply): only the move found.
+            val score = (GumbelMcts.exactValue(result.status) + 1f) / 2f
+            return listOf(MoveHint(result.move, 1, 1f, score))
+        }
+        val classes = (0 until 64).filter { result.moveClass[it] >= 0 }.groupBy { result.moveClass[it] }
+        val chosen = result.moveClass[result.move]
+        val ranked = classes.keys.filter { it == chosen || result.visits[classes.getValue(it).first()] > 0 }
+            .sortedWith(
+                compareByDescending<Int> { it == chosen }
+                    .thenByDescending { result.visits[classes.getValue(it).first()] }
+                    .thenByDescending { result.moveValues[classes.getValue(it).first()] },
+            )
+        val rank = ranked.withIndex().associate { (i, c) -> c to i + 1 }
+        // A class's policy is spread over its cells: compare whole classes.
+        val mass = classes.mapValues { (_, cells) -> cells.sumOf { result.policy[it].toDouble() }.toFloat() }
+        val maxMass = mass.values.max().coerceAtLeast(1e-6f)
+        return classes.flatMap { (c, cells) ->
+            val q = result.moveValues[cells.first()]
+            val known = rank[c] != null && !q.isNaN()
+            val share = if (c == chosen) 1f else (mass.getValue(c) / maxMass).coerceIn(0f, 1f)
+            cells.map { MoveHint(it, rank[c], share, if (known) (q + 1f) / 2f else null) }
+        }
+    }
 
     /**
      * A win/draw/loss split whose difference is the search value: the network's draw share

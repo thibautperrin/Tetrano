@@ -20,6 +20,14 @@ import kotlin.random.Random
  * (MCTS-solver): a move to a lost position wins; a node whose moves all
  * lead to won positions for the opponent is lost.
  *
+ * Moves equivalent under a board automorphism fixing the position (one of
+ * the 192, see [QubicGeometry.symmetries]) are one move of the tree, its
+ * class: prior summed over the class, searched once; results give every
+ * cell of a class the same values, and the move played is a random cell of
+ * the chosen class. The network is equivariant, so nothing is lost. A node's
+ * symmetries are those of its parent that fix the move played (all of them
+ * at the root), so finding them costs nothing below the first plies.
+ *
  * Values are from the point of view of the player to move at the node, in
  * [-1, 1] (win probability minus loss probability). Not thread-safe: one
  * instance per thread (the [net] itself may be shared).
@@ -49,6 +57,19 @@ class GumbelMcts(
          */
         val movesLeftWeight: Float = 0.05f,
         val movesLeftThreshold: Float = 0.8f,
+        /** [searchAdaptive]: simulations of its first round. */
+        val adaptiveFirst: Int = 64,
+        /**
+         * [searchAdaptive] stops once the same move has been chosen [stableRounds] rounds in a
+         * row, or only [decidedStableRounds] when the position is decided (|completed Q| of the
+         * move at least [decidedValue]: clearly won or lost, the choice barely matters).
+         * Calibrated with tools/nn/adaptive_rules.py on 1000 battle positions (big network):
+         * against a 2048-simulation search, regret 0.0046 for 468 simulations on average,
+         * where a fixed search needs about 950 (0.0109 at 512, 0.0037 at 1024).
+         */
+        val stableRounds: Int = 4,
+        val decidedStableRounds: Int = 2,
+        val decidedValue: Float = 0.8f,
     )
 
     /** Exact status of a node, for the player to move there. */
@@ -62,7 +83,15 @@ class GumbelMcts(
         var winningMove: Int = -1
             internal set
         internal var expanded = false
+
+        /** One cell per class of equivalent moves (its lowest). */
         internal var moves: IntArray = EMPTY_INT
+
+        /** The cells of each class of [moves]; null when every class is a single cell. */
+        internal var classes: LongArray? = null
+
+        /** The automorphisms fixing this position known to the search (0, the identity, first). */
+        internal var symmetries: IntArray = IDENTITY
 
         /** Log prior probabilities of [moves] (log-softmax over legal moves). */
         internal var logits: FloatArray = EMPTY_FLOAT
@@ -102,8 +131,13 @@ class GumbelMcts(
         val simulations: Int,
         /** Per legal move: completed Q from the root player's point of view (NaN for occupied cells). */
         val moveValues: FloatArray,
-        /** Per cell: simulations through that root move, over every search of the root. */
+        /** Per cell: simulations through that root move's class, over every search of the root. */
         val visits: IntArray = IntArray(64),
+        /**
+         * Per cell: index of its class of equivalent moves (cells of one class are the same move
+         * up to a symmetry of the position, with the same values), -1 if not a legal move.
+         */
+        val moveClass: IntArray = IntArray(64) { -1 },
     )
 
     private val workspace = net?.newWorkspace()
@@ -128,10 +162,46 @@ class GumbelMcts(
         deadlineNanos: Long = Long.MAX_VALUE,
         noise: Boolean = config.gumbelNoise,
         onSimulation: ((Int, Int) -> Boolean)? = null,
-    ): Result = search(Node(mine, theirs), simulations, deadlineNanos, noise, onSimulation)
+    ): Result = search(newRoot(mine, theirs), simulations, deadlineNanos, noise, onSimulation)
 
     /** A root for [search] that can be searched again: each search adds to its tree (analysis). */
-    fun newRoot(mine: Long, theirs: Long): Node = Node(mine, theirs)
+    fun newRoot(mine: Long, theirs: Long): Node = Node(mine, theirs).also { it.symmetries = symmetriesOf(mine, theirs) }
+
+    /**
+     * A search whose budget follows the position's difficulty: [Config.adaptiveFirst]
+     * simulations, then doubled (128, 256, ...) up to [maxSimulations] as long as the search
+     * hesitates: until the same move (up to symmetry) has been chosen [Config.stableRounds]
+     * rounds in a row ([Config.decidedStableRounds] in a decided position). The Gumbel noise is
+     * drawn once, and each round adds to the same tree.
+     */
+    fun searchAdaptive(
+        mine: Long,
+        theirs: Long,
+        maxSimulations: Int,
+        deadlineNanos: Long = Long.MAX_VALUE,
+        noise: Boolean = config.gumbelNoise,
+        onSimulation: ((Int, Int) -> Boolean)? = null,
+        /** Replaces the stopping rule (calibration): called after each round, true to stop. */
+        stopRule: ((Result) -> Boolean)? = null,
+    ): Result {
+        val root = newRoot(mine, theirs)
+        prepare(root)?.let { return it }
+        val gumbel = FloatArray(root.moves.size) { if (noise) sampleGumbel() else 0f }
+        var budget = minOf(config.adaptiveFirst, maxSimulations).coerceAtLeast(1)
+        var done = 0
+        var previous = -1
+        var sameRounds = 0
+        while (true) {
+            val round = halve(root, gumbel, budget - done, done, maxSimulations, deadlineNanos, onSimulation)
+            done += round.done
+            sameRounds = if (round.chosen == previous) sameRounds + 1 else 1
+            previous = round.chosen
+            val stop = round.stopped || budget >= maxSimulations ||
+                (if (stopRule != null) stopRule(finish(root, round.chosen, done)) else isSettled(root, round.chosen, sameRounds))
+            if (stop) return finish(root, round.chosen, done)
+            budget = minOf(maxSimulations, budget * 2)
+        }
+    }
 
     /**
      * Like the other [search], on [root]: a root already searched keeps its tree, so searching
@@ -144,21 +214,45 @@ class GumbelMcts(
         noise: Boolean = config.gumbelNoise,
         onSimulation: ((Int, Int) -> Boolean)? = null,
     ): Result {
+        prepare(root)?.let { return it }
+        val gumbel = FloatArray(root.moves.size) { if (noise) sampleGumbel() else 0f }
+        val round = halve(root, gumbel, simulations, 0, simulations, deadlineNanos, onSimulation)
+        return finish(root, round.chosen, round.done)
+    }
+
+    /** Expands [root] if needed; the result when there is nothing to search (proven, forced), else null. */
+    private fun prepare(root: Node): Result? {
         if (!root.expanded && root.status == Status.UNKNOWN) {
             expand(root, config.vcfBudgetRoot)
             if (root.status == Status.UNKNOWN && root.moves.size == 1) {
-                // A forced move: one simulation is enough for its exact outcome (e.g. the
-                // block only delays an opponent VCF) to reach the root through the solver.
+                // A forced move (or all moves alike): one simulation is enough for its exact
+                // outcome (e.g. the block only delays an opponent VCF) to reach the root.
                 simulate(root, 0)
             }
         }
         if (root.status == Status.WIN) preferShortestWin(root)
-        if (root.status != Status.UNKNOWN || root.moves.size <= 1) {
-            return immediateResult(root)
-        }
+        if (root.status != Status.UNKNOWN || root.moves.size <= 1) return immediateResult(root)
+        return null
+    }
 
+    /** One round of sequential halving: [done] simulations, the move class [chosen], whether it [stopped] early. */
+    private class Round(val done: Int, val chosen: Int, val stopped: Boolean)
+
+    /**
+     * Sequential halving at the root over the top [Config.maxConsidered] classes by
+     * Gumbel + prior, with [simulations] simulations; [before] simulations were already run by
+     * earlier rounds, [budget] is the total reported to [onSimulation].
+     */
+    private fun halve(
+        root: Node,
+        gumbel: FloatArray,
+        simulations: Int,
+        before: Int,
+        budget: Int,
+        deadlineNanos: Long,
+        onSimulation: ((Int, Int) -> Boolean)?,
+    ): Round {
         val k = root.moves.size
-        val gumbel = FloatArray(k) { if (noise) sampleGumbel() else 0f }
         val m = minOf(config.maxConsidered, k)
         var remaining = (0 until k).sortedByDescending { gumbel[it] + root.logits[it] }.take(m).toIntArray()
         val phases = max(1, ceil(ln(m.toDouble()) / ln(2.0)).toInt())
@@ -174,7 +268,7 @@ class GumbelMcts(
                     }
                     simulate(root, a)
                     done++
-                    if (onSimulation != null && !onSimulation(done, simulations)) stop = true
+                    if (onSimulation != null && !onSimulation(before + done, budget)) stop = true
                     if (root.status != Status.UNKNOWN) stop = true
                     if (stop) break@loop
                 }
@@ -185,16 +279,51 @@ class GumbelMcts(
             val scored = remaining.sortedByDescending { gumbel[it] + root.logits[it] + sig[it] }
             remaining = scored.take((remaining.size + 1) / 2).toIntArray()
         }
-
-        if (root.status == Status.WIN) preferShortestWin(root)
         val sig = FloatArray(k)
         sigmas(root, sig)
-        val chosen = when (root.status) {
-            Status.WIN -> root.moves.indexOf(root.winningMove).takeIf { it >= 0 }
-                ?: remaining.maxBy { gumbel[it] + root.logits[it] + sig[it] }
-            else -> remaining.maxBy { gumbel[it] + root.logits[it] + sig[it] }
+        val chosen = remaining.maxBy { gumbel[it] + root.logits[it] + sig[it] }
+        return Round(done, chosen, stop && root.status == Status.UNKNOWN && done < simulations)
+    }
+
+    /** Whether [searchAdaptive] can stop, class [chosen] having been chosen [sameRounds] rounds in a row. */
+    private fun isSettled(root: Node, chosen: Int, sameRounds: Int): Boolean {
+        if (root.status != Status.UNKNOWN || sameRounds >= config.stableRounds) return true
+        return sameRounds >= config.decidedStableRounds && kotlin.math.abs(completedQ(root, chosen)) >= config.decidedValue
+    }
+
+    /** The result of a searched root: the shortest win if proven won, else a cell of class [chosen]. */
+    private fun finish(root: Node, chosen: Int, done: Int): Result {
+        if (root.status == Status.WIN) {
+            preferShortestWin(root)
+            if (root.winningMove >= 0) return buildResult(root, root.winningMove, done)
         }
-        return buildResult(root, root.moves[chosen], done)
+        return buildResult(root, member(root, chosen), done)
+    }
+
+    /** A random cell of [node]'s move class [index]. */
+    private fun member(node: Node, index: Int): Int {
+        val cells = node.classes?.get(index) ?: return node.moves[index]
+        var pick = random.nextInt(popCount(cells))
+        var bits = cells
+        while (pick-- > 0) bits = bits and (bits - 1)
+        return lowestCell(bits)
+    }
+
+    /** The cells of [node]'s move class [index]. */
+    private fun cellsOf(node: Node, index: Int): Long = node.classes?.get(index) ?: (1L shl node.moves[index])
+
+    /** The automorphisms fixing the position (identity first). */
+    private fun symmetriesOf(mine: Long, theirs: Long): IntArray {
+        if (mine == 0L && theirs == 0L) return ALL_SYMMETRIES
+        var out: IntArray? = null
+        var n = 0
+        for (s in 1 until QubicGeometry.symmetryCount) {
+            if (QubicGeometry.transform(s, mine) == mine && QubicGeometry.transform(s, theirs) == theirs) {
+                if (out == null) out = IntArray(QubicGeometry.symmetryCount).also { it[0] = 0 }
+                out[++n] = s
+            }
+        }
+        return if (out == null) IDENTITY else out.copyOf(n + 1)
     }
 
     // ---- tree operations ----
@@ -247,12 +376,34 @@ class GumbelMcts(
     }
 
     private fun setMoves(node: Node, legal: Long) {
-        val n = popCount(legal)
-        val moves = IntArray(n)
-        var bits = legal
-        for (i in 0 until n) {
-            moves[i] = lowestCell(bits)
-            bits = bits and (bits - 1)
+        val symmetries = node.symmetries
+        val n: Int
+        val moves: IntArray
+        if (symmetries.size == 1) {
+            n = popCount(legal)
+            moves = IntArray(n)
+            var bits = legal
+            for (i in 0 until n) {
+                moves[i] = lowestCell(bits)
+                bits = bits and (bits - 1)
+            }
+            node.classes = null
+        } else {
+            // Classes of cells under the position's symmetries (they map legal moves to legal moves).
+            val reps = ArrayList<Int>()
+            val classes = ArrayList<Long>()
+            var bits = legal
+            while (bits != 0L) {
+                val cell = lowestCell(bits)
+                var orbit = 0L
+                for (s in symmetries) orbit = orbit or (1L shl QubicGeometry.symmetries[s][cell])
+                reps += cell
+                classes += orbit
+                bits = bits and orbit.inv()
+            }
+            n = reps.size
+            moves = reps.toIntArray()
+            node.classes = if (classes.any { popCount(it) > 1 }) classes.toLongArray() else null
         }
         node.moves = moves
         node.children = arrayOfNulls(n)
@@ -264,9 +415,10 @@ class GumbelMcts(
 
     private fun evaluateNet(node: Node) {
         val n = node.moves.size
+        val classes = node.classes
         if (net == null) {
-            val uniform = -ln(n.toFloat())
-            node.logits.fill(uniform)
+            val total = classes?.sumOf { popCount(it) } ?: n
+            for (i in 0 until n) node.logits[i] = ln((classes?.let { popCount(it[i]) } ?: 1).toFloat() / total)
             node.netValue = 0f
             node.netWdl[0] = 0f
             node.netWdl[1] = 1f
@@ -277,10 +429,21 @@ class GumbelMcts(
         net.evaluate(node.mine, node.theirs, workspace!!, netPolicy, node.netWdl)
         var maxLogit = Float.NEGATIVE_INFINITY
         for (i in 0 until n) maxLogit = max(maxLogit, netPolicy[node.moves[i]])
-        var total = 0.0
-        for (i in 0 until n) total += exp((netPolicy[node.moves[i]] - maxLogit).toDouble())
-        val logTotal = ln(total).toFloat()
-        for (i in 0 until n) node.logits[i] = netPolicy[node.moves[i]] - maxLogit - logTotal
+        if (classes == null) {
+            var total = 0.0
+            for (i in 0 until n) total += exp((netPolicy[node.moves[i]] - maxLogit).toDouble())
+            val logTotal = ln(total).toFloat()
+            for (i in 0 until n) node.logits[i] = netPolicy[node.moves[i]] - maxLogit - logTotal
+        } else {
+            // A class's prior is the sum over its cells.
+            val mass = DoubleArray(n)
+            var total = 0.0
+            for (i in 0 until n) {
+                forEachCell(classes[i]) { mass[i] += exp((netPolicy[it] - maxLogit).toDouble()) }
+                total += mass[i]
+            }
+            for (i in 0 until n) node.logits[i] = ln(mass[i] / total).toFloat()
+        }
         node.netValue = node.netWdl[0] - node.netWdl[2]
         node.netMovesLeft = workspace.movesLeft
     }
@@ -290,6 +453,9 @@ class GumbelMcts(
         val cell = node.moves[index]
         val moverAfter = node.mine or (1L shl cell)
         val created = Node(mine = node.theirs, theirs = moverAfter)
+        if (node.symmetries.size > 1) {
+            created.symmetries = node.symmetries.filter { QubicGeometry.symmetries[it][cell] == cell }.toIntArray()
+        }
         if (Tactics.wonWith(moverAfter, cell)) created.status = Status.LOSS
         node.children[index] = created
         return created
@@ -456,7 +622,7 @@ class GumbelMcts(
     private fun immediateResult(root: Node): Result {
         val move = when {
             root.status == Status.WIN -> root.winningMove
-            root.moves.isNotEmpty() -> root.moves[root.logits.indices.maxBy { root.logits[it] }]
+            root.moves.isNotEmpty() -> member(root, root.logits.indices.maxBy { root.logits[it] })
             else -> -1
         }
         return buildResult(root, move, 0)
@@ -482,13 +648,24 @@ class GumbelMcts(
                 scores[i] = exp(scores[i] - maxScore)
                 total += scores[i]
             }
-            for (i in 0 until n) policy[root.moves[i]] = scores[i] / total
+            for (i in 0 until n) {
+                val cells = cellsOf(root, i)
+                val share = scores[i] / total / popCount(cells)
+                forEachCell(cells) { policy[it] = share }
+            }
         }
         val visits = IntArray(64)
+        val moveClass = IntArray(64) { -1 }
         for (i in 0 until n) {
-            prior[root.moves[i]] = exp(root.logits[i])
-            moveValues[root.moves[i]] = completedQ(root, i)
-            visits[root.moves[i]] = root.visits[i]
+            val cells = cellsOf(root, i)
+            val p = exp(root.logits[i]) / popCount(cells)
+            val q = completedQ(root, i)
+            forEachCell(cells) {
+                prior[it] = p
+                moveValues[it] = q
+                visits[it] = root.visits[i]
+                moveClass[it] = i
+            }
         }
         val value = when (root.status) {
             Status.UNKNOWN -> mixedValue(root)
@@ -500,10 +677,20 @@ class GumbelMcts(
             Status.DRAW -> floatArrayOf(0f, 1f, 0f)
             Status.UNKNOWN -> root.netWdl.copyOf()
         }
-        return Result(move, root.status, value, wdl, policy, prior, simulations, moveValues, visits)
+        return Result(move, root.status, value, wdl, policy, prior, simulations, moveValues, visits, moveClass)
+    }
+
+    private inline fun forEachCell(cells: Long, action: (Int) -> Unit) {
+        var bits = cells
+        while (bits != 0L) {
+            action(lowestCell(bits))
+            bits = bits and (bits - 1)
+        }
     }
 
     companion object {
+        private val IDENTITY = intArrayOf(0)
+        private val ALL_SYMMETRIES = IntArray(QubicGeometry.symmetryCount) { it }
         private val EMPTY_INT = IntArray(0)
         private val EMPTY_FLOAT = FloatArray(0)
         private val EMPTY_NODES = arrayOfNulls<Node>(0)

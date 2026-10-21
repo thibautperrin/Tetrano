@@ -21,6 +21,14 @@ data class MovingRing(val ringNumber: Int, val player: Int, val progress: Float)
 data class GhostRing(val ringNumber: Int, val player: Int)
 
 /**
+ * A move as the analysis sees it, drawn dashed in a pale [player] color on its free slot: the
+ * more [strength] (0..1, share of the search relative to the most searched move), the more
+ * visible; [rank] (1 = recommended, equal for moves alike by symmetry) and [percent] (expected
+ * score of the move, 0..100) labelled in small, null when the search did not look at it.
+ */
+data class RingHint(val ringNumber: Int, val player: Int, val strength: Float, val rank: Int?, val percent: Int?)
+
+/**
  * Everything [BoardCanvas] needs to render one frame — no engine or
  * domain types leak into this UI-facing model. Animation (blinking,
  * [MovingRing]'s progress, [trayAngleDegrees] during an AI search) is
@@ -49,6 +57,8 @@ data class BoardVisualState(
     val trayAngleDegrees: Float = 360f,
     val movingRing: MovingRing? = null,
     val ghostRing: GhostRing? = null,
+    /** The analysis's view of the free slots (empty outside the analysis). */
+    val hints: List<RingHint> = emptyList(),
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -61,7 +71,8 @@ data class BoardVisualState(
             dragEnabled == other.dragEnabled &&
             trayAngleDegrees == other.trayAngleDegrees &&
             movingRing == other.movingRing &&
-            ghostRing == other.ghostRing
+            ghostRing == other.ghostRing &&
+            hints == other.hints
     }
 
     override fun hashCode(): Int {
@@ -74,6 +85,7 @@ data class BoardVisualState(
         result = 31 * result + trayAngleDegrees.hashCode()
         result = 31 * result + (movingRing?.hashCode() ?: 0)
         result = 31 * result + (ghostRing?.hashCode() ?: 0)
+        result = 31 * result + hints.hashCode()
         return result
     }
 }
