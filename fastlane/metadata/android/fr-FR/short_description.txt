@@ -1,0 +1,1 @@
+Qubic, le morpion 4×4×4, joué avec des anneaux. IA forte, puzzles, analyse.

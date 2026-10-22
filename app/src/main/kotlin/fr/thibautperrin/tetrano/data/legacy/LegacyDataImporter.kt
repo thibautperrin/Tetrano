@@ -16,9 +16,11 @@ import javax.inject.Singleton
  *
  * Idempotent and safe to call on every app start: it does nothing once
  * [TetranoPreferencesDataSource.legacyImportDone] is true, and each source
- * is imported independently — a problem reading one (a corrupt or
- * unexpectedly shaped file) does not block the others, and never crashes
- * the app; it just leaves that source's data at this app's own defaults.
+ * is imported independently — a problem reading one does not block the
+ * others, and never crashes the app. A corrupt or unexpectedly shaped file
+ * is dropped (its data stays at this app's defaults); an import that fails
+ * is retried at the next launch. Challenge moves that don't replay on their
+ * level are dropped later by [fr.thibautperrin.tetrano.domain.service.ChallengeService].
  */
 @Singleton
 class LegacyDataImporter @Inject constructor(
@@ -30,16 +32,18 @@ class LegacyDataImporter @Inject constructor(
     suspend fun importIfNeeded() {
         if (preferences.legacyImportDone.first()) return
 
-        runCatching { importSettings() }
-        runCatching { importChallengeProgress() }
+        val settingsImported = runCatching { importSettings() }.isSuccess
+        val challengeImported = runCatching { importChallengeProgress() }.isSuccess
 
-        // Only the files this importer itself is responsible for. The
-        // legacy saved-games database is migrated in place by Room
-        // (MIGRATION_1_2) and is never touched here.
-        runCatching { challengeVarsReader.delete() }
-        runCatching { preferencesReader.deleteAll() }
+        // Only the files this importer itself is responsible for, and only
+        // once imported: a failure (an IO error, the database not opening)
+        // keeps the file for another try at the next launch. The legacy
+        // saved-games database is migrated in place by Room (MIGRATION_1_2)
+        // and is never touched here.
+        if (challengeImported) runCatching { challengeVarsReader.delete() }
+        if (settingsImported) runCatching { preferencesReader.deleteAll() }
 
-        preferences.setLegacyImportDone(true)
+        if (settingsImported && challengeImported) preferences.setLegacyImportDone(true)
     }
 
     private suspend fun importSettings() {

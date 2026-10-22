@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -156,8 +157,8 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
         TriangleButton(
             next = false,
             onClick = { onAction(ComputerSetupAction.LevelDecremented) },
-            contentDescription = stringResource(R.string.previous),
-            modifier = Modifier.width(dimens.mediumMargin),
+            contentDescription = stringResource(R.string.level_lower),
+            modifier = Modifier.widthIn(min = MIN_TOUCH_TARGET).width(dimens.mediumMargin),
         )
         Slider(
             value = uiModel.aiLevel.toFloat(),
@@ -172,8 +173,8 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
         TriangleButton(
             next = true,
             onClick = { onAction(ComputerSetupAction.LevelIncremented) },
-            contentDescription = stringResource(R.string.Next),
-            modifier = Modifier.width(dimens.mediumMargin),
+            contentDescription = stringResource(R.string.level_higher),
+            modifier = Modifier.widthIn(min = MIN_TOUCH_TARGET).width(dimens.mediumMargin),
         )
     }
 }
@@ -203,6 +204,9 @@ private fun WhoBeginsRadio(text: String, selected: Boolean, onClick: () -> Unit,
         )
     }
 }
+
+/** The arrows' smallest width (their height follows), whatever the screen size. */
+private val MIN_TOUCH_TARGET = 48.dp
 
 // Room around the radio circle, like the legacy RadioButton's own padding.
 private val RADIO_PADDING = 8.dp

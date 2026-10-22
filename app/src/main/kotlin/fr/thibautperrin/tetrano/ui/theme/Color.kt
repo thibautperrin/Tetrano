@@ -1,6 +1,7 @@
 package fr.thibautperrin.tetrano.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import fr.thibautperrin.tetrano.R
 
 /**
  * Ring colors, unchanged from the legacy `colors.xml`, and the 8-color
@@ -20,6 +21,18 @@ object TetranoRingColors {
 
     /** In the legacy settings screen's layout order (grid: grey/black/brown/orange/red/purple/blue/green). */
     val selectable: List<Color> = listOf(Gray, Black, Brown, Orange, Red, Purple, Blue, Green)
+
+    /** The name of each [selectable] color, in the same order, for screen readers. */
+    val selectableNames: List<Int> = listOf(
+        R.string.color_gray,
+        R.string.color_black,
+        R.string.color_brown,
+        R.string.color_orange,
+        R.string.color_red,
+        R.string.color_purple,
+        R.string.color_blue,
+        R.string.color_green,
+    )
 }
 
 /**

@@ -70,9 +70,18 @@ class ChallengeService @Inject constructor(
         isOver = false
 
         ringsPlayedByHints = mutableListOf()
-        progress?.playedByHints?.let { replay(it, onto = ringsPlayedByHints) }
         ringsPlayedNormally = mutableListOf()
-        progress?.normallyPlayed?.let { replay(it, onto = ringsPlayedNormally) }
+        val replayed = replay(progress?.playedByHints, onto = ringsPlayedByHints) &&
+            replay(progress?.normallyPlayed, onto = ringsPlayedNormally)
+        if (!replayed) {
+            // Saved moves that don't fit this level (a corrupt save or legacy
+            // import): start the level afresh rather than fail on every visit.
+            board = BoardState(levels.signature(level), symmetry.toByte(), levels.isInvertPlayer(level))
+            ai = Ai(board)
+            ringsPlayedByHints = mutableListOf()
+            ringsPlayedNormally = mutableListOf()
+            persistProgress()
+        }
         return true
     }
 
@@ -197,13 +206,17 @@ class ChallengeService @Inject constructor(
         )
     }
 
-    private fun replay(rings: ByteArray, onto: MutableList<Int>) {
+    /** Replays [rings] (alternately the user's and the computer's) onto the board; false at the first ring that can't be played. */
+    private fun replay(rings: ByteArray?, onto: MutableList<Int>): Boolean {
         var player = USER
-        for (ring in rings) {
-            board.play(ring.toInt(), player)
-            onto.add(ring.toInt())
+        for (ring in rings ?: return true) {
+            val index = ring.toInt()
+            if (index !in 0 until BoardTables.RING_COUNT || board.rings[index] != EMPTY) return false
+            board.play(index, player)
+            onto.add(index)
             player = 3 - player
         }
+        return true
     }
 
     private fun numberUserRings(): Int = ringsPlayedNormally.size / 2 + ringsPlayedNormally.size % 2

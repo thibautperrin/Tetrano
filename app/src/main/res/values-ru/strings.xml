@@ -1,34 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Tetrano</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml, except
          Long_Sentence_About: the legacy file left this string in French (a leftover
          copy-paste from values-fr/strings.xml) instead of translating it; fixed here. -->
     <string name="Play">играть</string>
     <string name="About">кстати</string>
-    <string name="Long_Sentence_About">Приложение разработано Тибо Перреном по мотивам настольной игры, придуманной Максимом Виалем в 2004 году.</string>
     <string name="action_settings">настройки</string>
     <string name="Rules_Of_Game">Правила игры</string>
-    <string name="Long_Sentence_Rules">Тетрано-это игра для двоих.\n
-        Последовательно игроки распологаються на кольце на сетке,цель собрать серию из четырёх колец одно цвета.\n
-        Эта серия может быть :\n
-        -концентрической : 4 кольца различного размера находятся в одной клетке\n
-        -линейной : 4 кольца либо одинакового размера либо расположенны в порядке увеличения или в порядке уменьшения размера находятся на одной линии, колонке, диагонали.\n
-        Игра заканчивается когда один из участников получает серию из четырёх колец цвета,которой он выбрал в начале.\n
-        Чтобы сыграть в кольцо,нажмите на это кольцо,потом на клетку,на которую вы желаете его поставить.\n
-        Удачи!\n
-    </string>
+    <string name="Long_Sentence_Rules">Tetrano — игра для двух игроков.\n\nИгроки по очереди ставят на поле кольцо своего цвета. Побеждает тот, кто первым выстроит четыре кольца своего цвета.\n\nЛиния из четырёх колец может быть:\n• концентрической: четыре кольца разного размера в одной клетке;\n• прямой: четыре кольца в строке, столбце или по диагонали — все одного размера либо по возрастанию или убыванию размера.\n\nЧтобы сделать ход, перетащите кольцо из-под поля в нужную клетку.\n\nУдачной игры!</string>
     <string name="Winning_Situation_Example">Победа примеры ситуации</string>
     <string name="User">пользователь</string>
     <string name="User_Name">Имя пользователя</string>
-    <string name="User_Color">цвет пользователя</string>
-    <string name="Adversary_Color">противник цвет</string>
     <string name="Two_Players">2 игроков</string>
     <string name="One_Player">1 игрок</string>
-    <string name="Challenge">вызов</string>
-    <string name="Joueur1">игрок1</string>
-    <string name="Joueur2">игрок2</string>
+    <string name="Challenge">Испытание</string>
+    <string name="Joueur1">Игрок 1</string>
+    <string name="Joueur2">Игрок 2</string>
     <string name="Level">уровень</string>
     <string name="Who_Begins">Кто начнет?</string>
     <string name="Enter_A_Name">Введите имя</string>
@@ -37,11 +25,8 @@
     <string name="Sentence_End_Null">Игра закончилась. Нет победителем.</string>
     <string name="Sentence_End_Win">Вы выиграли!</string>
     <string name="Sentence_End_Lost">Вы потеряли.</string>
-    <string name="Winner">Победитель</string>
     <string name="Sentence_Begin_Start">Начиная: Вы можете начать играть.</string>
-    <string name="Your_Turn">Это ваша очередь.</string>
     <string name="Sentence_Computer_Work">Компьютер играет</string>
-    <string name="You_Can_Start">, Вы можете начать.</string>
     <string name="Computer">компьютер</string>
     <string name="Mot_Clignoter">мигать</string>
 
@@ -51,15 +36,10 @@
     <string name="Abandoned">заброшенный</string>
     <string name="Try_Again">Попробуй еще раз</string>
     <string name="Go_To_Next_Level">Перейти на следующий уровень</string>
-    <string name="You_Lost_At_Level">Вы потеряли на уровне </string>
-    <string name="You_Passed_Level">Вы прошли уровень</string>
     <string name="Computer_Won_Before">Компьютер выиграл перед вами!</string>
     <string name="Sentence_Number_Rings">Вы не сумели использовать выделенное количество колец.</string>
-    <string name="Explanation_Rings_Number">В режиме вызова, вы должны выиграть, используя ограниченное количество колец.</string>
-    <string name="In_This_Level">В этом уровне:</string>
-    <string name="Number_Of_Rings_Allowed">Уполномоченный количество колец:</string>
     <string name="Rings_used">Кольца используются</string>
-    <string name="Explanations_Challenge1">Добро пожаловать в режиме Challenge,\n\nВ этом режиме, вы начинаете с начавшейся игре, и вы можете использовать только ограниченное количество колец, чтобы выиграть. Если вы не выиграть игру с этого ограниченного числа, вы проиграете. Если вы выиграли игру, используя большое количество колец, вы выиграете и вы можете перейти к следующему уровню.</string>
+    <string name="Explanations_Challenge1">Добро пожаловать в режим «Испытание».\n\nКаждый уровень начинается с уже начатой партии, и победить нужно, использовав не больше заданного числа колец. Уложитесь в лимит — перейдёте на следующий уровень; иначе вы проиграете и сможете попробовать снова.</string>
     <string name="Hint">Подсказка</string>
     <string name="Explanations_Challenge2">Если уровень кажется слишком сложным, откройте меню и выберите «Подсказка»: компьютер сделает за вас ход, ведущий к победе. Подсказки бесплатны и не ограничены.</string>
     <string name="Next">Следующий</string>
@@ -73,7 +53,6 @@
     <string name="Sentence_Confirm_Delete_Game">Действительно удалить сохраненную игру?</string>
     <string name="Continue_In_Two_Players_Mode">Продолжить партию в 2 игрока режиме</string>
     <string name="Continue_Against_Computer">Продолжить игру против компьютера</string>
-    <string name="Ring">кольцо</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="previous">Предыдущий</string>
@@ -82,8 +61,8 @@
     <!-- Restored from the 2015 app. -->
     <string name="Play_Again">Играть снова</string>
     <string name="Internal_Error">Внутренняя ошибка. Извините.</string>
-    <string name="Joueur1_Name">имя игрока1</string>
-    <string name="Joueur2_Name">имя игрока2</string>
+    <string name="Joueur1_Name">Имя игрока 1</string>
+    <string name="Joueur2_Name">Имя игрока 2</string>
     <string name="Review_Game">Просмотреть партию</string>
     <string name="Analysing">Анализ…</string>
     <string name="Draw_Short">Ничья</string>
@@ -104,7 +83,6 @@
     <string name="settings_section_colors">Цвета колец</string>
     <string name="settings_your_rings">Ваши кольца</string>
     <string name="settings_opponent_rings">Кольца соперника</string>
-    <string name="settings_color">Цвет</string>
     <string name="settings_color_unavailable">Занят другим игроком</string>
     <string name="settings_section_neural">Уровень 101 (нейросеть)</string>
     <string name="settings_neural_simulations">Максимум вариантов на ход</string>
@@ -147,4 +125,43 @@
         <item quantity="many">Выиграйте за %d ходов</item>
         <item quantity="other">Выиграйте за %d хода</item>
     </plurals>
+
+    <!-- 5.0: whole sentences with placeholders, and the ring color names. -->
+    <string name="game_your_turn">%1$s, ваш ход.</string>
+    <string name="game_you_can_start">%1$s, вы начинаете.</string>
+    <string name="game_winner">Победитель: %1$s</string>
+    <string name="challenge_title">Испытание · Уровень %1$d</string>
+    <string name="explanations_page">Пояснения %1$d/%2$d</string>
+    <string name="challenge_level_passed">Вы прошли уровень %1$d.</string>
+    <string name="challenge_level_lost">Вы проиграли на уровне %1$d.</string>
+    <string name="challenge_rings_info">В режиме «Испытание» нужно победить, использовав ограниченное число колец.\n\nНа этом уровне:\n• разрешено колец: %1$d\n• использовано колец: %2$d</string>
+    <string name="analysis_ring_position">Кольцо %1$d / %2$d</string>
+    <string name="analysis_ring_verdict">Кольцо %1$d: %2$s</string>
+    <string name="color_gray">Серый</string>
+    <string name="color_black">Чёрный</string>
+    <string name="color_brown">Коричневый</string>
+    <string name="color_orange">Оранжевый</string>
+    <string name="color_red">Красный</string>
+    <string name="color_purple">Фиолетовый</string>
+    <string name="color_blue">Синий</string>
+    <string name="color_green">Зелёный</string>
+
+    <!-- 5.0: the About screen. -->
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_qubic_title">Qubic</string>
+    <string name="about_qubic">Qubic — это крестики-нолики в трёх измерениях: куб из 4 × 4 × 4 клеток, то есть 64 клетки и 76 возможных линий. Побеждает тот, кто первым выстроит в линию четыре фишки своего цвета. Игра продавалась как настольная в 1960-х годах, а в 1980 году её решил Орен Паташник: первый игрок всегда может добиться победы.</string>
+    <string name="about_tetrano_title">Tetrano</string>
+    <string name="about_tetrano">Tetrano — двумерное представление Qubic, придуманное Максимом Виалем в 2004 году; именно его использует это приложение: четыре уровня куба превращаются в четыре размера колец на поле 4 × 4. Линия — это четыре концентрических кольца в одной клетке или четыре кольца в ряд, все одного размера либо по возрастанию или убыванию размера.</string>
+    <string name="about_app_title">Приложение</string>
+    <string name="about_app">Это приложение написал Тибо Перрен (Thibaut PERRIN). Начатое в 2014 году, в 2026 году оно было обновлено с помощью искусственного интеллекта: полностью переписано, получило нового соперника на основе нейронной сети, задачи и анализ партий.</string>
+    <string name="about_open_source_title">Открытый исходный код</string>
+    <string name="about_open_source">Исходный код Tetrano открыт, распространяется по лицензии MIT и доступен на GitHub.</string>
+    <string name="about_github">Открыть код на GitHub</string>
+    <string name="about_license">Лицензия MIT</string>
+
+    <!-- 5.0: accessibility labels. -->
+    <string name="more_options">Другие действия</string>
+    <string name="game_options">Действия: %1$s</string>
+    <string name="level_lower">Уровень ниже</string>
+    <string name="level_higher">Уровень выше</string>
 </resources>

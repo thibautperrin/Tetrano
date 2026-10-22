@@ -32,8 +32,8 @@ class TetranoApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         applicationScope.launch {
-            legacyDataImporter.importIfNeeded()
-            preferences.removeObsoleteKeys()
+            runCatching { legacyDataImporter.importIfNeeded() }
+            runCatching { preferences.removeObsoleteKeys() }
         }
     }
 }

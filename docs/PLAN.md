@@ -1,9 +1,9 @@
 # Tetrano — Plan de réécriture Kotlin / Compose
 
-> Document de travail destiné à être **exécuté plus tard**.
-> Source : `C:\Users\ThibautPERRIN\Downloads\tetrano_git.git-20260917T145212Z-1-001\tetrano_git`
-> Cible  : `C:\Users\ThibautPERRIN\AndroidStudioProjects\Tetrano`
-> Rédigé le 2026-09-17.
+> Plan de travail de la réécriture 2026 (rédigé le 2026-09-17, réalisé depuis), conservé pour
+> l’histoire du projet. Source : le dépôt Java de 2015 ; cible : ce dépôt.
+> Depuis, en 5.0 : les étoiles ont été supprimées (indices du Challenge gratuits) et tous les
+> écrans sont passés au noir et jaune.
 
 ---
 
@@ -280,9 +280,8 @@ pas et que ses tests ne passent pas.
 ### P0 — Mise en place du dépôt
 
 ```bash
-git clone "C:/Users/ThibautPERRIN/Downloads/tetrano_git.git-20260917T145212Z-1-001/tetrano_git" \
-          "C:/Users/ThibautPERRIN/AndroidStudioProjects/Tetrano"
-cd "C:/Users/ThibautPERRIN/AndroidStudioProjects/Tetrano"
+git clone <dépôt Java de 2015> Tetrano
+cd Tetrano
 git remote remove origin
 git tag -a v4.1-legacy -m "Derniere version Java (2015), versionCode 18 / 4.1" f60fca2
 git switch -c main

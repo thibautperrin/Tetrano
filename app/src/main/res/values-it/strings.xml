@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Tetrano</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-it/strings.xml. -->
     <string name="Play">Giocare</string>
     <string name="About">Info</string>
-    <string name="Long_Sentence_About">Un gioco codificato da Thibaut Perrin, basa sul gioco di bordo creato da Maxime Vial nel 2004.</string>
     <string name="action_settings">Impostazioni</string>
     <string name="Rules_Of_Game">Regola di gioco </string>
-    <string name="Long_Sentence_Rules">Il Tetrano è un gioco che si gioca da due.\nAlternativamente, i giocatori piazzano un anello sulla griglia, al fine di effettuare una serie di quattro anelli dello stesso colore.\nQuesta serie può essere:\n- concentrico: 4 anelli di dimensioni diverse nella stessa piazza,\n- o lineari : 4 anelli, o della stessa dimensione, o piazzati in un ordine crescente o decrescente di dimensioni sono sulla stessa riga, colonna o diagonale.\nIl gioco si termina quando un giocatore riesce ad ottenere una serie di quattro anelli della sua colore.\nDivertiti!</string>
+    <string name="Long_Sentence_Rules">Tetrano è un gioco per due giocatori.\n\nA turno, ogni giocatore posa un anello del proprio colore sul tavoliere. Vince chi per primo allinea quattro anelli del proprio colore.\n\nUn allineamento di quattro anelli può essere:\n• concentrico: quattro anelli di dimensioni diverse nella stessa casella;\n• rettilineo: quattro anelli su una riga, una colonna o una diagonale, tutti della stessa dimensione oppure di dimensione crescente o decrescente.\n\nPer giocare, trascina un anello da sotto il tavoliere fino a una casella.\n\nBuon divertimento!</string>
     <string name="Winning_Situation_Example">Modelli vincono situazioni:</string>
     <string name="User">Utente</string>
     <string name="User_Name">nome utente</string>
-    <string name="User_Color">Colore utente</string>
-    <string name="Adversary_Color">Colore avversario</string>
     <string name="Two_Players">2 giocatori</string>
     <string name="One_Player">1 giocatore</string>
     <string name="Challenge">Sfida</string>
-    <string name="Joueur1">Giocatore1</string>
-    <string name="Joueur2">Giocatore2</string>
+    <string name="Joueur1">Giocatore 1</string>
+    <string name="Joueur2">Giocatore 2</string>
     <string name="Level">Difficoltà </string>
     <string name="Who_Begins">Chi cominciare?</string>
     <string name="Enter_A_Name">Inserire un nome di partito</string>
@@ -27,11 +23,8 @@
     <string name="Sentence_End_Null">Gioco finito. Nessun vincitore.</string>
     <string name="Sentence_End_Win">Gioco finito. Hai vinto !</string>
     <string name="Sentence_End_Lost">Gioco finito. Hai perso.</string>
-    <string name="Winner">Vincitore</string>
     <string name="Sentence_Begin_Start">Debutto: si può iniziare.</string>
-    <string name="Your_Turn">è il suo turno.</string>
     <string name="Sentence_Computer_Work">Il computer gioca.</string>
-    <string name="You_Can_Start">, Si può iniziare.</string>
     <string name="Computer">Computer</string>
     <string name="Mot_Clignoter">Lampeggiare</string>
 
@@ -41,15 +34,10 @@
     <string name="Abandoned">Abbandonato</string>
     <string name="Try_Again">Riprovare </string>
     <string name="Go_To_Next_Level">Passare al livello successivo</string>
-    <string name="You_Lost_At_Level">Hai perso a livello</string>
-    <string name="You_Passed_Level">Hai vinto a livello</string>
     <string name="Computer_Won_Before">Il computer ha vinto prima di voi!</string>
     <string name="Sentence_Number_Rings">Non sei riuscito a utilizzare il numero assegnato di squilli.</string>
-    <string name="Explanation_Rings_Number">Nella modalità sfida, devi vincere utilizzando un numero limitato di anelli.</string>
-    <string name="In_This_Level">In questo livello:</string>
-    <string name="Number_Of_Rings_Allowed">Numero autorizzato di fornelli:</string>
     <string name="Rings_used">Anelli usati:</string>
-    <string name="Explanations_Challenge1">Benvenuti nella modalità Sfida,\n\nin questa modalità, si parte da un gioco già iniziato, ed è possibile utilizzare solo un numero limitato di squilli per vincere. Se non si vince la partita con questo numero limitato, si perde. Se vinci il gioco utilizzando il buon numero di squilli, si vince e si può passare al livello successivo.</string>
+    <string name="Explanations_Challenge1">Benvenuto nella modalità Sfida.\n\nOgni livello parte da una partita già iniziata e devi vincere senza superare un numero di anelli stabilito. Se vinci entro questo limite passi al livello successivo; altrimenti perdi e puoi riprovare.</string>
     <string name="Hint">Suggerimento</string>
     <string name="Explanations_Challenge2">Se un livello ti sembra troppo difficile, apri il menu e scegli Suggerimento: il computer gioca per te una mossa che porta alla vittoria. I suggerimenti sono gratuiti e illimitati.</string>
     <string name="Next">Successiva</string>
@@ -63,7 +51,6 @@
     <string name="Sentence_Confirm_Delete_Game">Davvero cancellare la partita salvata?</string>
     <string name="Continue_In_Two_Players_Mode">Continuare la festa in 2 modalità giocatore</string>
     <string name="Continue_Against_Computer">Continuare la partita contro il computer</string>
-    <string name="Ring">Anello</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="previous">Precedente</string>
@@ -72,8 +59,8 @@
     <!-- Restored from the 2015 app. -->
     <string name="Play_Again">Nuovo gioco</string>
     <string name="Internal_Error">Errore interno. Scusate</string>
-    <string name="Joueur1_Name">Nome giocatore1?</string>
-    <string name="Joueur2_Name">Nome giocatore2?</string>
+    <string name="Joueur1_Name">Nome del giocatore 1</string>
+    <string name="Joueur2_Name">Nome del giocatore 2</string>
     <string name="Review_Game">Rivedi la partita</string>
     <string name="Analysing">Analisi in corso…</string>
     <string name="Draw_Short">Patta</string>
@@ -94,7 +81,6 @@
     <string name="settings_section_colors">Colori degli anelli</string>
     <string name="settings_your_rings">I tuoi anelli</string>
     <string name="settings_opponent_rings">Anelli dell\'avversario</string>
-    <string name="settings_color">Colore</string>
     <string name="settings_color_unavailable">Usato dall\'altro giocatore</string>
     <string name="settings_section_neural">Livello 101 (rete neurale)</string>
     <string name="settings_neural_simulations">Varianti testate per mossa (massimo)</string>
@@ -133,6 +119,46 @@
     <string name="puzzle_explanations">Ogni problema è una posizione di una partita in cui puoi forzare la vittoria: trova le mosse vincenti, l\'avversario si difende al meglio. Una mossa sbagliata termina il tentativo.\n\nTu e i problemi avete un Elo: i problemi sono scelti perché tu ne risolva circa 3 su 4, e il tuo Elo segue i tuoi risultati (conta solo il primo tentativo di ogni problema).</string>
     <plurals name="puzzle_find_win">
         <item quantity="one">Vinci in %d mossa</item>
+        <item quantity="many">Vinci in %d mosse</item>
         <item quantity="other">Vinci in %d mosse</item>
     </plurals>
+
+    <!-- 5.0: whole sentences with placeholders, and the ring color names. -->
+    <string name="game_your_turn">%1$s, tocca a te.</string>
+    <string name="game_you_can_start">%1$s, puoi iniziare.</string>
+    <string name="game_winner">Vincitore: %1$s</string>
+    <string name="challenge_title">Sfida · Livello %1$d</string>
+    <string name="explanations_page">Spiegazioni %1$d/%2$d</string>
+    <string name="challenge_level_passed">Hai superato il livello %1$d.</string>
+    <string name="challenge_level_lost">Hai perso al livello %1$d.</string>
+    <string name="challenge_rings_info">Nella modalità Sfida devi vincere con un numero limitato di anelli.\n\nIn questo livello:\n• anelli consentiti: %1$d\n• anelli usati: %2$d</string>
+    <string name="analysis_ring_position">Anello %1$d / %2$d</string>
+    <string name="analysis_ring_verdict">Anello %1$d: %2$s</string>
+    <string name="color_gray">Grigio</string>
+    <string name="color_black">Nero</string>
+    <string name="color_brown">Marrone</string>
+    <string name="color_orange">Arancione</string>
+    <string name="color_red">Rosso</string>
+    <string name="color_purple">Viola</string>
+    <string name="color_blue">Blu</string>
+    <string name="color_green">Verde</string>
+
+    <!-- 5.0: the About screen. -->
+    <string name="about_version">Versione %1$s</string>
+    <string name="about_qubic_title">Qubic</string>
+    <string name="about_qubic">Qubic è il tris in tre dimensioni: un cubo di 4 × 4 × 4 caselle, cioè 64 caselle e 76 allineamenti possibili. Vince il primo giocatore che allinea quattro pedine del proprio colore. Venduto come gioco da tavolo negli anni Sessanta, è stato risolto nel 1980 da Oren Patashnik: il primo giocatore può sempre forzare la vittoria.</string>
+    <string name="about_tetrano_title">Tetrano</string>
+    <string name="about_tetrano">Tetrano è la rappresentazione bidimensionale di Qubic inventata da Maxime Vial nel 2004, quella usata da questa app: i quattro piani del cubo diventano quattro dimensioni di anelli, posati su un tavoliere di 4 × 4. Un allineamento si legge quindi come quattro anelli concentrici in una casella, oppure come quattro anelli in fila, tutti della stessa dimensione o di dimensione crescente o decrescente.</string>
+    <string name="about_app_title">L’app</string>
+    <string name="about_app">Questa app è stata scritta da Thibaut PERRIN. Iniziata nel 2014, è stata rinnovata nel 2026 con l’aiuto dell’intelligenza artificiale: riscrittura completa, un nuovo avversario basato su una rete neurale, rompicapi e analisi delle partite.</string>
+    <string name="about_open_source_title">Open source</string>
+    <string name="about_open_source">Il codice sorgente di Tetrano è open source, con licenza MIT, ed è disponibile su GitHub.</string>
+    <string name="about_github">Vedi il codice su GitHub</string>
+    <string name="about_license">Licenza MIT</string>
+
+    <!-- 5.0: accessibility labels. -->
+    <string name="more_options">Altre opzioni</string>
+    <string name="game_options">Opzioni di %1$s</string>
+    <string name="level_lower">Livello inferiore</string>
+    <string name="level_higher">Livello superiore</string>
 </resources>

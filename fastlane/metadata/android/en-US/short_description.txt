@@ -1,0 +1,1 @@
+Qubic, the 4×4×4 tic-tac-toe, played with rings. Strong AI, puzzles, analysis.

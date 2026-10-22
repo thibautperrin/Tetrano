@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Tetrano</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-de/strings.xml. -->
     <string name="Play">Spielen</string>
     <string name="About">Über das Spiel</string>
-    <string name="Long_Sentence_About">Eine von Thibaut Perrin entwickelte Applikation, auf der Basis des 2004 von Maxime Vial erfundenen Brettspiels.</string>
     <string name="action_settings">Einstellungen</string>
     <string name="Rules_Of_Game">Spielregeln</string>
-    <string name="Long_Sentence_Rules">« Tetrano » ist ein Strategie-Spiel für zwei Spieler.\n Ziel des Spiels ist, mit 4 Ringen derselben Farbe eine gültige Serie herzustellen.\n Gültige Serien sind:\n - konzentrisch : 4 Ringe jeder Größe derselben Farbe befinden sich im gleichen Feld,\n - linear : 4 Ringe derselben Größe und derselben Farbe befinden sich auf einer senkrechten, waagerechten oder diagonalen Linie \n ODER\n  4 Ringe derselben Farbe befinden sich in aufsteigender oder absteigender Reihenfolge auf einer senkrechten, waagerechten oder diagonalen Linie\n Die Ringe werden von beiden Spielern abwechselnd auf das Spielbrett geschoben. Mit dem ersten Klick wird zunächst die Größe des Rings ausgewählt, mit dem zweiten Klick wird der Ring dann auf dem Feld positioniert.\n  Der Spieler, der es zuerst schafft, eine gültige Serie herzustellen, gewinnt.\n  Viel Spaß beim Spielen !</string>
+    <string name="Long_Sentence_Rules">Tetrano ist ein Spiel für zwei Personen.\n\nAbwechselnd legt jeder einen Ring seiner Farbe auf das Spielbrett. Wer zuerst vier Ringe seiner Farbe in eine Reihe bringt, gewinnt.\n\nEine Reihe aus vier Ringen kann sein:\n• konzentrisch: vier Ringe unterschiedlicher Größe im selben Feld;\n• gerade: vier Ringe in einer Zeile, einer Spalte oder einer Diagonale, entweder alle gleich groß oder mit auf- oder absteigender Größe.\n\nZiehe zum Spielen einen Ring von unterhalb des Spielbretts auf ein Feld.\n\nViel Spaß!</string>
     <string name="Winning_Situation_Example">So gewinnt man Tetrano</string>
     <string name="User">Benutzer</string>
     <string name="User_Name">Benutzername</string>
-    <string name="User_Color">meine Farbe</string>
-    <string name="Adversary_Color">Farbe des Gegners</string>
     <string name="Two_Players">2 Spieler</string>
     <string name="One_Player">1 Spieler</string>
     <string name="Challenge">Herausforderung</string>
-    <string name="Joueur1">Spieler1</string>
-    <string name="Joueur2">Spieler2</string>
+    <string name="Joueur1">Spieler 1</string>
+    <string name="Joueur2">Spieler 2</string>
     <string name="Level">Schwierigkeitsgrad</string>
     <string name="Who_Begins">Wer soll anfangen?</string>
     <string name="Enter_A_Name">gib einen Namen ein</string>
@@ -27,11 +23,8 @@
     <string name="Sentence_End_Null">Spiel beendet. Kein Sieger.</string>
     <string name="Sentence_End_Win"> Sie haben gewonnen!</string>
     <string name="Sentence_End_Lost">Sie haben verloren.</string>
-    <string name="Winner">Gewinner</string>
     <string name="Sentence_Begin_Start">starte das Spiel…</string>
-    <string name="Your_Turn">Du bist dran</string>
     <string name="Sentence_Computer_Work">Der Computer ist gerade am Spielen.</string>
-    <string name="You_Can_Start">, du kannst anfangen.</string>
     <string name="Computer">Computer</string>
     <string name="Mot_Clignoter">letzter Zug</string>
 
@@ -41,15 +34,10 @@
     <string name="Abandoned">Verlassene</string>
     <string name="Try_Again">Versuch es noch einmal</string>
     <string name="Go_To_Next_Level">Gehen zum nächsten Level</string>
-    <string name="You_Lost_At_Level">Sie scheiterte auf Ebene </string>
-    <string name="You_Passed_Level">Sie bestanden auf Ebene </string>
     <string name="Computer_Won_Before">Der Computer, bevor Sie gewonnen hat!</string>
     <string name="Sentence_Number_Rings">Sie haben es nicht geschafft, die zugeteilte Anzahl von Ringen zu verwenden.</string>
-    <string name="Explanation_Rings_Number">Im Challenge-Modus, haben Sie, um zu gewinnen mit einer begrenzten Anzahl von Ringen.</string>
-    <string name="In_This_Level">In dieser Ebene:</string>
-    <string name="Number_Of_Rings_Allowed">Autorisierte Anzahl der Ringe:</string>
     <string name="Rings_used">Verwendet Ringe:</string>
-    <string name="Explanations_Challenge1">Willkommen in der Challenge-Modus,\n\nin diesem Modus starten Sie von einem Spiel bereits begonnen, und Sie können nur eine begrenzte Anzahl von Ringen zu verwenden, um zu gewinnen. Wenn Sie das Spiel mit dieser begrenzten Anzahl nicht gewinnen, verlieren Sie. Wenn Sie das Spiel mit dem guten Anzahl von Ringen gewinnen, gewinnen Sie und Sie können auf die nächste Ebene zu gehen.</string>
+    <string name="Explanations_Challenge1">Willkommen im Herausforderungsmodus.\n\nJedes Level beginnt mit einer bereits laufenden Partie, und du musst mit höchstens einer vorgegebenen Anzahl von Ringen gewinnen. Gelingt dir das, geht es zum nächsten Level; sonst hast du verloren und kannst es erneut versuchen.</string>
     <string name="Hint">Tipp</string>
     <string name="Explanations_Challenge2">Wenn dir ein Level zu schwer erscheint, öffne das Menü und wähle Tipp: Der Computer spielt für dich einen Zug, der zum Sieg führt. Tipps sind kostenlos und unbegrenzt.</string>
     <string name="Next">Weiter</string>
@@ -63,7 +51,6 @@
     <string name="Sentence_Confirm_Delete_Game">Willst du das Spiel wirklich löschen?</string>
     <string name="Continue_In_Two_Players_Mode">Fahren Sie mit der Partei im 2-Spieler-Modus</string>
     <string name="Continue_Against_Computer">Weiter das Spiel gegen den Computer</string>
-    <string name="Ring">Ring</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="previous">Zurück</string>
@@ -72,8 +59,8 @@
     <!-- Restored from the 2015 app. -->
     <string name="Play_Again">nochmal spielen</string>
     <string name="Internal_Error">Interner Fehler. Entschuldigung.</string>
-    <string name="Joueur1_Name">Spielername1</string>
-    <string name="Joueur2_Name">Spielername2</string>
+    <string name="Joueur1_Name">Name von Spieler 1</string>
+    <string name="Joueur2_Name">Name von Spieler 2</string>
     <string name="Review_Game">Partie ansehen</string>
     <string name="Analysing">Analyse läuft…</string>
     <string name="Draw_Short">Remis</string>
@@ -94,7 +81,6 @@
     <string name="settings_section_colors">Ringfarben</string>
     <string name="settings_your_rings">Deine Ringe</string>
     <string name="settings_opponent_rings">Ringe des Gegners</string>
-    <string name="settings_color">Farbe</string>
     <string name="settings_color_unavailable">Vom anderen Spieler verwendet</string>
     <string name="settings_section_neural">Stufe 101 (neuronales Netz)</string>
     <string name="settings_neural_simulations">Maximal getestete Varianten pro Zug</string>
@@ -135,4 +121,43 @@
         <item quantity="one">Gewinne in %d Zug</item>
         <item quantity="other">Gewinne in %d Zügen</item>
     </plurals>
+
+    <!-- 5.0: whole sentences with placeholders, and the ring color names. -->
+    <string name="game_your_turn">%1$s, du bist dran.</string>
+    <string name="game_you_can_start">%1$s, du darfst anfangen.</string>
+    <string name="game_winner">Gewinner: %1$s</string>
+    <string name="challenge_title">Herausforderung · Level %1$d</string>
+    <string name="explanations_page">Erklärungen %1$d/%2$d</string>
+    <string name="challenge_level_passed">Du hast Level %1$d geschafft.</string>
+    <string name="challenge_level_lost">Du hast Level %1$d verloren.</string>
+    <string name="challenge_rings_info">Im Herausforderungsmodus musst du mit einer begrenzten Anzahl von Ringen gewinnen.\n\nIn diesem Level:\n• erlaubte Ringe: %1$d\n• verwendete Ringe: %2$d</string>
+    <string name="analysis_ring_position">Ring %1$d / %2$d</string>
+    <string name="analysis_ring_verdict">Ring %1$d: %2$s</string>
+    <string name="color_gray">Grau</string>
+    <string name="color_black">Schwarz</string>
+    <string name="color_brown">Braun</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_red">Rot</string>
+    <string name="color_purple">Lila</string>
+    <string name="color_blue">Blau</string>
+    <string name="color_green">Grün</string>
+
+    <!-- 5.0: the About screen. -->
+    <string name="about_version">Version %1$s</string>
+    <string name="about_qubic_title">Qubic</string>
+    <string name="about_qubic">Qubic ist Tic-Tac-Toe in drei Dimensionen: ein Würfel aus 4 × 4 × 4 Feldern, also 64 Felder und 76 mögliche Reihen. Wer zuerst vier Steine seiner Farbe in eine Reihe bringt, gewinnt. In den 1960er-Jahren als Brettspiel verkauft, wurde es 1980 von Oren Patashnik gelöst: Der erste Spieler kann den Sieg immer erzwingen.</string>
+    <string name="about_tetrano_title">Tetrano</string>
+    <string name="about_tetrano">Tetrano ist die zweidimensionale Darstellung von Qubic, die Maxime Vial 2004 erfunden hat und die diese App verwendet: Die vier Ebenen des Würfels werden zu vier Ringgrößen auf einem 4 × 4-Spielbrett. Eine Reihe sind dann vier konzentrische Ringe in einem Feld oder vier Ringe in einer Linie, alle gleich groß oder mit auf- oder absteigender Größe.</string>
+    <string name="about_app_title">Die App</string>
+    <string name="about_app">Diese App wurde von Thibaut PERRIN geschrieben. 2014 begonnen, wurde sie 2026 mit Hilfe künstlicher Intelligenz modernisiert: vollständige Neuentwicklung, ein neuer Computergegner auf Basis eines neuronalen Netzes, Rätsel und Partieanalyse.</string>
+    <string name="about_open_source_title">Open Source</string>
+    <string name="about_open_source">Der Quellcode von Tetrano ist Open Source, steht unter der MIT-Lizenz und ist auf GitHub verfügbar.</string>
+    <string name="about_github">Code auf GitHub ansehen</string>
+    <string name="about_license">MIT-Lizenz</string>
+
+    <!-- 5.0: accessibility labels. -->
+    <string name="more_options">Weitere Optionen</string>
+    <string name="game_options">Optionen für %1$s</string>
+    <string name="level_lower">Niedrigeres Level</string>
+    <string name="level_higher">Höheres Level</string>
 </resources>

@@ -2,9 +2,11 @@ package fr.thibautperrin.tetrano.di
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,6 +23,9 @@ object DataStoreModule {
     @Singleton
     fun providePreferencesDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(
+            // A corrupt settings file is reset to the defaults rather than
+            // failing every read (and crashing the app at each launch).
+            corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
             produceFile = { context.preferencesDataStoreFile(FILE_BASE_NAME) },
         )
 

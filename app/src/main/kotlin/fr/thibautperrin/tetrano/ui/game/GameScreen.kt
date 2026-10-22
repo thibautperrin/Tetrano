@@ -158,7 +158,7 @@ private fun GameMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     IconButton(onClick = { expanded = true }) {
-        Icon(Icons.Default.MoreVert, contentDescription = null)
+        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_options))
     }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         @Composable
@@ -195,22 +195,22 @@ private fun gameTitle(mode: GameMode, uiModel: GameUiModel): String {
             }
             else -> {
                 val winnerName = if (title.winner == 1) player1Name else player2Name
-                "${stringResource(R.string.Winner)}: $winnerName"
+                stringResource(R.string.game_winner, winnerName)
             }
         }
     }
     return when (mode) {
         GameMode.VS_COMPUTER -> when {
             title.playedCount == 0 && title.nextPlayer == 1 -> stringResource(R.string.Sentence_Begin_Start)
-            title.nextPlayer == 1 -> "$player1Name ${stringResource(R.string.Your_Turn)}"
+            title.nextPlayer == 1 -> stringResource(R.string.game_your_turn, player1Name)
             else -> stringResource(R.string.Sentence_Computer_Work)
         }
         else -> {
             val name = if (title.nextPlayer == 1) player1Name else player2Name
             if (title.playedCount == 0) {
-                "$name${stringResource(R.string.You_Can_Start)}"
+                stringResource(R.string.game_you_can_start, name)
             } else {
-                "$name, ${stringResource(R.string.Your_Turn)}"
+                stringResource(R.string.game_your_turn, name)
             }
         }
     }

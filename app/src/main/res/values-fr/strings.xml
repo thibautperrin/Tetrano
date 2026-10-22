@@ -1,31 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Tetrano</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-fr/strings.xml. -->
     <string name="Play">Jouer</string>
     <string name="About">À propos</string>
-    <string name="Long_Sentence_About">Application développée par Thibaut Perrin à partir du jeu de plateau inventé en 2004 par Maxime Vial.</string>
     <string name="action_settings">Paramètres</string>
     <string name="Rules_Of_Game">Règles du jeu </string>
-    <string name="Long_Sentence_Rules">Le Tetrano est un jeu qui se joue à deux.\n
-        Successivement, les joueurs placent un anneau sur la grille, dans le but de réaliser une série de 4 anneaux d’une même couleur.\n
-        Cette série peut être:\n
-        - concentrique : 4 anneaux de tailles différentes se trouvent dans la même case,\n
-        - ou linéaire : 4 anneaux, soit de taille identique, soit rangés dans un ordre croissant ou décroissant de taille se trouvent sur une même ligne, colonne ou diagonale.\n
-        La partie se termine quand l’un des deux joueurs réussit à obtenir une série de 4 anneaux de la couleur qu’il a choisie au début.\n
-        Pour jouer un anneau, cliquez-deplacez cet anneau vers la case dans laquelle vous souhaitez le placer.\n
-        Bonne Partie!</string>
+    <string name="Long_Sentence_Rules">Tetrano se joue à deux.\n\nChacun à son tour, les joueurs posent un anneau de leur couleur sur le plateau. Le premier qui aligne quatre anneaux de sa couleur gagne.\n\nUn alignement de quatre anneaux peut être :\n• concentrique : quatre anneaux de tailles différentes dans la même case ;\n• linéaire : quatre anneaux sur une ligne, une colonne ou une diagonale, soit tous de la même taille, soit de taille croissante ou décroissante.\n\nPour jouer, faites glisser un anneau depuis le bas du plateau jusqu’à une case.\n\nBon jeu !</string>
     <string name="Winning_Situation_Example">Exemples de situations gagnantes</string>
     <string name="User">Utilisateur</string>
     <string name="User_Name">Nom d’utilisateur</string>
-    <string name="User_Color">Couleur utilisateur</string>
-    <string name="Adversary_Color">Couleur adversaire</string>
     <string name="Two_Players">Jouer à 2</string>
     <string name="One_Player">1 joueur</string>
     <string name="Challenge">Challenge</string>
-    <string name="Joueur1">Joueur1</string>
-    <string name="Joueur2">Joueur2</string>
+    <string name="Joueur1">Joueur 1</string>
+    <string name="Joueur2">Joueur 2</string>
     <string name="Level">Niveau </string>
     <string name="Who_Begins">Qui commence?</string>
     <string name="Enter_A_Name">Entrez un nom de partie</string>
@@ -34,11 +23,8 @@
     <string name="Sentence_End_Null">La partie est finie. Match nul.</string>
     <string name="Sentence_End_Win">Vous avez gagné!</string>
     <string name="Sentence_End_Lost"> Vous avez perdu.</string>
-    <string name="Winner">Vainqueur</string>
     <string name="Sentence_Begin_Start">Début: vous pouvez commencer à jouer.</string>
-    <string name="Your_Turn">c’est votre tour.</string>
     <string name="Sentence_Computer_Work">C’est à l’ordinateur de jouer.</string>
-    <string name="You_Can_Start">, vous pouvez commencer la partie.</string>
     <string name="Computer">Ordinateur</string>
     <string name="Mot_Clignoter">Clignoter</string>
 
@@ -48,15 +34,10 @@
     <string name="Abandoned">Abandonné</string>
     <string name="Try_Again">Réessayer</string>
     <string name="Go_To_Next_Level">Aller au niveau suivant</string>
-    <string name="You_Lost_At_Level">Vous avez perdu au niveau</string>
-    <string name="You_Passed_Level">Vous avez gagné au niveau</string>
     <string name="Computer_Won_Before">L’ordinateur a gagné avant vous!</string>
     <string name="Sentence_Number_Rings">Vous n’avez pas réussi à utiliser le nombre d’anneaux imparti.</string>
-    <string name="Explanation_Rings_Number">En mode challenge, vous devez gagner sans dépasser la limite de nombre d’anneaux.</string>
-    <string name="In_This_Level">Dans ce niveau:</string>
-    <string name="Number_Of_Rings_Allowed">Nombre d’anneaux autorisés:</string>
     <string name="Rings_used">Anneaux utilisés:</string>
-    <string name="Explanations_Challenge1">Bienvenue dans le mode challenge,\n\ndans ce mode de jeu, vous partez d’une partie déjà commencée, et vous avez droit à un certain nombre d’anneaux pour gagner. Ainsi, si vous dépassez le nombre d’anneaux prévu, vous avez perdu. Si vous réussissez, vous passez au niveau suivant.</string>
+    <string name="Explanations_Challenge1">Bienvenue dans le mode Challenge.\n\nChaque niveau part d’une partie déjà commencée, et vous devez gagner sans dépasser un nombre d’anneaux donné. Si vous gagnez dans cette limite, vous passez au niveau suivant ; sinon, vous perdez et pouvez réessayer.</string>
     <string name="Hint">Indice</string>
     <string name="Explanations_Challenge2">Si un niveau vous semble trop difficile, ouvrez le menu et choisissez Indice : l’ordinateur joue pour vous un coup qui mène vers la victoire. Les indices sont gratuits et illimités.</string>
     <string name="Next">Suivant</string>
@@ -70,7 +51,6 @@
     <string name="Sentence_Confirm_Delete_Game">Voulez vous vraiment supprimer la partie enregistrée?</string>
     <string name="Continue_In_Two_Players_Mode">Continuer la partie en mode 2 joueurs</string>
     <string name="Continue_Against_Computer">Continuer la partie contre l’ordinateur</string>
-    <string name="Ring">Anneau</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
     <string name="previous">Précédent</string>
@@ -79,8 +59,8 @@
     <!-- Restored from the 2015 app. -->
     <string name="Play_Again">Recommencer</string>
     <string name="Internal_Error">Erreur interne. Désolé.</string>
-    <string name="Joueur1_Name">nom Joueur 1 ?</string>
-    <string name="Joueur2_Name">nom Joueur 2 ?</string>
+    <string name="Joueur1_Name">Nom du joueur 1</string>
+    <string name="Joueur2_Name">Nom du joueur 2</string>
     <string name="Review_Game">Revoir la partie</string>
     <string name="Analysing">Analyse en cours…</string>
     <string name="Draw_Short">Nul</string>
@@ -101,7 +81,6 @@
     <string name="settings_section_colors">Couleurs des anneaux</string>
     <string name="settings_your_rings">Vos anneaux</string>
     <string name="settings_opponent_rings">Anneaux de l\'adversaire</string>
-    <string name="settings_color">Couleur</string>
     <string name="settings_color_unavailable">Prise par l\'autre joueur</string>
     <string name="settings_section_neural">Niveau 101 (réseau de neurones)</string>
     <string name="settings_neural_simulations">Variations testées par coup (maximum)</string>
@@ -140,6 +119,46 @@
     <string name="puzzle_explanations">Chaque puzzle est une position tirée d\'une partie où vous pouvez forcer la victoire : trouvez les coups gagnants, l\'adversaire se défend du mieux possible. Un mauvais coup met fin à l\'essai.\n\nVous et les puzzles avez un Elo : les puzzles sont choisis pour que vous en réussissiez environ 3 sur 4, et votre Elo suit vos résultats (seul le premier essai d\'un puzzle compte).</string>
     <plurals name="puzzle_find_win">
         <item quantity="one">Gagnez en %d coup</item>
+        <item quantity="many">Gagnez en %d coups</item>
         <item quantity="other">Gagnez en %d coups</item>
     </plurals>
+
+    <!-- 5.0: whole sentences with placeholders, and the ring color names. -->
+    <string name="game_your_turn">%1$s, à vous de jouer.</string>
+    <string name="game_you_can_start">%1$s, vous pouvez commencer.</string>
+    <string name="game_winner">Vainqueur : %1$s</string>
+    <string name="challenge_title">Challenge · Niveau %1$d</string>
+    <string name="explanations_page">Explications %1$d/%2$d</string>
+    <string name="challenge_level_passed">Vous avez réussi le niveau %1$d.</string>
+    <string name="challenge_level_lost">Vous avez perdu au niveau %1$d.</string>
+    <string name="challenge_rings_info">En mode Challenge, vous devez gagner avec un nombre limité d’anneaux.\n\nDans ce niveau :\n• anneaux autorisés : %1$d\n• anneaux utilisés : %2$d</string>
+    <string name="analysis_ring_position">Anneau %1$d / %2$d</string>
+    <string name="analysis_ring_verdict">Anneau %1$d : %2$s</string>
+    <string name="color_gray">Gris</string>
+    <string name="color_black">Noir</string>
+    <string name="color_brown">Marron</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_red">Rouge</string>
+    <string name="color_purple">Violet</string>
+    <string name="color_blue">Bleu</string>
+    <string name="color_green">Vert</string>
+
+    <!-- 5.0: the About screen. -->
+    <string name="about_version">Version %1$s</string>
+    <string name="about_qubic_title">Qubic</string>
+    <string name="about_qubic">Qubic est le morpion en trois dimensions : un cube de 4 × 4 × 4 cases, soit 64 cases et 76 alignements possibles. Le premier joueur qui aligne quatre pions de sa couleur gagne. Commercialisé comme jeu de société dans les années 1960, il a été résolu en 1980 par Oren Patashnik : le premier joueur peut toujours forcer la victoire.</string>
+    <string name="about_tetrano_title">Tetrano</string>
+    <string name="about_tetrano">Tetrano est la représentation en deux dimensions de Qubic inventée par Maxime Vial en 2004, celle qu’utilise cette application : les quatre étages du cube deviennent quatre tailles d’anneaux, posés sur un plateau de 4 × 4. Un alignement se lit alors comme quatre anneaux concentriques dans une case, ou comme quatre anneaux alignés, tous de la même taille ou de taille croissante ou décroissante.</string>
+    <string name="about_app_title">L’application</string>
+    <string name="about_app">Cette application a été écrite par Thibaut PERRIN. Commencée en 2014, elle a été remise au goût du jour en 2026 avec l’aide de l’intelligence artificielle : réécriture complète, nouvel adversaire fondé sur un réseau de neurones, puzzles et analyse de parties.</string>
+    <string name="about_open_source_title">Open source</string>
+    <string name="about_open_source">Le code source de Tetrano est open source, sous licence MIT, et disponible sur GitHub.</string>
+    <string name="about_github">Voir le code sur GitHub</string>
+    <string name="about_license">Licence MIT</string>
+
+    <!-- 5.0: accessibility labels. -->
+    <string name="more_options">Plus d’options</string>
+    <string name="game_options">Options de %1$s</string>
+    <string name="level_lower">Niveau inférieur</string>
+    <string name="level_higher">Niveau supérieur</string>
 </resources>

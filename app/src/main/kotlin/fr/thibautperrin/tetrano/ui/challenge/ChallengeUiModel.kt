@@ -26,6 +26,8 @@ data class ChallengeUiModel(
     val showExplanationsPage: Int? = null,
     val showRingsInfoDialog: Boolean = false,
     val endDialog: ChallengeEndDialog? = null,
+    /** Show the `Internal_Error` toast once, then send [ChallengeAction.InternalErrorShown]. */
+    val showInternalError: Boolean = false,
 )
 
 /** Ports `ChallengeActivity.displayDialogEnd`'s `situation` byte. */
@@ -44,6 +46,7 @@ sealed interface ChallengeAction {
     data object HintMenuClicked : ChallengeAction
     data object EndDialogContinueClicked : ChallengeAction
     data object EndDialogQuitClicked : ChallengeAction
+    data object InternalErrorShown : ChallengeAction
 }
 
 /** One-shot navigation out of [ChallengeScreen]. Ports `endDueToNoMoreLevels`/the "Quit" dialog button. */

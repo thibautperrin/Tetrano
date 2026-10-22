@@ -1,0 +1,24 @@
+Tetrano is Qubic — tic-tac-toe in three dimensions — played with rings on a flat 4 × 4 board.
+
+The four levels of the 4 × 4 × 4 cube become four sizes of rings. Line up four rings of your color: concentric in one square, or in a row, all the same size or in increasing or decreasing size. Easy to learn, surprisingly deep: there are 76 winning lines, and the first player can always force a win… if they find it.
+
+GAME MODES
+• Two players on the same phone
+• Against the computer, from level 0 to level 100, plus level 101: a neural network trained by playing against itself
+• Challenge: 245 levels, each starting from a game in progress that you must win with a limited number of rings, with free hints
+• Puzzles: real positions with a forced win, chosen to match your Elo rating
+
+GAME ANALYSIS
+• Every finished game is saved automatically
+• Replay it move by move with a verdict on each move: best move, inaccuracy, mistake, blunder, missed forced win…
+• Live evaluation of the position, suggested moves and your own variations
+• Or explore any position from an empty board
+
+AND ALSO
+• Rules with winning examples
+• Your name and your ring colors
+• In English, French, German, Spanish, Italian and Russian
+• No ads, no account, no internet access: nothing leaves your phone
+• Open source (MIT license): github.com/thibautperrin/Tetrano
+
+Tetrano is the ring representation of Qubic invented by Maxime Vial in 2004. This app, started in 2014 by Thibaut PERRIN, was rewritten from scratch in 2026 with the help of artificial intelligence.

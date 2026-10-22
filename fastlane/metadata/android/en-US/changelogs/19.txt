@@ -1,0 +1,7 @@
+Tetrano is back, rewritten from scratch!
+• A new look, the same game
+• Level 101: a neural-network computer player
+• Puzzles with an Elo rating
+• Analysis of your games, move by move
+• Challenge hints are now free
+• Your saved games, Challenge progress and settings are kept

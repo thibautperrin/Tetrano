@@ -22,9 +22,6 @@ interface SavedGameDao {
     @Query("SELECT * FROM saved_games WHERE name = :name")
     suspend fun getByName(name: String): SavedGameEntity?
 
-    @Query("SELECT name FROM saved_games")
-    suspend fun getAllNames(): List<String>
-
     /**
      * Ignores (rather than replacing) a conflicting primary key, mirroring
      * the legacy `SQLiteDatabase.insert` (not `insertOrThrow`) used by

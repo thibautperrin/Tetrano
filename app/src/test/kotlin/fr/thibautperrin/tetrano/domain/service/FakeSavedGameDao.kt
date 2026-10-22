@@ -19,8 +19,6 @@ internal class FakeSavedGameDao : SavedGameDao {
 
     override suspend fun getByName(name: String): SavedGameEntity? = games.value.firstOrNull { it.name == name }
 
-    override suspend fun getAllNames(): List<String> = games.value.map { it.name }
-
     override suspend fun insert(game: SavedGameEntity): Long {
         if (getByName(game.name) != null) return -1L
         games.value = games.value + game

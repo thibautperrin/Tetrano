@@ -1,5 +1,6 @@
 package fr.thibautperrin.tetrano.ui.challenge
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,8 @@ import fr.thibautperrin.tetrano.domain.model.ChallengeState
 import fr.thibautperrin.tetrano.domain.service.ChallengeService
 import fr.thibautperrin.tetrano.ui.components.BoardVisualState
 import fr.thibautperrin.tetrano.ui.components.MovingRing
+import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -26,7 +29,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import javax.inject.Inject
 
 /**
  * Backs [ChallengeScreen] — replaces `ChallengeActivity`/`Challenge`/
@@ -91,7 +93,7 @@ class ChallengeViewModel @Inject constructor(
             // Kept collecting: colors changed in Settings apply on return (legacy onActivityResult → refreshSettings).
             colors.collect(::applyColors)
         }
-        viewModelScope.launch {
+        launchGuarded {
             applyColors(colors.first()) // never draw the first position in the default colors
             loadCurrentLevel(showExplanationsIfFirstLevel = true)
         }
@@ -109,6 +111,7 @@ class ChallengeViewModel @Inject constructor(
             ChallengeAction.HintMenuClicked -> useHint()
             ChallengeAction.EndDialogContinueClicked -> continueAfterEndDialog()
             ChallengeAction.EndDialogQuitClicked -> _exit.trySend(ChallengeExit.Quit)
+            ChallengeAction.InternalErrorShown -> _uiState.update { it.copy(showInternalError = false) }
         }
     }
 
@@ -152,7 +155,7 @@ class ChallengeViewModel @Inject constructor(
         if (board.rings.getOrNull(ring) != EMPTY) return
         // Accepted: the ring stays where it was dropped and the tray is put away (MOVE_CHOICE_ACCEPTED).
         updateBoard { it.copy(rings = it.rings.copyOf().also { rings -> rings[ring] = PLAYER_USER.toByte() }, trayPlayer = NOBODY) }
-        viewModelScope.launch {
+        launchGuarded {
             val reply = callService { challengeService.playUserRing(ring) }
             when (val result = reply.result) {
                 ChallengeMoveResult.InvalidMove -> {
@@ -198,9 +201,9 @@ class ChallengeViewModel @Inject constructor(
     private fun abandon() {
         if (isLevelOver || !_uiState.value.canAbandon) return
         updateBoard { it.copy(dragEnabled = false) }
-        viewModelScope.launch {
+        launchGuarded {
             val reply = callService { challengeService.abandon() }
-            val result = reply.result ?: return@launch
+            val result = reply.result ?: return@launchGuarded
             endAttempt(
                 reply = reply,
                 dialog = ChallengeEndDialog(ChallengeEndSituation.ABANDONED, result.level),
@@ -234,7 +237,7 @@ class ChallengeViewModel @Inject constructor(
         cancelSequence()
         cancelBlinks()
         _uiState.update { it.copy(endDialog = null) }
-        viewModelScope.launch { loadCurrentLevel(showExplanationsIfFirstLevel = false) }
+        launchGuarded { loadCurrentLevel(showExplanationsIfFirstLevel = false) }
     }
 
     /** Ports the `menu_use_a_star` item and `useAStar`, minus the star: no confirmation, no limit. */
@@ -243,7 +246,7 @@ class ChallengeViewModel @Inject constructor(
         // autoriserDeplacement(0, 0): no drag (nor pending flight) until the hint has played out.
         cancelSequence()
         updateBoard { it.copy(dragEnabled = false) }
-        viewModelScope.launch {
+        launchGuarded {
             val reply = callService { challengeService.useHint() }
             when (val result = reply.result) {
                 ChallengeHintResult.LevelOver -> Unit
@@ -273,6 +276,24 @@ class ChallengeViewModel @Inject constructor(
     }
 
     // ---- Service access ----
+
+    /**
+     * Runs [block], turning an unexpected failure of [ChallengeService] (a
+     * database error, a search that finds no move) into the `Internal_Error`
+     * toast and a reload of the attempt, instead of a crash.
+     */
+    private fun launchGuarded(block: suspend CoroutineScope.() -> Unit) = viewModelScope.launch {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("Tetrano", "Challenge failed", e)
+            cancelSequence()
+            _uiState.update { it.copy(showInternalError = true, endDialog = null) }
+            runCatching { loadCurrentLevel(showExplanationsIfFirstLevel = false) }
+        }
+    }
 
     /** A service result plus the position right after it, read under the same lock. */
     private class ServiceReply<T>(val result: T, val state: ChallengeState, val winningLine: ByteArray)

@@ -86,6 +86,12 @@ fun ChallengeRoute(
             onExit()
         }
     }
+    if (uiModel.showInternalError) {
+        LaunchedEffect(Unit) {
+            Toast.makeText(context, R.string.Internal_Error, Toast.LENGTH_LONG).show()
+            viewModel.onAction(ChallengeAction.InternalErrorShown)
+        }
+    }
     ChallengeScreen(uiModel = uiModel, onAction = viewModel::onAction, onNavigateToSettings = onNavigateToSettings)
 }
 
@@ -108,8 +114,8 @@ fun ChallengeScreen(
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             LegacyTopBar(
-                // ChallengeActivity.updateTitle(): "%s      %s %d".
-                title = "${stringResource(R.string.Challenge)}      ${stringResource(R.string.Level)} ${uiModel.level}",
+                // ChallengeActivity.updateTitle() ("%s      %s %d"), as one translatable sentence.
+                title = stringResource(R.string.challenge_title, uiModel.level),
                 actions = { ChallengeMenu(onAction = onAction, onNavigateToSettings = onNavigateToSettings) },
             )
         },
@@ -135,7 +141,7 @@ fun ChallengeScreen(
 private fun ChallengeMenu(onAction: (ChallengeAction) -> Unit, onNavigateToSettings: () -> Unit) {
     var menuExpanded by remember { mutableStateOf(false) }
     IconButton(onClick = { menuExpanded = true }) {
-        Icon(Icons.Default.MoreVert, contentDescription = null)
+        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_options))
     }
     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
         DropdownMenuItem(
@@ -299,12 +305,7 @@ private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeActi
         AlertDialog(
             onDismissRequest = { onAction(ChallengeAction.RingsInfoDismissed) },
             text = {
-                DialogText(
-                    stringResource(R.string.Explanation_Rings_Number) + "\n\n" +
-                        stringResource(R.string.In_This_Level) + "\n\t" +
-                        stringResource(R.string.Number_Of_Rings_Allowed) + " ${uiModel.authorizedRings}" + "\n\t" +
-                        stringResource(R.string.Rings_used) + " ${uiModel.usedRings}",
-                )
+                DialogText(stringResource(R.string.challenge_rings_info, uiModel.authorizedRings, uiModel.usedRings))
             },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.RingsInfoDismissed) }) { Text(stringResource(R.string.OK)) }
@@ -315,7 +316,7 @@ private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeActi
     when (uiModel.showExplanationsPage) {
         1 -> AlertDialog(
             onDismissRequest = {},
-            title = { Text("${stringResource(R.string.Explanations)} 1/2") },
+            title = { Text(stringResource(R.string.explanations_page, 1, 2)) },
             text = { DialogText(stringResource(R.string.Explanations_Challenge1)) },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.ExplanationsNextClicked) }) { Text(stringResource(R.string.Next)) }
@@ -323,7 +324,7 @@ private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeActi
         )
         2 -> AlertDialog(
             onDismissRequest = { onAction(ChallengeAction.ExplanationsDismissed) },
-            title = { Text("${stringResource(R.string.Explanations)} 2/2") },
+            title = { Text(stringResource(R.string.explanations_page, 2, 2)) },
             text = { DialogText(stringResource(R.string.Explanations_Challenge2)) },
             confirmButton = {
                 TextButton(onClick = { onAction(ChallengeAction.ExplanationsDismissed) }) { Text(stringResource(R.string.Play)) }
@@ -352,22 +353,22 @@ private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeActi
 private fun endDialogTexts(dialog: ChallengeEndDialog): Triple<String, String, String> = when (dialog.situation) {
     ChallengeEndSituation.USER_WON -> Triple(
         stringResource(R.string.Sentence_End_Win),
-        "${stringResource(R.string.You_Passed_Level)} ${dialog.level}",
+        stringResource(R.string.challenge_level_passed, dialog.level),
         stringResource(R.string.Go_To_Next_Level),
     )
     ChallengeEndSituation.COMPUTER_WON -> Triple(
         stringResource(R.string.Sentence_End_Lost),
-        "${stringResource(R.string.You_Lost_At_Level)} ${dialog.level}\n${stringResource(R.string.Computer_Won_Before)}",
+        stringResource(R.string.challenge_level_lost, dialog.level) + "\n" + stringResource(R.string.Computer_Won_Before),
         stringResource(R.string.Try_Again),
     )
     ChallengeEndSituation.RAN_OUT_OF_RINGS -> Triple(
         stringResource(R.string.Sentence_End_Lost),
-        "${stringResource(R.string.You_Lost_At_Level)} ${dialog.level}\n${stringResource(R.string.Sentence_Number_Rings)}",
+        stringResource(R.string.challenge_level_lost, dialog.level) + "\n" + stringResource(R.string.Sentence_Number_Rings),
         stringResource(R.string.Try_Again),
     )
     ChallengeEndSituation.ABANDONED -> Triple(
         stringResource(R.string.Abandoned),
-        "${stringResource(R.string.You_Lost_At_Level)} ${dialog.level}",
+        stringResource(R.string.challenge_level_lost, dialog.level),
         stringResource(R.string.Try_Again),
     )
 }

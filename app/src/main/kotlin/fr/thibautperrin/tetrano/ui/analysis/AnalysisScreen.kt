@@ -141,7 +141,7 @@ fun AnalysisScreen(
 private fun ResumeMenu(onContinueAgainstComputer: () -> Unit, onContinueTwoPlayers: () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     IconButton(onClick = { expanded = true }) {
-        Icon(Icons.Default.MoreVert, contentDescription = null)
+        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_options))
     }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
         DropdownMenuItem(
@@ -246,7 +246,7 @@ private fun ReviewPanel(review: ReviewUiModel, uiModel: AnalysisUiModel, onActio
     review.lastMove?.let { verdict ->
         val color = if (review.lastMovePlayer == 1) uiModel.board.player1Color else uiModel.board.player2Color
         Text(
-            text = "${stringResource(R.string.Ring)} ${uiModel.cursor} : ${stringResource(verdict.label())}",
+            text = stringResource(R.string.analysis_ring_verdict, uiModel.cursor, stringResource(verdict.label())),
             color = if (verdict.isMistake) MistakeTextColor else BodyColor,
             fontWeight = if (verdict.isMistake) FontWeight.Bold else FontWeight.Normal,
             modifier = Modifier
@@ -280,7 +280,7 @@ private fun Navigation(uiModel: AnalysisUiModel, onAction: (AnalysisAction) -> U
                 Icon(Icons.AutoMirrored.Filled.NavigateBefore, contentDescription = stringResource(R.string.previous))
             }
             Text(
-                "${stringResource(R.string.Ring)} ${uiModel.cursor} / ${uiModel.lineLength}",
+                stringResource(R.string.analysis_ring_position, uiModel.cursor, uiModel.lineLength),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium,
                 color = BodyColor,

@@ -68,6 +68,9 @@ sealed interface TetranoRoute {
     @Serializable
     data object WinningExamples : TetranoRoute
 
+    @Serializable
+    data object About : TetranoRoute
+
     companion object {
         /** `ringCount` meaning "every move of the saved game". */
         const val ALL_RINGS = -1

@@ -1,15 +1,17 @@
 package fr.thibautperrin.tetrano.di
 
+import android.util.Log
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import javax.inject.Qualifier
-import javax.inject.Singleton
 
 /** The CPU-bound dispatcher, e.g. for [fr.thibautperrin.tetrano.engine.ai.Ai] searches (see docs/PLAN.md §6.3). */
 @Qualifier
@@ -42,5 +44,8 @@ object DispatcherModule {
     @Singleton
     @ApplicationScope
     fun provideApplicationScope(@IoDispatcher dispatcher: CoroutineDispatcher): CoroutineScope =
-        CoroutineScope(SupervisorJob() + dispatcher)
+        CoroutineScope(
+            SupervisorJob() + dispatcher +
+                CoroutineExceptionHandler { _, e -> Log.e("Tetrano", "Startup work failed", e) },
+        )
 }

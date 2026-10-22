@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -197,10 +198,11 @@ private fun ColorChoice(label: String, selected: Int, unavailable: Int, onSelect
             Text(label, style = MaterialTheme.typography.bodyLarge, color = BodyColor)
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (color in TetranoRingColors.selectable) {
+            TetranoRingColors.selectable.forEachIndexed { index, color ->
                 val argb = color.toArgb()
                 Swatch(
                     color = color,
+                    name = stringResource(TetranoRingColors.selectableNames[index]),
                     isSelected = argb == selected,
                     isUnavailable = argb == unavailable,
                     onClick = { onSelected(argb) },
@@ -212,8 +214,8 @@ private fun ColorChoice(label: String, selected: Int, unavailable: Int, onSelect
 }
 
 @Composable
-private fun Swatch(color: Color, isSelected: Boolean, isUnavailable: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    val description = stringResource(if (isUnavailable) R.string.settings_color_unavailable else R.string.settings_color)
+private fun Swatch(color: Color, name: String, isSelected: Boolean, isUnavailable: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val unavailable = stringResource(R.string.settings_color_unavailable)
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -227,8 +229,9 @@ private fun Swatch(color: Color, isSelected: Boolean, isUnavailable: Boolean, on
             .background(color)
             .clickable(enabled = !isUnavailable, role = Role.RadioButton, onClick = onClick)
             .semantics {
-                contentDescription = description
+                contentDescription = name
                 this.selected = isSelected
+                if (isUnavailable) stateDescription = unavailable
             },
     ) {
         if (isSelected) {

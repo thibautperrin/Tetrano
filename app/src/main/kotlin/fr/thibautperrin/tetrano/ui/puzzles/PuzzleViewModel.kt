@@ -83,6 +83,9 @@ class PuzzleViewModel @Inject constructor(
     private var opponentColor = TetranoRingColors.Blue
     private var animation: Job? = null
 
+    /** Loading the next puzzle: a second tap on Next meanwhile is ignored. */
+    private var nextJob: Job? = null
+
     init {
         viewModelScope.launch {
             playerColor = Color(preferences.userColor.first())
@@ -101,8 +104,9 @@ class PuzzleViewModel @Inject constructor(
                 render(PuzzlePhase.PLAYING)
             }
             PuzzleAction.NextClicked -> {
+                if (nextJob?.isActive == true) return
                 animation?.cancel()
-                viewModelScope.launch { show(puzzleService.next()) }
+                nextJob = viewModelScope.launch { show(puzzleService.next()) }
             }
         }
     }

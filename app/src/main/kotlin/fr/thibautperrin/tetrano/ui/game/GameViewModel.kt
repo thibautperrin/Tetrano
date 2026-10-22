@@ -195,7 +195,6 @@ class GameViewModel @AssistedInject constructor(
                     aiLevel = preferences.aiLevel.first(),
                 )
             }
-            else -> error("GameScreen does not support $mode")
         }
         // Recovering from process death: the moves actually played this
         // session (possibly more than what savedGameName/PendingComputerGameSetup

@@ -178,7 +178,9 @@ private fun GameCard(game: SavedGameItem, onClick: () -> Unit, onAction: (Analys
 private fun GameMenu(name: String, onAction: (AnalyseGamesAction) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { expanded = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = HintColor) }
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.game_options, name), tint = HintColor)
+        }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.Rename)) },

@@ -9,7 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
 
 /**
@@ -43,12 +46,14 @@ fun ColorBlob(color: Color, modifier: Modifier = Modifier) {
 @Composable
 fun ColorBlobRow(onColorSelected: (Color) -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth()) {
-        for (option in TetranoRingColors.selectable) {
+        TetranoRingColors.selectable.forEachIndexed { index, option ->
+            val name = stringResource(TetranoRingColors.selectableNames[index])
             ColorBlob(
                 color = option,
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(role = Role.Button) { onColorSelected(option) },
+                    .clickable(role = Role.Button) { onColorSelected(option) }
+                    .semantics { contentDescription = name },
             )
         }
     }

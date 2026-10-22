@@ -7,7 +7,6 @@ import fr.thibautperrin.tetrano.domain.model.ChallengeHintResult
 import fr.thibautperrin.tetrano.domain.model.ChallengeMoveResult
 import fr.thibautperrin.tetrano.engine.BoardState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
@@ -46,7 +45,6 @@ class ChallengeServiceTest {
 
     private class FakeChallengeProgressDao(initial: ChallengeProgressEntity?) : ChallengeProgressDao {
         private val state = MutableStateFlow(initial)
-        override fun observe(): Flow<ChallengeProgressEntity?> = state
         override suspend fun get(): ChallengeProgressEntity? = state.value
         override suspend fun upsert(progress: ChallengeProgressEntity) {
             state.value = progress

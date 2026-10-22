@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +36,7 @@ fun HomeRoute(
     onNavigateToPlayMenu: () -> Unit,
     onNavigateToRules: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToAbout: () -> Unit,
 ) {
     HomeScreen(
         onAction = { action ->
@@ -45,6 +44,7 @@ fun HomeRoute(
                 HomeAction.PlayClicked -> onNavigateToPlayMenu()
                 HomeAction.RulesClicked -> onNavigateToRules()
                 HomeAction.SettingsClicked -> onNavigateToSettings()
+                HomeAction.AboutClicked -> onNavigateToAbout()
             }
         },
     )
@@ -55,7 +55,8 @@ fun HomeRoute(
  * "Tetrano", and four `button_texte_style`
  * buttons stacked at the top of the `fond_inverse` collage — Play (which
  * flashes blue for 500 ms when tapped, as in the legacy listener), Rules,
- * Settings and About (a button-less, dismiss-outside dialog).
+ * Settings and About (a screen of its own since 5.0, where the 2015 app
+ * showed a one-line dialog).
  *
  * The buttons keep their legacy size whenever it fits; on a short screen
  * (landscape) they share the height and their labels shrink, and only when
@@ -64,7 +65,6 @@ fun HomeRoute(
 @Composable
 fun HomeScreen(onAction: (HomeAction) -> Unit) {
     val dimens = LocalLegacyDimens.current
-    var showAbout by remember { mutableStateOf(false) }
     var playFlashing by remember { mutableStateOf(false) }
     LaunchedEffect(playFlashing) {
         if (playFlashing) {
@@ -120,24 +120,13 @@ fun HomeScreen(onAction: (HomeAction) -> Unit) {
                     )
                     LegacyButton(
                         text = stringResource(R.string.About),
-                        onClick = { showAbout = true },
+                        onClick = { onAction(HomeAction.AboutClicked) },
                         fontSize = dimens.title2,
                         modifier = buttonModifier,
                     )
                 }
             }
         }
-    }
-
-    if (showAbout) {
-        // Legacy dialogAPropos: title and message only, dismissed by tapping
-        // outside or Back.
-        AlertDialog(
-            onDismissRequest = { showAbout = false },
-            title = { Text(stringResource(R.string.About)) },
-            text = { Text(stringResource(R.string.Long_Sentence_About)) },
-            confirmButton = {},
-        )
     }
 }
 
