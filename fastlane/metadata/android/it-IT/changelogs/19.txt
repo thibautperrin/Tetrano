@@ -1,0 +1,7 @@
+Tetrano è tornato, riscritto da zero!
+• Un nuovo look, lo stesso gioco
+• Livello 101: un avversario con rete neurale
+• Rompicapi con punteggio Elo
+• L’analisi delle tue partite, mossa per mossa
+• I suggerimenti della Sfida ora sono gratuiti
+• Partite salvate, progressi nella Sfida e impostazioni restano al loro posto

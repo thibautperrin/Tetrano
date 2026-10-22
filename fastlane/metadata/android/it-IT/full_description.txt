@@ -1,0 +1,24 @@
+Tetrano è Qubic — il tris in tre dimensioni — giocato con gli anelli su un tavoliere piatto di 4 × 4.
+
+I quattro piani del cubo 4 × 4 × 4 diventano quattro taglie di anelli. Allinea quattro anelli del tuo colore: concentrici in una stessa casella, oppure in fila, tutti della stessa taglia o di taglia crescente o decrescente. Facile da imparare, sorprendentemente profondo: ci sono 76 allineamenti vincenti, e il primo giocatore può sempre forzare la vittoria… se la trova.
+
+MODALITÀ DI GIOCO
+• In due sullo stesso telefono
+• Contro il computer, dal livello 0 al livello 100, più il livello 101: una rete neurale addestrata giocando contro se stessa
+• Sfida: 245 livelli, ognuno con una partita già in corso da vincere con un numero limitato di anelli, con suggerimenti gratuiti
+• Rompicapi: posizioni reali con vittoria forzata, scelte in base al tuo punteggio Elo
+
+ANALISI DELLE PARTITE
+• Ogni partita finita viene salvata automaticamente
+• Rivedila mossa per mossa, con un verdetto su ogni mossa: mossa migliore, imprecisione, errore, errore grave, vittoria forzata mancata…
+• Valutazione della posizione in tempo reale, mosse consigliate e le tue varianti
+• Oppure esplora qualsiasi posizione partendo dal tavoliere vuoto
+
+E INOLTRE
+• Le regole, con esempi di allineamenti vincenti
+• Il tuo nome e i colori dei tuoi anelli
+• In italiano, inglese, francese, tedesco, spagnolo e russo
+• Senza pubblicità, senza account, senza accesso a Internet: nulla lascia il tuo telefono
+• Open source (licenza MIT): github.com/thibautperrin/Tetrano
+
+Tetrano è la rappresentazione di Qubic con gli anelli, inventata da Maxime Vial nel 2004. Questa app, iniziata nel 2014 da Thibaut PERRIN, è stata riscritta da zero nel 2026 con l’aiuto dell’intelligenza artificiale.

@@ -4,66 +4,66 @@
     <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml, except
          Long_Sentence_About: the legacy file left this string in French (a leftover
          copy-paste from values-fr/strings.xml) instead of translating it; fixed here. -->
-    <string name="Play">играть</string>
-    <string name="About">кстати</string>
-    <string name="action_settings">настройки</string>
+    <string name="Play">Играть</string>
+    <string name="About">О приложении</string>
+    <string name="action_settings">Настройки</string>
     <string name="Rules_Of_Game">Правила игры</string>
     <string name="Long_Sentence_Rules">Tetrano — игра для двух игроков.\n\nИгроки по очереди ставят на поле кольцо своего цвета. Побеждает тот, кто первым выстроит четыре кольца своего цвета.\n\nЛиния из четырёх колец может быть:\n• концентрической: четыре кольца разного размера в одной клетке;\n• прямой: четыре кольца в строке, столбце или по диагонали — все одного размера либо по возрастанию или убыванию размера.\n\nЧтобы сделать ход, перетащите кольцо из-под поля в нужную клетку.\n\nУдачной игры!</string>
-    <string name="Winning_Situation_Example">Победа примеры ситуации</string>
-    <string name="User">пользователь</string>
-    <string name="User_Name">Имя пользователя</string>
-    <string name="Two_Players">2 игроков</string>
+    <string name="Winning_Situation_Example">Примеры побед</string>
+    <string name="User">Пользователь</string>
+    <string name="User_Name">Ваше имя</string>
+    <string name="Two_Players">2 игрока</string>
     <string name="One_Player">1 игрок</string>
     <string name="Challenge">Испытание</string>
     <string name="Joueur1">Игрок 1</string>
     <string name="Joueur2">Игрок 2</string>
-    <string name="Level">уровень</string>
-    <string name="Who_Begins">Кто начнет?</string>
+    <string name="Level">Уровень</string>
+    <string name="Who_Begins">Кто начинает?</string>
     <string name="Enter_A_Name">Введите имя</string>
-    <string name="Cancel">отменить</string>
-    <string name="Settings_Saved">Параметры сохраняются</string>
-    <string name="Sentence_End_Null">Игра закончилась. Нет победителем.</string>
-    <string name="Sentence_End_Win">Вы выиграли!</string>
-    <string name="Sentence_End_Lost">Вы потеряли.</string>
-    <string name="Sentence_Begin_Start">Начиная: Вы можете начать играть.</string>
-    <string name="Sentence_Computer_Work">Компьютер играет</string>
-    <string name="Computer">компьютер</string>
-    <string name="Mot_Clignoter">мигать</string>
+    <string name="Cancel">Отмена</string>
+    <string name="Settings_Saved">Настройки сохранены</string>
+    <string name="Sentence_End_Null">Игра окончена. Победителя нет.</string>
+    <string name="Sentence_End_Win">Игра окончена. Вы выиграли!</string>
+    <string name="Sentence_End_Lost">Игра окончена. Вы проиграли.</string>
+    <string name="Sentence_Begin_Start">Начало игры: вы можете ходить первым.</string>
+    <string name="Sentence_Computer_Work">Компьютер делает ход.</string>
+    <string name="Computer">Компьютер</string>
+    <string name="Mot_Clignoter">Мигать</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml (P8 challenge/saved-games screens). -->
-    <string name="Abandon_Challenge">сдаваться</string>
+    <string name="Abandon_Challenge">Сдаться</string>
     <string name="Quit">Выйти</string>
-    <string name="Abandoned">заброшенный</string>
-    <string name="Try_Again">Попробуй еще раз</string>
-    <string name="Go_To_Next_Level">Перейти на следующий уровень</string>
-    <string name="Computer_Won_Before">Компьютер выиграл перед вами!</string>
-    <string name="Sentence_Number_Rings">Вы не сумели использовать выделенное количество колец.</string>
-    <string name="Rings_used">Кольца используются</string>
-    <string name="Explanations_Challenge1">Добро пожаловать в режим «Испытание».\n\nКаждый уровень начинается с уже начатой партии, и победить нужно, использовав не больше заданного числа колец. Уложитесь в лимит — перейдёте на следующий уровень; иначе вы проиграете и сможете попробовать снова.</string>
+    <string name="Abandoned">Вы сдались</string>
+    <string name="Try_Again">Попробовать снова</string>
+    <string name="Go_To_Next_Level">Следующий уровень</string>
+    <string name="Computer_Won_Before">Компьютер выиграл раньше вас!</string>
+    <string name="Sentence_Number_Rings">Вы не уложились в отведённое число колец.</string>
+    <string name="Rings_used">Использовано колец:</string>
+    <string name="Explanations_Challenge1">Добро пожаловать в режим «Испытание».\n\nКаждый уровень начинается с партии, которая уже идёт, и вам нужно победить, потратив не больше заданного числа колец. Уложитесь в лимит — перейдёте на следующий уровень, иначе проиграете и сможете попробовать снова.</string>
     <string name="Hint">Подсказка</string>
-    <string name="Explanations_Challenge2">Если уровень кажется слишком сложным, откройте меню и выберите «Подсказка»: компьютер сделает за вас ход, ведущий к победе. Подсказки бесплатны и не ограничены.</string>
-    <string name="Next">Следующий</string>
+    <string name="Explanations_Challenge2">Если уровень кажется слишком трудным, откройте меню и выберите «Подсказка»: компьютер сделает ход, ведущий вас к победе. Подсказки бесплатные и неограниченные.</string>
+    <string name="Next">Далее</string>
     <string name="Explanations">Пояснения</string>
-    <string name="All_Levels_Passed">Вам удалось все уровни. Вы закончили режим вызов!</string>
-    <string name="Sentence_No_Saved_Game">Вы не имеют никаких сохраненных игр.</string>
-    <string name="Delete">удалить</string>
-    <string name="Rename">переименовать</string>
-    <string name="Confirm">подтвердить</string>
-    <string name="Rename_A_Saved_Game">Переименовать сохраненную игру</string>
-    <string name="Sentence_Confirm_Delete_Game">Действительно удалить сохраненную игру?</string>
-    <string name="Continue_In_Two_Players_Mode">Продолжить партию в 2 игрока режиме</string>
-    <string name="Continue_Against_Computer">Продолжить игру против компьютера</string>
+    <string name="All_Levels_Passed">Вы прошли все уровни. Режим «Испытание» пройден!</string>
+    <string name="Sentence_No_Saved_Game">У вас пока нет сохранённых партий.</string>
+    <string name="Delete">Удалить</string>
+    <string name="Rename">Переименовать</string>
+    <string name="Confirm">Подтвердить</string>
+    <string name="Rename_A_Saved_Game">Переименовать сохранённую партию</string>
+    <string name="Sentence_Confirm_Delete_Game">Вы действительно хотите удалить эту сохранённую партию?</string>
+    <string name="Continue_In_Two_Players_Mode">Продолжить в режиме для двух игроков</string>
+    <string name="Continue_Against_Computer">Продолжить против компьютера</string>
 
     <!-- New in the rewrite: no legacy equivalent, translated for P9. -->
-    <string name="previous">Предыдущий</string>
-    <string name="name_already_used">Сохранённая игра с таким именем уже существует.</string>
+    <string name="previous">Назад</string>
+    <string name="name_already_used">Партия с таким именем уже сохранена.</string>
 
     <!-- Restored from the 2015 app. -->
     <string name="Play_Again">Играть снова</string>
     <string name="Internal_Error">Внутренняя ошибка. Извините.</string>
     <string name="Joueur1_Name">Имя игрока 1</string>
     <string name="Joueur2_Name">Имя игрока 2</string>
-    <string name="Review_Game">Просмотреть партию</string>
+    <string name="Review_Game">Разобрать партию</string>
     <string name="Analysing">Анализ…</string>
     <string name="Draw_Short">Ничья</string>
     <string name="Verdict_Best">Лучший ход</string>
@@ -72,10 +72,10 @@
     <string name="Verdict_Mistake">Ошибка</string>
     <string name="Verdict_Blunder">Грубая ошибка</string>
     <string name="Verdict_Missed_Win">Упущена форсированная победа</string>
-    <string name="Verdict_Allowed_Win">Допущена форсированная победа</string>
+    <string name="Verdict_Allowed_Win">Допущена форсированная победа соперника</string>
     <string name="Previous_Mistake">Предыдущая ошибка</string>
     <string name="Next_Mistake">Следующая ошибка</string>
-    <string name="Level_Neural">нейросеть</string>
+    <string name="Level_Neural">Нейросеть</string>
 
     <!-- Analysis, puzzles and the new settings (2026-10). -->
     <string name="back">Назад</string>
@@ -86,23 +86,23 @@
     <string name="settings_color_unavailable">Занят другим игроком</string>
     <string name="settings_section_neural">Уровень 101 (нейросеть)</string>
     <string name="settings_neural_simulations">Максимум вариантов на ход</string>
-    <string name="settings_neural_explanation">Компьютер проверяет 64 варианта, затем вдвое больше, пока лучший ход не станет ясен, вплоть до этого максимума. Чем он выше, тем сильнее компьютер играет в трудных позициях, но тем дольше может думать. По умолчанию: %1$d.</string>
+    <string name="settings_neural_explanation">Компьютер проверяет 64 варианта, а затем каждый раз вдвое больше, пока лучший ход неочевиден, — вплоть до этого максимума. Чем он выше, тем сильнее компьютер играет в трудных позициях, но тем дольше он может думать. По умолчанию: %1$d.</string>
     <string name="Analyse_Games">Анализ партий</string>
     <string name="Puzzles">Задачи</string>
-    <string name="analysis_empty_board">Пустая доска</string>
-    <string name="analysis_empty_board_hint">Играйте за обе стороны, сеть анализирует каждую позицию</string>
+    <string name="analysis_empty_board">Пустое поле</string>
+    <string name="analysis_empty_board_hint">Играйте за обе стороны — нейросеть анализирует каждую позицию</string>
     <string name="analysis_no_games">Ваши завершённые партии будут автоматически сохраняться здесь.</string>
     <string name="analysis_rings_count">Колец: %1$d</string>
     <string name="analysis_result_wins">побеждает</string>
-    <string name="analysis_result_unfinished">Не окончена</string>
+    <string name="analysis_result_unfinished">Не завершена</string>
     <string name="analysis_title">Анализ</string>
     <string name="analysis_game_over">Партия окончена</string>
     <string name="analysis_variations">Проверено вариантов: %1$s</string>
-    <string name="analysis_best_move">Пунктирные кольца — ходы: чем сильнее ход рекомендован, тем он заметнее (место · шанс выиграть). Нажмите на доску, чтобы прочитать кольцо.</string>
+    <string name="analysis_best_move">Пунктирные кольца — рекомендуемые ходы: чем заметнее кольцо, тем лучше ход (место · шанс на победу). Нажмите на поле, чтобы рассмотреть кольцо.</string>
     <string name="analysis_forced_win">Форсированная победа</string>
     <string name="analysis_forced_draw">Форсированная ничья</string>
     <string name="analysis_depth">Предел: %1$s</string>
-    <string name="analysis_reviewing">Проверка ходов… %1$d %%</string>
+    <string name="analysis_reviewing">Разбор ходов… %1$d %%</string>
     <string name="analysis_first">Первый ход</string>
     <string name="analysis_last">Последний ход</string>
     <string name="analysis_variation_from">Вариант с хода %1$d</string>
@@ -111,19 +111,19 @@
     <string name="puzzle_correct">Верно! Продолжайте.</string>
     <string name="puzzle_stats">Решено: %1$d из %2$d</string>
     <string name="puzzle_solved">Решено!</string>
-    <string name="puzzle_failed">Это не выигрывающий ход</string>
+    <string name="puzzle_failed">Этот ход не ведёт к победе</string>
     <string name="puzzle_solution_shown">Выигрывающий ход показан полупрозрачным кольцом.</string>
     <string name="puzzle_rating_change">Ваш рейтинг: %1$d (%2$s)</string>
     <string name="puzzle_difficulty">Рейтинг задачи: %1$d</string>
-    <string name="puzzle_retry">Ещё раз</string>
+    <string name="puzzle_retry">Повторить</string>
     <string name="puzzle_next">Следующая задача</string>
     <string name="puzzle_retry_note">Повторные попытки не меняют рейтинг.</string>
-    <string name="puzzle_explanations">Каждая задача — позиция из партии, где вы можете форсировать победу: найдите выигрывающие ходы, соперник защищается как можно лучше. Неверный ход завершает попытку.\n\nУ вас и у задач есть рейтинг Эло: задачи подбираются так, чтобы вы решали примерно 3 из 4, а ваш рейтинг следует за результатами (учитывается только первая попытка решения задачи).</string>
+    <string name="puzzle_explanations">Каждая задача — позиция из реальной партии, в которой можно форсировать победу: найдите выигрывающие ходы, соперник защищается наилучшим образом. Неверный ход завершает попытку.\n\nУ вас и у задач есть рейтинг Эло: задачи подбираются так, чтобы вы решали примерно три из четырёх, а ваш рейтинг меняется по результатам (учитывается только первая попытка в каждой задаче).</string>
     <plurals name="puzzle_find_win">
-        <item quantity="one">Выиграйте за %d ход</item>
-        <item quantity="few">Выиграйте за %d хода</item>
-        <item quantity="many">Выиграйте за %d ходов</item>
-        <item quantity="other">Выиграйте за %d хода</item>
+        <item quantity="one">Победа в %d ход</item>
+        <item quantity="few">Победа в %d хода</item>
+        <item quantity="many">Победа в %d ходов</item>
+        <item quantity="other">Победа в %d хода</item>
     </plurals>
 
     <!-- 5.0: whole sentences with placeholders, and the ring color names. -->
@@ -149,19 +149,19 @@
     <!-- 5.0: the About screen. -->
     <string name="about_version">Версия %1$s</string>
     <string name="about_qubic_title">Qubic</string>
-    <string name="about_qubic">Qubic — это крестики-нолики в трёх измерениях: куб из 4 × 4 × 4 клеток, то есть 64 клетки и 76 возможных линий. Побеждает тот, кто первым выстроит в линию четыре фишки своего цвета. Игра продавалась как настольная в 1960-х годах, а в 1980 году её решил Орен Паташник: первый игрок всегда может добиться победы.</string>
+    <string name="about_qubic">Qubic — это крестики-нолики в трёх измерениях: куб из 4 × 4 × 4 клеток, то есть 64 клетки и 76 возможных линий. Побеждает тот, кто первым выстроит в линию четыре фишки своего цвета. Игра поступила в продажу как настольная в 1960-х годах, а в 1980 году Oren Patashnik решил её: первый игрок всегда может вынудить победу.</string>
     <string name="about_tetrano_title">Tetrano</string>
-    <string name="about_tetrano">Tetrano — двумерное представление Qubic, придуманное Максимом Виалем в 2004 году; именно его использует это приложение: четыре уровня куба превращаются в четыре размера колец на поле 4 × 4. Линия — это четыре концентрических кольца в одной клетке или четыре кольца в ряд, все одного размера либо по возрастанию или убыванию размера.</string>
+    <string name="about_tetrano">Tetrano — это плоское представление Qubic, придуманное Maxime Vial в 2004 году и положенное в основу приложения: четыре уровня куба превращаются в четыре размера колец, которые ставятся на поле 4 × 4. Линия — это четыре концентрических кольца в одной клетке или четыре кольца подряд, одного размера либо по возрастанию или убыванию размера.</string>
     <string name="about_app_title">Приложение</string>
-    <string name="about_app">Это приложение написал Тибо Перрен (Thibaut PERRIN). Начатое в 2014 году, в 2026 году оно было обновлено с помощью искусственного интеллекта: полностью переписано, получило нового соперника на основе нейронной сети, задачи и анализ партий.</string>
-    <string name="about_open_source_title">Открытый исходный код</string>
+    <string name="about_app">Это приложение написал Thibaut PERRIN. Начатое в 2014 году, в 2026 году оно было обновлено с помощью искусственного интеллекта: полностью переписано, получило нового компьютерного соперника на основе нейронной сети, задачи и анализ партий.</string>
+    <string name="about_open_source_title">Открытый код</string>
     <string name="about_open_source">Исходный код Tetrano открыт, распространяется по лицензии MIT и доступен на GitHub.</string>
-    <string name="about_github">Открыть код на GitHub</string>
+    <string name="about_github">Смотреть код на GitHub</string>
     <string name="about_license">Лицензия MIT</string>
 
     <!-- 5.0: accessibility labels. -->
-    <string name="more_options">Другие действия</string>
-    <string name="game_options">Действия: %1$s</string>
+    <string name="more_options">Дополнительные действия</string>
+    <string name="game_options">Параметры: %1$s</string>
     <string name="level_lower">Уровень ниже</string>
     <string name="level_higher">Уровень выше</string>
 </resources>

@@ -1,7 +1,7 @@
-Tetrano revient, entièrement réécrit !
+Tetrano est de retour, entièrement réécrit !
 • Un nouveau look, le même jeu
 • Niveau 101 : un adversaire à réseau de neurones
 • Des puzzles avec classement Elo
-• L'analyse de vos parties, coup par coup
+• L’analyse de vos parties, coup par coup
 • Les indices du Challenge sont désormais gratuits
-• Vos parties, votre progression dans le Challenge et vos réglages sont conservés
+• Vos parties, votre progression dans le Challenge et vos paramètres sont conservés

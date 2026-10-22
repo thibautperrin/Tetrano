@@ -1,0 +1,1 @@
+Qubic, il tris 4×4×4, giocato con gli anelli. IA forte, rompicapi, analisi.

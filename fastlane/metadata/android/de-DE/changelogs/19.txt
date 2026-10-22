@@ -1,0 +1,7 @@
+Tetrano ist zurück – komplett neu geschrieben!
+• Neues Aussehen, dasselbe Spiel
+• Level 101: ein Computergegner mit neuronalem Netz
+• Rätsel mit Elo-Wertung
+• Analyse deiner Partien, Zug für Zug
+• Tipps in der Challenge sind jetzt kostenlos
+• Deine gespeicherten Partien, dein Challenge-Fortschritt und deine Einstellungen bleiben erhalten

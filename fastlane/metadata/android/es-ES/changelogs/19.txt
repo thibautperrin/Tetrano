@@ -1,0 +1,7 @@
+¡Tetrano vuelve, reescrito desde cero!
+• Un aspecto nuevo, el mismo juego
+• Nivel 101: un rival basado en una red neuronal
+• Problemas con puntuación Elo
+• Análisis de tus partidas, jugada a jugada
+• Las pistas del modo Desafío ahora son gratuitas
+• Se conservan tus partidas guardadas, tu progreso en Desafío y tus ajustes

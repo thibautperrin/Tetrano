@@ -1,0 +1,24 @@
+Tetrano es el Qubic —el tres en raya en tres dimensiones— jugado con anillos en un tablero plano de 4 × 4.
+
+Los cuatro niveles del cubo de 4 × 4 × 4 se convierten en cuatro tamaños de anillos. Alinea cuatro anillos de tu color: concéntricos en una misma casilla, o en fila, todos del mismo tamaño o de tamaño creciente o decreciente. Fácil de aprender y sorprendentemente profundo: hay 76 líneas ganadoras, y el primer jugador siempre puede forzar la victoria… si la encuentra.
+
+MODOS DE JUEGO
+• Dos jugadores en el mismo móvil
+• Contra el ordenador, del nivel 0 al 100, y además el nivel 101: una red neuronal entrenada jugando contra sí misma
+• Desafío: 245 niveles, cada uno con una partida en curso que debes ganar con un número limitado de anillos, con pistas gratuitas
+• Problemas: posiciones reales con victoria forzada, elegidas según tu Elo
+
+ANÁLISIS DE PARTIDAS
+• Cada partida terminada se guarda automáticamente
+• Repásala jugada a jugada, con un veredicto para cada una: mejor jugada, imprecisión, error, error grave, victoria forzada desaprovechada…
+• Evaluación de la posición en directo, jugadas sugeridas y tus propias variantes
+• O explora cualquier posición desde un tablero vacío
+
+ADEMÁS
+• Reglas con ejemplos de victoria
+• Tu nombre y los colores de tus anillos
+• En español, inglés, francés, alemán, italiano y ruso
+• Sin anuncios, sin cuenta, sin acceso a internet: nada sale de tu móvil
+• Código abierto (licencia MIT): github.com/thibautperrin/Tetrano
+
+Tetrano es la representación con anillos del Qubic, inventada por Maxime Vial en 2004. Esta aplicación, creada en 2014 por Thibaut PERRIN, se reescribió desde cero en 2026 con ayuda de la inteligencia artificial.

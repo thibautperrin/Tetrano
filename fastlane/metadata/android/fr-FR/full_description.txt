@@ -1,24 +1,24 @@
-Tetrano, c'est Qubic — le morpion en trois dimensions — joué avec des anneaux sur un plateau de 4 × 4.
+Tetrano, c’est Qubic, le morpion en trois dimensions, joué avec des anneaux sur un plateau plat de 4 × 4.
 
-Les quatre étages du cube de 4 × 4 × 4 deviennent quatre tailles d'anneaux. Alignez quatre anneaux de votre couleur : concentriques dans une même case, ou en ligne, tous de la même taille ou de taille croissante ou décroissante. Facile à apprendre, étonnamment profond : il y a 76 alignements gagnants, et le premier joueur peut toujours forcer la victoire… s'il la trouve.
+Les quatre niveaux du cube de 4 × 4 × 4 deviennent quatre tailles d’anneaux. Alignez quatre anneaux de votre couleur : concentriques dans une même case, ou en ligne, tous de la même taille ou de taille croissante ou décroissante. Facile à apprendre, étonnamment profond : il existe 76 alignements gagnants, et le premier joueur peut toujours forcer la victoire… s’il la trouve.
 
 MODES DE JEU
 • À deux sur le même téléphone
-• Contre l'ordinateur, du niveau 0 au niveau 100, plus le niveau 101 : un réseau de neurones entraîné en jouant contre lui-même
-• Challenge : 245 niveaux, chacun partant d'une partie en cours à gagner avec un nombre limité d'anneaux, avec des indices gratuits
-• Puzzles : de vraies positions avec un gain forcé, choisies selon votre classement Elo
+• Contre l’ordinateur, du niveau 0 au niveau 100, plus le niveau 101 : un réseau de neurones entraîné en jouant contre lui-même
+• Challenge : 245 niveaux, chacun partant d’une partie en cours que vous devez gagner avec un nombre limité d’anneaux, avec des indices gratuits
+• Puzzles : de vraies positions avec une victoire forcée, choisies selon votre classement Elo
 
 ANALYSE DES PARTIES
 • Chaque partie terminée est enregistrée automatiquement
-• Rejouez-la coup par coup avec un verdict sur chaque coup : meilleur coup, imprécision, erreur, gaffe, gain forcé manqué…
-• Évaluation de la position en direct, coups conseillés et vos propres variantes
-• Ou explorez n'importe quelle position depuis un plateau vide
+• Rejouez-la coup par coup avec un verdict sur chaque coup : meilleur coup, imprécision, erreur, gaffe, victoire forcée manquée…
+• Évaluation de la position en direct, coups conseillés et variantes de votre cru
+• Ou explorez n’importe quelle position à partir d’un plateau vide
 
 ET AUSSI
-• Les règles, avec des exemples d'alignements gagnants
-• Votre nom et vos couleurs d'anneaux
+• Les règles, avec des exemples d’alignements gagnants
+• Votre nom et la couleur de vos anneaux
 • En français, anglais, allemand, espagnol, italien et russe
 • Sans publicité, sans compte, sans accès à Internet : rien ne quitte votre téléphone
 • Open source (licence MIT) : github.com/thibautperrin/Tetrano
 
-Tetrano est la représentation de Qubic avec des anneaux inventée par Maxime Vial en 2004. Cette application, commencée en 2014 par Thibaut PERRIN, a été entièrement réécrite en 2026 avec l'aide de l'intelligence artificielle.
+Tetrano est la version à anneaux de Qubic, inventée par Maxime Vial en 2004. Cette application, commencée en 2014 par Thibaut PERRIN, a été entièrement réécrite en 2026 avec l’aide de l’intelligence artificielle.

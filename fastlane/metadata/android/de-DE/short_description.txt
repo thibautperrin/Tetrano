@@ -1,0 +1,1 @@
+Qubic, das 4×4×4-Tic-Tac-Toe, mit Ringen. Starke KI, Rätsel, Partieanalyse.

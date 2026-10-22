@@ -24,9 +24,9 @@
     <string name="Cancel">Cancel</string>
     <string name="Settings_Saved">Settings saved</string>
     <string name="Sentence_End_Null">Game ended. No winner.</string>
-    <string name="Sentence_End_Win">Game ended. You won !</string>
+    <string name="Sentence_End_Win">Game ended. You won!</string>
     <string name="Sentence_End_Lost">Game ended. You lost.</string>
-    <string name="Sentence_Begin_Start">Beginning: You can start to play.</string>
+    <string name="Sentence_Begin_Start">You can start to play.</string>
     <string name="Sentence_Computer_Work">Computer is playing.</string>
     <string name="Computer">Computer</string>
     <string name="Mot_Clignoter">Blink</string>
@@ -39,7 +39,7 @@
     <string name="Try_Again">Try again</string>
     <string name="Go_To_Next_Level">Go to next level</string>
     <string name="Computer_Won_Before">The computer has won before you!</string>
-    <string name="Sentence_Number_Rings">You have not managed to use the allotted number of rings.</string>
+    <string name="Sentence_Number_Rings">You did not win within the allotted number of rings.</string>
     <string name="Rings_used">Rings used:</string>
     <string name="Explanations_Challenge1">Welcome to Challenge mode.\n\nEach level starts from a game already in progress, and you must win using no more than a set number of rings. Win within that number and you move on to the next level; otherwise you lose and can try again.</string>
     <string name="Hint">Hint</string>

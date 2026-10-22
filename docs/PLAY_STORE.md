@@ -17,7 +17,7 @@ Tout ce qu'il faut pour la fiche de `thibautperrin.tetrano` (versionCode 19, ver
 | `images/featureGraphic.png` | Image de présentation, 1 024 × 500 | |
 | `images/phoneScreenshots/*.png` | Captures d'écran du téléphone, 1 080 × 1 920 | 2 à 8 |
 
-Les captures sont refaites par `tools/store/screenshots.sh` (voir l'en-tête du script).
+Les captures sont refaites par `python tools/store/screenshots.py <langue>` (bannière : `tools/store/feature_graphic.py`) (voir l'en-tête du script).
 
 ## Réponses aux formulaires « Contenu de l'application »
 

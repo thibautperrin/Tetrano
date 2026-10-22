@@ -8,7 +8,7 @@ dimensions — played with rings on a flat board.
 <p align="center">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="200" alt="Home screen">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="200" alt="A game against the computer">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" width="200" alt="Game analysis">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="200" alt="Game analysis">
 </p>
 
 ## About
