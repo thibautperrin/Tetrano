@@ -98,7 +98,7 @@ vide. Contrôle par une autre voie, des parties réelles du joueur de l'appli (`
 contre un adversaire aléatoire puis contre le réseau :
 
 ```
-runs\mainppin\wingraph.bat play graph=runs\main\graph-best.bin model=..\..pp\src\mainesaw	etrano_nn.bin games=3000
+runs\main\app\bin\wingraph.bat play graph=runs\main\graph-best.bin model=..\..\app\src\main\res\raw\tetrano_nn.bin games=3000
 ```
 
 ## Divers
