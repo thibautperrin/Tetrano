@@ -91,6 +91,12 @@ class Vcf(log2TableSize: Int = 16) {
         return search(p, o)
     }
 
+    /** Forgets every cached result: the next [solve] behaves exactly as on a new instance of the same size. */
+    fun clear() {
+        value.fill(0)
+        depthFailed.fill(0)
+    }
+
     private fun slot(p: Long, o: Long): Int {
         var h = p * -0x61c8864680b583ebL xor java.lang.Long.rotateLeft(o * -0x3d4d51c2d82b14b1L, 31)
         h = h xor (h ushr 29)
