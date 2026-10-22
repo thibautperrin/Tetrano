@@ -37,7 +37,7 @@ import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.domain.model.GameMode
 import fr.thibautperrin.tetrano.ui.components.FitText
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
 
 /** Wires [GameViewModel] (created for [mode] via its assisted [GameViewModel.Factory]) to the stateless [GameScreen]. */
@@ -106,14 +106,14 @@ fun GameScreen(
     }
 
     Scaffold(
-        containerColor = LegacyColors.Page,
+        containerColor = TetranoPalette.Page,
         contentWindowInsets = GameInsets,
         topBar = {
             // The dark bar also runs under a landscape cutout; its title and
             // menu stay clear of it.
             Box(
                 Modifier
-                    .background(LegacyColors.ActionBar)
+                    .background(TetranoPalette.Page)
                     .windowInsetsPadding(GameInsets.only(WindowInsetsSides.Horizontal)),
             ) {
                 LegacyTopBar(

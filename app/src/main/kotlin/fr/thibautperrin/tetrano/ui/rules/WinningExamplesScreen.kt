@@ -25,7 +25,7 @@ import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.BoardCanvas
 import fr.thibautperrin.tetrano.ui.components.BoardOrientation
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 
 /** Wires [WinningExamplesViewModel] to the stateless [WinningExamplesScreen]. */
 @Composable
@@ -36,10 +36,10 @@ fun WinningExamplesRoute(viewModel: WinningExamplesViewModel = hiltViewModel()) 
 
 /**
  * Ports `ExamplesActivity` (see docs/GLOSSARY.md, docs/PLAN.md P8) and its
- * `activity_examples` layouts, under the dark action bar
+ * `activity_examples` layouts, under the top bar
  * (`Winning_Situation_Example`): 6 unlabeled square `GrilleView`s — black
- * grid, blue rings, no empty slots, no background — side by side with a
- * 1dp margin around them: 2 columns (1–3 | 4–6) in portrait, 3 columns
+ * grid, blue rings, no empty slots — each on the board's light background
+ * (the 2015 page was white) with a thin black gap between them: 2 columns (1–3 | 4–6) in portrait, 3 columns
  * (1–2 | 3–4 | 5–6) in landscape. Boards are sized to fit the window
  * without scrolling; only when that would make them smaller than
  * [MIN_BOARD_SIDE] do they keep that size and the page scrolls.
@@ -47,7 +47,7 @@ fun WinningExamplesRoute(viewModel: WinningExamplesViewModel = hiltViewModel()) 
 @Composable
 fun WinningExamplesScreen(uiModel: WinningExamplesUiModel) {
     Scaffold(
-        containerColor = LegacyColors.Page,
+        containerColor = TetranoPalette.Page,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = { LegacyTopBar(title = stringResource(R.string.Winning_Situation_Example)) },
     ) { padding ->
@@ -78,8 +78,9 @@ fun WinningExamplesScreen(uiModel: WinningExamplesUiModel) {
                                     orientation = BoardOrientation.SQUARE,
                                     onRingDropped = {},
                                     emptyRingColor = Color.Transparent,
-                                    backgroundColor = Color.Transparent,
-                                    modifier = Modifier.size(side),
+                                    modifier = Modifier
+                                        .size(side)
+                                        .padding(EXAMPLE_GAP),
                                 )
                             }
                         }
@@ -92,3 +93,6 @@ fun WinningExamplesScreen(uiModel: WinningExamplesUiModel) {
 
 /** Below this, a board is too small to read: scroll instead. */
 private val MIN_BOARD_SIDE = 110.dp
+
+/** Black between two example boards, so each reads as its own board. */
+private val EXAMPLE_GAP = 2.dp

@@ -56,6 +56,7 @@ import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
 import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
 
 /** `?android:attr/textAppearanceLarge`, the legacy rings counter's text size (an upper bound here). */
@@ -90,7 +91,7 @@ fun ChallengeRoute(
 
 /**
  * Ports `ChallengeActivity` (see docs/GLOSSARY.md, docs/PLAN.md P8) and its
- * `activity_challenge.xml` layouts: a white page under the dark action bar;
+ * `activity_challenge.xml` layouts: a black page (white in 2015) under the top bar;
  * portrait: the board above, the rings counter bottom-left and the give-up
  * button bottom-right; landscape (`layout-land`): the board on the left,
  * the counter top-right and the button bottom-right. The board always takes
@@ -103,7 +104,7 @@ fun ChallengeScreen(
     onNavigateToSettings: () -> Unit,
 ) {
     Scaffold(
-        containerColor = LegacyColors.Page,
+        containerColor = TetranoPalette.Page,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             LegacyTopBar(

@@ -17,7 +17,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
@@ -25,8 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 
 /** Wires [RulesViewModel] to the stateless [RulesScreen]. */
 @Composable
@@ -43,7 +42,7 @@ fun RulesRoute(
 
 /**
  * Ports `NoticeFormelleActivity` (see docs/GLOSSARY.md, docs/PLAN.md P8)
- * and its `activity_notice_formelle` layout, under the dark action bar
+ * and its `activity_notice_formelle` layout, white on black under the top bar
  * (`Rules_Of_Game`): the rules text (`Long_Sentence_Rules`, `Taille_Corps`)
  * scrolling in the top 9/10 of the page, and the yellow "Winning situation
  * examples" button (black bold italic text) pinned in the bottom 1/10 —
@@ -53,7 +52,7 @@ fun RulesRoute(
 fun RulesScreen(uiModel: RulesUiModel, onAction: (RulesAction) -> Unit) {
     val dimens = LocalLegacyDimens.current
     Scaffold(
-        containerColor = LegacyColors.Page,
+        containerColor = TetranoPalette.Page,
         contentWindowInsets = WindowInsets.safeDrawing,
         topBar = { LegacyTopBar(title = stringResource(R.string.Rules_Of_Game)) },
     ) { padding ->
@@ -67,7 +66,7 @@ fun RulesScreen(uiModel: RulesUiModel, onAction: (RulesAction) -> Unit) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Text(
                     text = stringResource(R.string.Long_Sentence_Rules),
-                    color = DefaultTextColor,
+                    color = TetranoPalette.Text,
                     fontSize = dimens.body,
                     modifier = Modifier
                         .weight(1f)
@@ -89,5 +88,3 @@ fun RulesScreen(uiModel: RulesUiModel, onAction: (RulesAction) -> Unit) {
 
 private val MIN_BUTTON_HEIGHT = 48.dp
 
-/** A plain legacy `TextView`'s color: Material light's `textColorSecondary`. */
-private val DefaultTextColor = Color(0x8A000000)

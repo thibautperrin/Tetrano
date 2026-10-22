@@ -42,9 +42,6 @@ object LegacyColors {
     /** `infoRingsNumber`: the Challenge "rings used" counters. */
     val InfoRings = Color(0xBEB0FF80)
 
-    /** Text of the setup screens' radio buttons and of the Play / Confirm buttons. */
-    val TextBlue = Color(0xFF0000FF)
-
     /** `ThreadSurfaceGraphView`'s board background. */
     val BoardBackground = Color(0xFFFCFCFC)
 
@@ -53,27 +50,37 @@ object LegacyColors {
 
     /** `COLOR_VERT_CLAIR`: the saved-games list text / selection. */
     val SavedGameGreen = Color(0xFF44FF44)
-
-    /** `Theme.AppCompat.Light.DarkActionBar`'s action bar. */
-    val ActionBar = Color(0xFF212121)
-    val OnActionBar = Color(0xFFFFFFFF)
-
-    /** Plain white page behind every screen but Home and the Play menu. */
-    val Page = Color(0xFFFFFFFF)
 }
 
-// Material 3 scheme: only used by the stock widgets (dialogs, text fields,
-// radio buttons, sliders); red/blue echo the two default player colors.
+/**
+ * The look of every screen since 5.0: black pages, yellow titles and accents,
+ * white text — the 2015 home screen's colors (the black `fond_inverse`
+ * collage and its yellow buttons) carried over to the screens that used to
+ * be plain white pages. Boards keep their light 2015 artwork
+ * ([LegacyColors.BoardBackground]).
+ */
+object TetranoPalette {
+    /** Behind every screen, and the top bar. */
+    val Page = Color(0xFF000000)
 
-internal val md_theme_light_primary = Color(0xFFB3261E)
-internal val md_theme_light_onPrimary = Color(0xFFFFFFFF)
-internal val md_theme_light_primaryContainer = Color(0xFFFFDAD4)
-internal val md_theme_light_onPrimaryContainer = Color(0xFF410001)
-internal val md_theme_light_secondary = Color(0xFF0B57D0)
-internal val md_theme_light_onSecondary = Color(0xFFFFFFFF)
-internal val md_theme_light_secondaryContainer = Color(0xFFD8E2FF)
-internal val md_theme_light_onSecondaryContainer = Color(0xFF001A41)
-internal val md_theme_light_background = Color(0xFFFFFFFF)
-internal val md_theme_light_onBackground = Color(0xFF000000)
-internal val md_theme_light_surface = Color(0xFFFFFFFF)
-internal val md_theme_light_onSurface = Color(0xFF000000)
+    /** Cards, panels and dialogs, one step above [Page]. */
+    val Panel = Color(0xFF1A1A1A)
+
+    /** A panel inside a panel (menus, text fields), or a highlighted panel. */
+    val PanelRaised = Color(0xFF2A2A2A)
+
+    /** Thin outlines: around panels, and around swatches so a black one stays visible. */
+    val Outline = Color(0xFF5A5A5A)
+
+    /** `jauneBoutonMain`, opaque: titles, selections, sliders, progress. */
+    val Accent = Color(0xFFFFFF32)
+
+    /** Text and icons on [Accent] (and on the translucent yellow buttons). */
+    val OnAccent = Color(0xFF000000)
+
+    val Text = Color(0xFFFFFFFF)
+    val TextSecondary = Color(0xFFB4B4B4)
+
+    val Success = Color(0xFF6BE38A)
+    val Failure = Color(0xFFFF6B6B)
+}

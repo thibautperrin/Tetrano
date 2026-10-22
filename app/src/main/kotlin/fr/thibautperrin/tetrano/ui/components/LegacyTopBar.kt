@@ -12,11 +12,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 
 /**
- * The legacy `Theme.AppCompat.Light.DarkActionBar` action bar: dark bar,
- * white title and overflow icon. [title] is a slot so screens can put a
+ * The legacy `Theme.AppCompat.Light.DarkActionBar` action bar, black since
+ * 5.0 like the pages under it: white title and overflow icon. [title] is a slot so screens can put a
  * dynamic title there. Insets cover the display cutout
  * too (landscape), not just the status bar.
  */
@@ -35,10 +35,10 @@ fun LegacyTopBar(
         modifier = modifier,
         windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = LegacyColors.ActionBar,
-            titleContentColor = LegacyColors.OnActionBar,
-            actionIconContentColor = LegacyColors.OnActionBar,
-            navigationIconContentColor = LegacyColors.OnActionBar,
+            containerColor = TetranoPalette.Page,
+            titleContentColor = TetranoPalette.Text,
+            actionIconContentColor = TetranoPalette.Text,
+            navigationIconContentColor = TetranoPalette.Text,
         ),
     )
 }

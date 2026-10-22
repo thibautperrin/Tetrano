@@ -160,7 +160,6 @@ private fun GameButton(spec: GameButtonSpec, modifier: Modifier) {
         onClick = spec.onClick,
         modifier = modifier,
         background = spec.background,
-        textColor = LegacyColors.TextBlue,
         fontSize = LocalLegacyDimens.current.bottomButtons,
     )
 }

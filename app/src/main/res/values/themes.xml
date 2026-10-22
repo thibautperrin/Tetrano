@@ -7,7 +7,7 @@
       paints windowSplashScreenBackground/Icon until
       installSplashScreen() — called in MainActivity.onCreate before
       super.onCreate/setContent — hands off to postSplashScreenTheme.
-      The actual Material 3 theming (light only, like the 2015 app) lives
+      The actual Material 3 theming (always dark, see TetranoPalette) lives
       in Compose (ui/theme/Theme.kt, P7), so postSplashScreenTheme
       only needs to be a valid, minimal window host until setContent runs.
     -->
@@ -17,5 +17,7 @@
         <item name="postSplashScreenTheme">@style/Theme.Tetrano.Main</item>
     </style>
 
-    <style name="Theme.Tetrano.Main" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Tetrano.Main" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
 </resources>

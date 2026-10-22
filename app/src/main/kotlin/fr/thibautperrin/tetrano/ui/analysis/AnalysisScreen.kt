@@ -59,6 +59,7 @@ import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.domain.service.LiveAnalysisService
 import fr.thibautperrin.tetrano.ui.components.BoardWithPanel
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import java.text.NumberFormat
 import kotlin.math.roundToInt
 
@@ -114,7 +115,7 @@ fun AnalysisScreen(
     ) { padding ->
         if (uiModel.notFound) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.Sentence_No_Saved_Game), color = Color.Black)
+                Text(stringResource(R.string.Sentence_No_Saved_Game), color = BodyColor)
             }
             return@Scaffold
         }
@@ -270,7 +271,7 @@ private fun ReviewPanel(review: ReviewUiModel, uiModel: AnalysisUiModel, onActio
 /** First / previous / "Ring n / N" / next / last. */
 @Composable
 private fun Navigation(uiModel: AnalysisUiModel, onAction: (AnalysisAction) -> Unit) {
-    Surface(shape = RoundedCornerShape(16.dp), color = Color.White, shadowElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = RoundedCornerShape(16.dp), color = TetranoPalette.Panel, modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 4.dp)) {
             IconButton(onClick = { onAction(AnalysisAction.FirstClicked) }, enabled = uiModel.cursor > 0) {
                 Icon(Icons.Default.FirstPage, contentDescription = stringResource(R.string.analysis_first))
@@ -346,10 +347,10 @@ private fun MoveVerdict.label(): Int = when (this) {
     MoveVerdict.ALLOWED_WIN -> R.string.Verdict_Allowed_Win
 }
 
-private val PageColor = Color(0xFFF2F3F7)
-private val BodyColor = Color(0xFF2B2B2B)
-private val HintColor = Color(0xFF6B7280)
-private val AccentColor = Color(0xFF1F2A44)
-private val VariationColor = Color(0xFFFFF3C4)
-private val MistakeTextColor = Color(0xFFB00020)
+private val PageColor = TetranoPalette.Page
+private val BodyColor = TetranoPalette.Text
+private val HintColor = TetranoPalette.TextSecondary
+private val AccentColor = TetranoPalette.Accent
+private val VariationColor = TetranoPalette.PanelRaised
+private val MistakeTextColor = TetranoPalette.Failure
 private val DrawColor = Color(0xFF9E9E9E)

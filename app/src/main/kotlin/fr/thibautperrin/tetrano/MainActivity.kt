@@ -25,9 +25,11 @@ class MainActivity : ComponentActivity() {
         // integration contract.
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        // Light status-bar icons: every screen's top edge is dark (the legacy
-        // dark action bar, or the black fond_inverse collage).
-        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
+        // Light system-bar icons: every screen is black at both edges.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         setContent {
             TetranoApp()
         }

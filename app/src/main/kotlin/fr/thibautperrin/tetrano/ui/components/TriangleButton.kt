@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 
 /**
  * A black "previous" / "next" arrow-head button. Ports `ButtonNextPrevious`
@@ -24,6 +25,7 @@ fun TriangleButton(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    color: Color = TetranoPalette.Accent,
 ) {
     val xs = if (next) NEXT_X else PREVIOUS_X
     Canvas(
@@ -38,7 +40,7 @@ fun TriangleButton(
             for (i in xs.indices) lineTo(xs[i] * size.width, YS[i] * size.height)
             close()
         }
-        drawPath(path, Color.Black)
+        drawPath(path, color)
     }
 }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Splash screen background (see themes.xml): white, like the launcher
-         icon's own backdrop. The app has no dark variant (see ui/theme/Theme.kt). -->
-    <color name="splash_background">#FFFFFFFF</color>
+    <!-- Splash screen background (see themes.xml): black, like every screen
+         behind it (see ui/theme/Theme.kt). -->
+    <color name="splash_background">#FF000000</color>
 </resources>

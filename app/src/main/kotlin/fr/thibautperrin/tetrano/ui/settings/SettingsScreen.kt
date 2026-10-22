@@ -3,7 +3,6 @@ package fr.thibautperrin.tetrano.ui.settings
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,9 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +66,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
+import fr.thibautperrin.tetrano.ui.components.RingSwatch
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import fr.thibautperrin.tetrano.ui.theme.TetranoRingColors
 import java.text.NumberFormat
 import kotlin.math.roundToInt
@@ -95,8 +94,7 @@ fun SettingsRoute(onDone: () -> Unit, viewModel: SettingsViewModel = hiltViewMod
 }
 
 /**
- * The settings, as three cards on a soft background under the app's dark
- * bar: the player's name; both ring colors, each a row of swatches next to
+ * The settings, as three dark cards on the black page: the player's name; both ring colors, each a row of swatches next to
  * a ring drawn in the chosen color (the other player's color is shown as
  * unavailable, since both must differ); and the level-101 network's
  * thinking, the number of variations it tests per move.
@@ -143,8 +141,7 @@ fun SettingsScreen(uiModel: SettingsUiModel, onAction: (SettingsAction) -> Unit)
 private fun SettingsCard(title: String, content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = TetranoPalette.Panel),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -164,7 +161,7 @@ private fun PlayerCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> U
             label = { Text(stringResource(R.string.User_Name)) },
             placeholder = { Text(uiModel.currentUserName.ifBlank { stringResource(R.string.User) }) },
             singleLine = true,
-            leadingIcon = { RingPreview(Color(uiModel.userColor), Modifier.size(24.dp)) },
+            leadingIcon = { RingSwatch(Color(uiModel.userColor), size = 28.dp) },
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             modifier = Modifier.fillMaxWidth(),
@@ -195,7 +192,7 @@ private fun ColorsCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> U
 private fun ColorChoice(label: String, selected: Int, unavailable: Int, onSelected: (Int) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            RingPreview(Color(selected), Modifier.size(28.dp))
+            RingSwatch(Color(selected))
             Spacer(Modifier.size(10.dp))
             Text(label, style = MaterialTheme.typography.bodyLarge, color = BodyColor)
         }
@@ -224,8 +221,8 @@ private fun Swatch(color: Color, isSelected: Boolean, isUnavailable: Boolean, on
             .aspectRatio(1f)
             .alpha(if (isUnavailable) 0.25f else 1f)
             .clip(CircleShape)
-            .border(BorderStroke(if (isSelected) 3.dp else 0.dp, if (isSelected) TitleColor else Color.Transparent), CircleShape)
-            .padding(if (isSelected) 4.dp else 0.dp)
+            .border(BorderStroke(if (isSelected) 3.dp else 1.dp, if (isSelected) TitleColor else TetranoPalette.Outline), CircleShape)
+            .padding(if (isSelected) 4.dp else 1.dp)
             .clip(CircleShape)
             .background(color)
             .clickable(enabled = !isUnavailable, role = Role.RadioButton, onClick = onClick)
@@ -242,20 +239,6 @@ private fun Swatch(color: Color, isSelected: Boolean, isUnavailable: Boolean, on
                 modifier = Modifier.size(18.dp),
             )
         }
-    }
-}
-
-/** A board ring: a thick circle in [color]. */
-@Composable
-fun RingPreview(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val stroke = size.minDimension * 0.22f
-        drawCircle(
-            color = color,
-            radius = (size.minDimension - stroke) / 2f,
-            center = Offset(size.width / 2f, size.height / 2f),
-            style = Stroke(width = stroke),
-        )
     }
 }
 
@@ -287,7 +270,8 @@ private fun NeuralCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> U
             colors = SliderDefaults.colors(
                 thumbColor = TitleColor,
                 activeTrackColor = TitleColor,
-                activeTickColor = Color.White,
+                activeTickColor = TetranoPalette.OnAccent,
+                inactiveTrackColor = TetranoPalette.PanelRaised,
                 inactiveTickColor = TitleColor,
             ),
         )
@@ -304,7 +288,7 @@ private fun NeuralCard(uiModel: SettingsUiModel, onAction: (SettingsAction) -> U
     }
 }
 
-private val PageColor = Color(0xFFF2F3F7)
-private val TitleColor = Color(0xFF1F2A44)
-private val BodyColor = Color(0xFF2B2B2B)
-private val HintColor = Color(0xFF6B7280)
+private val PageColor = TetranoPalette.Page
+private val TitleColor = TetranoPalette.Accent
+private val BodyColor = TetranoPalette.Text
+private val HintColor = TetranoPalette.TextSecondary

@@ -22,7 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -34,8 +33,8 @@ import fr.thibautperrin.tetrano.domain.service.AiService
 import fr.thibautperrin.tetrano.ui.components.FitText
 import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.TriangleButton
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
 import kotlin.math.roundToInt
 
@@ -54,7 +53,7 @@ fun ComputerSetupRoute(
 
 /**
  * Ports `JouerContreOrdiActivity` (`activity_jouer_contre_ordi.xml`), on a
- * white page titled "1 player" (the activity's manifest label, see
+ * black page titled "1 player" (the activity's manifest label, see
  * [SetupPage]): "Who begins?", the User / Computer radio buttons, "Level"
  * and its number, the ◀ level bar ▶ row (0..101, ±1 per arrow; 101 = neural network), and the
  * big Play button.
@@ -73,7 +72,6 @@ fun ComputerSetupScreen(uiModel: ComputerSetupUiModel, onAction: (ComputerSetupA
         LegacyButton(
             text = stringResource(R.string.Play),
             onClick = { onAction(ComputerSetupAction.PlayClicked) },
-            textColor = LegacyColors.TextBlue,
             fontSize = dimens.title2,
             modifier = modifier.fillMaxWidth(),
         )
@@ -115,7 +113,7 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
     FitText(
         text = stringResource(R.string.Who_Begins),
         maxFontSize = dimens.title2,
-        color = Color.Black,
+        color = TetranoPalette.Accent,
     )
     Column(Modifier.selectableGroup()) {
         WhoBeginsRadio(
@@ -135,21 +133,21 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
         FitText(
             text = stringResource(R.string.Level),
             maxFontSize = dimens.title2,
-            color = Color.Black,
+            color = TetranoPalette.Accent,
             modifier = Modifier.weight(1f, fill = false),
         )
         // Legacy TextNiveauPourcent: String.format(" %d", progress).
         FitText(
             text = " ${uiModel.aiLevel}",
             maxFontSize = dimens.title2,
-            color = Color.Black,
+            color = TetranoPalette.Text,
         )
     }
     if (uiModel.aiLevel >= AiService.NEURAL_LEVEL) {
         FitText(
             text = stringResource(R.string.Level_Neural),
             maxFontSize = dimens.title3,
-            color = Color.Black,
+            color = TetranoPalette.Text,
             textAlign = TextAlign.End,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -166,8 +164,8 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
             onValueChange = { onAction(ComputerSetupAction.LevelChanged(it.roundToInt())) },
             valueRange = ComputerSetupViewModel.MIN_LEVEL.toFloat()..ComputerSetupViewModel.MAX_LEVEL.toFloat(),
             colors = SliderDefaults.colors(
-                thumbColor = LegacyColors.TextBlue,
-                activeTrackColor = LegacyColors.TextBlue,
+                thumbColor = TetranoPalette.Accent,
+                activeTrackColor = TetranoPalette.Accent,
             ),
             modifier = Modifier.weight(1f),
         )
@@ -192,13 +190,16 @@ private fun WhoBeginsRadio(text: String, selected: Boolean, onClick: () -> Unit,
         RadioButton(
             selected = selected,
             onClick = null,
-            colors = RadioButtonDefaults.colors(selectedColor = LegacyColors.TextBlue),
+            colors = RadioButtonDefaults.colors(
+                selectedColor = TetranoPalette.Accent,
+                unselectedColor = TetranoPalette.TextSecondary,
+            ),
             modifier = Modifier.padding(RADIO_PADDING),
         )
         FitText(
             text = text,
             maxFontSize = LocalLegacyDimens.current.title3,
-            color = LegacyColors.TextBlue,
+            color = TetranoPalette.Text,
         )
     }
 }

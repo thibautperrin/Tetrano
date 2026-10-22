@@ -36,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,7 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.BoardWithPanel
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 
 /** Wires [PuzzleViewModel] to the stateless [PuzzleScreen]. */
 @Composable
@@ -80,7 +79,7 @@ fun PuzzleScreen(uiModel: PuzzleUiModel, onAction: (PuzzleAction) -> Unit) {
                     if (!uiModel.isLoading) {
                         Text(
                             stringResource(R.string.puzzle_rating, uiModel.rating),
-                            color = LegacyColors.OnActionBar,
+                            color = TetranoPalette.Text,
                             fontWeight = FontWeight.Bold,
                         )
                     }
@@ -125,7 +124,7 @@ fun PuzzleScreen(uiModel: PuzzleUiModel, onAction: (PuzzleAction) -> Unit) {
 
 @Composable
 private fun Goal(uiModel: PuzzleUiModel) {
-    Surface(shape = RoundedCornerShape(16.dp), color = Color.White, shadowElevation = 1.dp, modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = RoundedCornerShape(16.dp), color = TetranoPalette.Panel, modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Box(Modifier.size(14.dp).clip(CircleShape).background(uiModel.board.player1Color))
             Spacer(Modifier.width(10.dp))
@@ -172,9 +171,9 @@ private fun Outcome(uiModel: PuzzleUiModel, success: Boolean, onAction: (PuzzleA
     if (!success) Text(stringResource(R.string.puzzle_retry_note), fontSize = 12.sp, color = HintColor)
 }
 
-private val PageColor = Color(0xFFF2F3F7)
-private val BodyColor = Color(0xFF2B2B2B)
-private val HintColor = Color(0xFF6B7280)
-private val AccentColor = Color(0xFF1F2A44)
-private val SuccessColor = Color(0xFF1B7F3B)
-private val FailureColor = Color(0xFFB00020)
+private val PageColor = TetranoPalette.Page
+private val BodyColor = TetranoPalette.Text
+private val HintColor = TetranoPalette.TextSecondary
+private val AccentColor = TetranoPalette.Accent
+private val SuccessColor = TetranoPalette.Success
+private val FailureColor = TetranoPalette.Failure

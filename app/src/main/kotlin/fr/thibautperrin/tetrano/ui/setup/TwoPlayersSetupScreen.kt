@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -37,8 +39,10 @@ import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.ColorBlobRow
 import fr.thibautperrin.tetrano.ui.components.FitText
 import fr.thibautperrin.tetrano.ui.components.LegacyButton
+import fr.thibautperrin.tetrano.ui.components.RingSwatch
 import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
 
 /** Wires [TwoPlayersSetupViewModel] to the stateless [TwoPlayersSetupScreen]. */
@@ -56,10 +60,12 @@ fun TwoPlayersSetupRoute(
 
 /**
  * Ports `JouerDeuxJoueurActivity` (`activity_jouer_deux_joueur.xml`), on a
- * white page titled "2 players" (the activity's manifest label, see
- * [SetupPage]). For each player: "Joueur N name ?" and a name field, then
- * the 8 color blobs; the label, the typed name and the hint (the last name
- * used) all take the player's current color. Then the Play button.
+ * black page titled "2 players" (the activity's manifest label, see
+ * [SetupPage]). For each player: the player's ring on a board tile (its
+ * current color), "Player N name?" and a name field, then the 8 color
+ * blobs on a light strip (where even the black one shows). Then the Play
+ * button. The 2015 screen showed the color through the label and name
+ * themselves, which some colors made unreadable on black.
  * - Portrait: label and field side by side, the blob row below, Play
  *   centered in the height left over.
  * - Landscape (`layout-land`): label with the field under it, the blob row
@@ -104,7 +110,6 @@ fun TwoPlayersSetupScreen(uiModel: TwoPlayersSetupUiModel, onAction: (TwoPlayers
                     ),
                 )
             },
-            textColor = LegacyColors.TextBlue,
             fontSize = dimens.title3,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -127,7 +132,7 @@ fun TwoPlayersSetupScreen(uiModel: TwoPlayersSetupUiModel, onAction: (TwoPlayers
                             PlayerLabel(player)
                             NameField(player, Modifier.fillMaxWidth())
                         }
-                        ColorBlobRow(
+                        ColorPalette(
                             onColorSelected = player.onColorSelected,
                             modifier = Modifier
                                 .weight(1f - LANDSCAPE_NAME_WEIGHT)
@@ -144,7 +149,9 @@ fun TwoPlayersSetupScreen(uiModel: TwoPlayersSetupUiModel, onAction: (TwoPlayers
                         PlayerLabel(player, Modifier.widthIn(max = pageWidth * PORTRAIT_LABEL_MAX_WIDTH))
                         NameField(player, Modifier.weight(1f))
                     }
-                    ColorBlobRow(onColorSelected = player.onColorSelected)
+                    Spacer(Modifier.height(dimens.tinyMargin))
+                    ColorPalette(onColorSelected = player.onColorSelected)
+                    Spacer(Modifier.height(dimens.smallMargin))
                 }
                 // Legacy FrameLayout filling the rest, Play centered in it.
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -167,28 +174,42 @@ private class PlayerSetup(
 
 @Composable
 private fun PlayerLabel(player: PlayerSetup, modifier: Modifier = Modifier) {
-    FitText(
-        text = player.label,
-        maxFontSize = LocalLegacyDimens.current.body,
-        color = player.color,
-        maxLines = 2,
-        modifier = modifier,
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        RingSwatch(player.color)
+        Spacer(Modifier.width(LocalLegacyDimens.current.tinyMargin))
+        FitText(
+            text = player.label,
+            maxFontSize = LocalLegacyDimens.current.body,
+            color = TetranoPalette.Text,
+            maxLines = 2,
+        )
+    }
+}
+
+/** The legacy blob row, on a light strip so that every color shows on the black page. */
+@Composable
+private fun ColorPalette(onColorSelected: (Color) -> Unit, modifier: Modifier = Modifier) {
+    ColorBlobRow(
+        onColorSelected = onColorSelected,
+        modifier = modifier
+            .background(LegacyColors.BoardBackground, RoundedCornerShape(FIELD_PADDING))
+            .padding(FIELD_UNDERLINE_INSET),
     )
 }
 
 /**
- * The legacy `EditText` (`textPersonName`): underlined single-line field
- * whose text, hint and underline are all in the player's color.
+ * The legacy `EditText` (`textPersonName`): underlined single-line field,
+ * white text, the hint (the last name used) in grey and a yellow underline.
  */
 @Composable
 private fun NameField(player: PlayerSetup, modifier: Modifier = Modifier) {
-    val textStyle = TextStyle(color = player.color, fontSize = LocalLegacyDimens.current.body)
+    val textStyle = TextStyle(color = TetranoPalette.Text, fontSize = LocalLegacyDimens.current.body)
     BasicTextField(
         value = player.name,
         onValueChange = player.onNameChanged,
         singleLine = true,
         textStyle = textStyle,
-        cursorBrush = SolidColor(player.color),
+        cursorBrush = SolidColor(TetranoPalette.Accent),
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Words,
             keyboardType = KeyboardType.Text,
@@ -201,7 +222,7 @@ private fun NameField(player: PlayerSetup, modifier: Modifier = Modifier) {
                     if (player.name.isEmpty()) {
                         Text(
                             text = player.hint,
-                            style = textStyle,
+                            style = textStyle.copy(color = TetranoPalette.TextSecondary),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -213,7 +234,7 @@ private fun NameField(player: PlayerSetup, modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .padding(horizontal = FIELD_UNDERLINE_INSET)
                         .height(1.dp)
-                        .background(player.color),
+                        .background(TetranoPalette.Accent),
                 )
             }
         },

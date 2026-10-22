@@ -15,24 +15,24 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.theme.LegacyColors
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
 
 /**
- * The white page shared by the two setup screens (`JouerDeuxJoueurActivity`,
+ * The black page shared by the two setup screens (`JouerDeuxJoueurActivity`,
  * `JouerContreOrdiActivity`): the legacy `activity_*_margin` padding around
  * [content], inside the safe-drawing insets (edge-to-edge, cutouts, IME).
  *
- * Those activities had no action bar of their own, but the status bar
- * icons are light, so the page gets a dark [LegacyTopBar] titled with the
- * activity's manifest label ([title]) to keep the top edge dark.
+ * Those activities had no action bar of their own; the page gets a
+ * [LegacyTopBar] titled with the activity's manifest label ([title]), like
+ * every other screen.
  */
 @Composable
 internal fun SetupPage(title: String, content: @Composable BoxWithConstraintsScope.() -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LegacyColors.Page),
+            .background(TetranoPalette.Page),
     ) {
         LegacyTopBar(title = title)
         BoxWithConstraints(

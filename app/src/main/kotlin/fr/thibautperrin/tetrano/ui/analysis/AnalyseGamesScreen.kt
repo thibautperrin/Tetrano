@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
+import fr.thibautperrin.tetrano.ui.theme.TetranoPalette
 
 /** Wires [AnalyseGamesViewModel] to the stateless [AnalyseGamesScreen]. */
 @Composable
@@ -124,7 +125,7 @@ private fun EmptyBoardCard(onClick: () -> Unit) {
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = AccentColor, contentColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AccentColor, contentColor = TetranoPalette.OnAccent),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(20.dp)) {
@@ -132,7 +133,7 @@ private fun EmptyBoardCard(onClick: () -> Unit) {
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(stringResource(R.string.analysis_empty_board), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(stringResource(R.string.analysis_empty_board_hint), fontSize = 13.sp, color = Color.White.copy(alpha = 0.8f))
+                Text(stringResource(R.string.analysis_empty_board_hint), fontSize = 13.sp, color = TetranoPalette.OnAccent.copy(alpha = 0.75f))
             }
         }
     }
@@ -142,8 +143,7 @@ private fun EmptyBoardCard(onClick: () -> Unit) {
 private fun GameCard(game: SavedGameItem, onClick: () -> Unit, onAction: (AnalyseGamesAction) -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = TetranoPalette.Panel),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)) {
@@ -232,7 +232,7 @@ private fun RenameDialog(draft: String, error: Boolean, onAction: (AnalyseGamesA
     )
 }
 
-private val PageColor = Color(0xFFF2F3F7)
-private val BodyColor = Color(0xFF2B2B2B)
-private val HintColor = Color(0xFF6B7280)
-private val AccentColor = Color(0xFF1F2A44)
+private val PageColor = TetranoPalette.Page
+private val BodyColor = TetranoPalette.Text
+private val HintColor = TetranoPalette.TextSecondary
+private val AccentColor = TetranoPalette.Accent
