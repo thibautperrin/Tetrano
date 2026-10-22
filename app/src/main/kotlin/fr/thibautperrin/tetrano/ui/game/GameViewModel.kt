@@ -15,7 +15,6 @@ import fr.thibautperrin.tetrano.domain.model.GameSessionEvent
 import fr.thibautperrin.tetrano.domain.model.GameSessionState
 import fr.thibautperrin.tetrano.domain.service.GameSessionService
 import fr.thibautperrin.tetrano.domain.service.SavedGameService
-import fr.thibautperrin.tetrano.domain.service.StarService
 import fr.thibautperrin.tetrano.ui.components.MovingRing
 import fr.thibautperrin.tetrano.ui.setup.PendingComputerGameSetup
 import fr.thibautperrin.tetrano.ui.setup.PendingTwoPlayersGameSetup
@@ -69,10 +68,6 @@ import java.util.Date
  * its 100 ms retries), and are applied at once while the computer is only
  * searching (the search is cancelled, see [GameSessionService]).
  *
- * Stars are recorded only when leaving a finished game — Play again or Back
- * (`GestionJeu.cliqueRecommencer`/`sortir` → `logGame`), once per game
- * ([KEY_GAME_RECORDED], which survives process death).
- *
  * In [GameMode.VS_COMPUTER] the user's name and both colors follow
  * [TetranoPreferencesDataSource] live, so coming back from Settings applies
  * them (`actualiserReglages`).
@@ -104,7 +99,6 @@ class GameViewModel @AssistedInject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val gameSessionFactory: GameSessionService.Factory,
     private val savedGameService: SavedGameService,
-    private val starService: StarService,
     private val preferences: TetranoPreferencesDataSource,
     private val pendingComputerGameSetup: PendingComputerGameSetup,
     private val pendingTwoPlayersGameSetup: PendingTwoPlayersGameSetup,
@@ -159,7 +153,6 @@ class GameViewModel @AssistedInject constructor(
             GameAction.BlinkClicked -> ifReady { startBlink(session.blinkingRings()) }
             GameAction.ReviewClicked -> ifReady { requestReview() }
             GameAction.ReviewHandled -> _uiState.update { it.copy(reviewRequest = null) }
-            GameAction.StarDialogDismissed -> _uiState.update { it.copy(starDialogs = it.starDialogs.drop(1)) }
             GameAction.InternalErrorShown -> _uiState.update { it.copy(showInternalError = false) }
             GameAction.BackPressed -> back()
         }
@@ -303,14 +296,12 @@ class GameViewModel @AssistedInject constructor(
         }
     }
 
-    /** `cliqueRecommencer`: logs a finished game, then always changes who starts. */
+    /** `cliqueRecommencer`: always changes who starts. */
     private fun restart() {
         viewModelScope.launch {
             animationLock.withLock {
-                recordFinishedGame()
                 cancelBlink()
                 session.restart(changingBeginner = true)
-                savedStateHandle[KEY_GAME_RECORDED] = false
                 savedStateHandle.remove<String>(KEY_SAVED_NAME)
                 persistSessionState()
                 render(session.state.value)
@@ -318,25 +309,9 @@ class GameViewModel @AssistedInject constructor(
         }
     }
 
-    /** `GestionJeu.sortir()`: logs a finished game, then leaves (once its star dialogs are dismissed). */
+    /** `GestionJeu.sortir()`. */
     private fun back() {
-        viewModelScope.launch {
-            if (::session.isInitialized) recordFinishedGame()
-            _uiState.update { it.copy(exitRequested = true) }
-        }
-    }
-
-    /** `logGame()` → `GameLog.addGame`, at most once per finished game. */
-    private suspend fun recordFinishedGame() {
-        val state = session.state.value
-        if (!state.isFinished || savedStateHandle.get<Boolean>(KEY_GAME_RECORDED) == true) return
-        savedStateHandle[KEY_GAME_RECORDED] = true
-        val awards = starService.recordGameFinished(mode, won = state.winner == 1)
-        if (awards.isEmpty()) return
-        // Each dialog's title shows the star count just after its own award.
-        val total = starService.numberStars.first()
-        val dialogs = awards.mapIndexed { index, award -> StarDialog(award, total - (awards.size - 1 - index)) }
-        _uiState.update { it.copy(starDialogs = it.starDialogs + dialogs) }
+        _uiState.update { it.copy(exitRequested = true) }
     }
 
     /** `cliquerClignoter`: hidden, then shown, [BLINK_CYCLES] times. Restarts any blink in progress. */
@@ -533,7 +508,6 @@ class GameViewModel @AssistedInject constructor(
         const val KEY_STARTING_PLAYER = "game_starting_player"
         const val KEY_PLAYER1_COLOR = "game_player1_color"
         const val KEY_PLAYER2_COLOR = "game_player2_color"
-        const val KEY_GAME_RECORDED = "game_recorded"
         const val KEY_SAVED_NAME = "game_saved_name"
     }
 }

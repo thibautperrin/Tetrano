@@ -32,7 +32,6 @@
     <string name="Enter_A_Name">Introduzca el nombre del partido</string>
     <string name="Cancel">Cancelar</string>
     <string name="Settings_Saved">Ajustes guardados</string>
-    <string name="Explanation_Star">Usted puede usar una estrella en el modo de desafío para una pista cuando está bloqueado.</string>
     <string name="Sentence_End_Null">Juego terminó. Ningún ganador.</string>
     <string name="Sentence_End_Win">Te has ganado!</string>
     <string name="Sentence_End_Lost">Has perdido.</string>
@@ -42,10 +41,6 @@
     <string name="Sentence_Computer_Work">Ordenador está jugando.</string>
     <string name="You_Can_Start">, usted puede comenzar.</string>
     <string name="Computer">computadora</string>
-    <string name="Star_Won_Two_Players">Usted gana una estrella, ya que jugó %1$d partidos en el modo de 2 jugadores.</string>
-    <string name="Star_Won_Against_Computer">Usted gana una estrella, ya que han jugado %1$d partidos contra el ordenador.</string>
-    <string name="Star_Won_Win_Against_Computer">Usted gana una estrella, ya que han ganado %1$d partidos contra la computadora (con nivel superior a 30).</string>
-    <string name="Star_Won_All_Games">Usted gana una estrella, ya que han intentado todos los 3 modos de juego principales.</string>
     <string name="Mot_Clignoter">Parpadear</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-es/strings.xml (P8 challenge/saved-games screens). -->
@@ -63,12 +58,10 @@
     <string name="Number_Of_Rings_Allowed">Número autorizado de los anillos:</string>
     <string name="Rings_used">Anillos usados:</string>
     <string name="Explanations_Challenge1">Bienvenido en el modo Desafío, \n\nen este modo, se parte de un juego ya empezado, y se puede utilizar sólo un número limitado de anillos para ganar. Si no ganas el juego con este número limitado, se pierde. Si usted gana el juego utilizando el buen número de anillos, usted gana y usted puede ir al siguiente nivel.</string>
-    <string name="Explanations_Challenge2">Si el nivel parece demasiado difícil, puede pasar. Para ello, tiene que utilizar una de sus estrellas.</string>
+    <string name="Hint">Pista</string>
+    <string name="Explanations_Challenge2">Si un nivel te parece demasiado difícil, abre el menú y elige Pista: el ordenador juega por ti una jugada que lleva a la victoria. Las pistas son gratuitas e ilimitadas.</string>
     <string name="Next">Siguiente</string>
     <string name="Explanations">Explicaciones</string>
-    <string name="Use_Star">Utilice una estrella para conseguir una pista</string>
-    <string name="No_More_Stars">Usted no tiene estrellas más.\n\nPara ganar nuevas estrellas, juegue partidas a 2 jugadores, contra el ordenador, y en modo desafío.</string>
-    <string name="Sentence_Confirm_Use_Star">¿Realmente desea utilizar una de sus estrellas para conseguir una pista?</string>
     <string name="All_Levels_Passed">Se las arregló todos los niveles. Ha terminado el modo desafío!</string>
     <string name="Sentence_No_Saved_Game">Usted no tiene ningún juego guardados.</string>
     <string name="Delete">Remover</string>

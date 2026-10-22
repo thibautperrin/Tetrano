@@ -54,7 +54,6 @@ import fr.thibautperrin.tetrano.ui.components.BoardOrientation
 import fr.thibautperrin.tetrano.ui.components.FitText
 import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.components.StarBadge
 import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
@@ -130,7 +129,7 @@ fun ChallengeScreen(
     ChallengeDialogs(uiModel, onAction)
 }
 
-/** `menu_challenge.xml`: Settings, Explanations, Use a star. */
+/** `menu_challenge.xml`: Settings, Explanations, Hint (the legacy "Use a star"). */
 @Composable
 private fun ChallengeMenu(onAction: (ChallengeAction) -> Unit, onNavigateToSettings: () -> Unit) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -153,10 +152,10 @@ private fun ChallengeMenu(onAction: (ChallengeAction) -> Unit, onNavigateToSetti
             },
         )
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.Use_Star)) },
+            text = { Text(stringResource(R.string.Hint)) },
             onClick = {
                 menuExpanded = false
-                onAction(ChallengeAction.UseStarMenuClicked)
+                onAction(ChallengeAction.HintMenuClicked)
             },
         )
     }
@@ -331,30 +330,6 @@ private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeActi
         )
     }
 
-    if (uiModel.showNoStarsMessage) {
-        // app.displayMessageStars(this, No_More_Stars).
-        StarMessageDialog(
-            numberStars = uiModel.numberStars,
-            message = stringResource(R.string.No_More_Stars),
-            onDismiss = { onAction(ChallengeAction.NoStarsAcknowledged) },
-        )
-    }
-
-    if (uiModel.showConfirmUseStar) {
-        // askConfirmUseStar().
-        AlertDialog(
-            onDismissRequest = { onAction(ChallengeAction.UseStarDismissed) },
-            title = { StarBadge(uiModel.numberStars) },
-            text = { DialogText(stringResource(R.string.Sentence_Confirm_Use_Star)) },
-            confirmButton = {
-                TextButton(onClick = { onAction(ChallengeAction.UseStarConfirmed) }) { Text(stringResource(R.string.OK)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { onAction(ChallengeAction.UseStarDismissed) }) { Text(stringResource(R.string.Cancel)) }
-            },
-        )
-    }
-
     uiModel.endDialog?.let { dialog ->
         val (title, message, positiveLabel) = endDialogTexts(dialog)
         AlertDialog(
@@ -369,32 +344,6 @@ private fun ChallengeDialogs(uiModel: ChallengeUiModel, onAction: (ChallengeActi
             },
         )
     }
-
-    if (uiModel.showAllModesTriedAward) {
-        // Composed after the end dialog: shown on top of it.
-        StarMessageDialog(
-            numberStars = uiModel.numberStars,
-            message = stringResource(R.string.Star_Won_All_Games),
-            onDismiss = { onAction(ChallengeAction.AllModesTriedAwardAcknowledged) },
-        )
-    }
-}
-
-/**
- * Ports `ApplicationTetrano.displayMessageStars`: the star count as title,
- * [message] + "\n\n" + `Explanation_Star` as text, cancelable (plus an OK
- * button the legacy dialog didn't have).
- */
-@Composable
-private fun StarMessageDialog(numberStars: Int, message: String, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { StarBadge(numberStars) },
-        text = { DialogText(message + "\n\n" + stringResource(R.string.Explanation_Star)) },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.OK)) }
-        },
-    )
 }
 
 // displayDialogEnd(level, situation), ported.

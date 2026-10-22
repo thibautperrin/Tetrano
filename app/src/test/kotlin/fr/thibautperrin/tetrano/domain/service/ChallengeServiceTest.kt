@@ -1,27 +1,21 @@
 package fr.thibautperrin.tetrano.domain.service
 
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import fr.thibautperrin.tetrano.data.assets.ChallengeLevels
 import fr.thibautperrin.tetrano.data.db.ChallengeProgressDao
 import fr.thibautperrin.tetrano.data.db.ChallengeProgressEntity
-import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 import fr.thibautperrin.tetrano.domain.model.ChallengeHintResult
 import fr.thibautperrin.tetrano.domain.model.ChallengeMoveResult
 import fr.thibautperrin.tetrano.engine.BoardState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import java.io.File
 
 /**
  * Exercises [ChallengeService]'s orchestration (ports `Challenge`/
@@ -32,24 +26,12 @@ import java.io.File
  */
 class ChallengeServiceTest {
 
-    @get:Rule
-    val tempFolder = TemporaryFolder()
-
-    private fun newPreferences(): TetranoPreferencesDataSource {
-        val dataStore = PreferenceDataStoreFactory.create(
-            produceFile = { File(tempFolder.newFolder(), "settings.preferences_pb") },
-        )
-        return TetranoPreferencesDataSource(dataStore)
-    }
-
-    private fun newStarService(): StarService = StarService(newPreferences())
-
     /** The AI runs inline: these tests check the orchestration, not the threading. */
-    private fun newService(levels: ChallengeLevels, dao: ChallengeProgressDao, stars: StarService = newStarService()) =
-        ChallengeService(levels, dao, stars, Dispatchers.Unconfined)
+    private fun newService(levels: ChallengeLevels, dao: ChallengeProgressDao) =
+        ChallengeService(levels, dao, Dispatchers.Unconfined)
 
     private fun progress(level: Int = 1, symmetry: Int = 0) =
-        ChallengeProgressEntity(level = level, symmetry = symmetry, normallyPlayed = null, playedByStars = null, nextTimeAdvert = false)
+        ChallengeProgressEntity(level = level, symmetry = symmetry, normallyPlayed = null, playedByHints = null, nextTimeAdvert = false)
 
     private class FakeChallengeLevels(
         signatures: Map<Int, ByteArray>,
@@ -153,16 +135,13 @@ class ChallengeServiceTest {
     fun finishedAttemptRefusesMovesHintsAndGivingUp() = runTest {
         val levels = FakeChallengeLevels(mapOf(1 to userThreeInARow, 2 to signatureFrom()), mapOf(1 to 0, 2 to 0), levelCount = 5)
         val dao = FakeChallengeProgressDao(progress())
-        val preferences = newPreferences()
-        val service = newService(levels, dao, StarService(preferences))
+        val service = newService(levels, dao)
         assertTrue(service.startCurrentLevel())
         service.playUserRing(3)
-        val starsBefore = preferences.numberStars.first()
 
         assertEquals(ChallengeMoveResult.InvalidMove, service.playUserRing(40))
         assertNull(service.abandon())
-        assertEquals(ChallengeHintResult.LevelOver, service.useStarHint())
-        assertEquals(starsBefore, preferences.numberStars.first()) // no star spent
+        assertEquals(ChallengeHintResult.LevelOver, service.useHint())
         assertEquals(2, dao.get()?.level)
 
         // Reloading starts the next attempt.
@@ -189,38 +168,17 @@ class ChallengeServiceTest {
     }
 
     @Test
-    fun firstAttemptAfterTheOtherModesEarnsTheAllModesStar() = runTest {
-        val preferences = newPreferences()
-        preferences.setGamesPlayedTwoPlayers(1)
-        preferences.setGamesPlayedAgainstComputer(1)
-        val starsBefore = preferences.numberStars.first()
-        val levels = FakeChallengeLevels(mapOf(1 to userThreeInARow, 2 to userThreeInARow), mapOf(1 to 0, 2 to 0), levelCount = 5)
-        val dao = FakeChallengeProgressDao(progress())
-        val service = newService(levels, dao, StarService(preferences))
-        assertTrue(service.startCurrentLevel())
-
-        assertEquals(ChallengeMoveResult.LevelPassed(1, allModesTriedAward = true), service.playUserRing(3))
-        assertEquals(starsBefore + 1, preferences.numberStars.first())
-
-        // Only ever once. (Level 2 was persisted under a random symmetry: pin it back to identity.)
-        assertEquals(2, dao.get()?.level)
-        dao.upsert(progress(level = 2))
-        assertTrue(service.startCurrentLevel())
-        assertEquals(ChallengeMoveResult.LevelPassed(2, allModesTriedAward = false), service.playUserRing(3))
-    }
-
-    @Test
-    fun starHintWinsImmediatelyWhenAThreeInARowAlreadyExists() = runTest {
+    fun hintWinsImmediatelyWhenAThreeInARowAlreadyExists() = runTest {
         // Player 1 already owns 3 of the 4 rings of line {0,1,2,3} before
         // the attempt even starts (a position the built-in level data
-        // could plausibly encode) — the very first star hint should just
+        // could plausibly encode) — the very first hint should just
         // complete it.
         val levels = FakeChallengeLevels(mapOf(1 to userThreeInARow), mapOf(1 to 0), levelCount = 5)
         val dao = FakeChallengeProgressDao(progress())
         val service = newService(levels, dao)
         assertTrue(service.startCurrentLevel())
 
-        val hint = service.useStarHint()
+        val hint = service.useHint()
         assertTrue(hint is ChallengeHintResult.LevelWon)
         assertEquals(3, (hint as ChallengeHintResult.LevelWon).ringForUser)
         assertEquals(1, hint.level) // the completed level, not the next one
@@ -229,7 +187,7 @@ class ChallengeServiceTest {
     }
 
     @Test
-    fun starHintUndoesTheAttemptsNormalMovesFirst() = runTest {
+    fun hintUndoesTheAttemptsNormalMovesFirst() = runTest {
         val levels = FakeChallengeLevels(mapOf(1 to userThreeInARow), mapOf(1 to 1), levelCount = 5) // authorizedRings = 3
         val dao = FakeChallengeProgressDao(progress())
         val service = newService(levels, dao)
@@ -239,7 +197,7 @@ class ChallengeServiceTest {
         // A move that doesn't win (the computer then blocks ring 3).
         assertTrue(service.playUserRing(40) is ChallengeMoveResult.ComputerReplied)
 
-        val hint = service.useStarHint()
+        val hint = service.useHint()
         // Undone back to the level's position, where ring 3 wins again.
         assertTrue(hint is ChallengeHintResult.LevelWon)
         assertEquals(3, (hint as ChallengeHintResult.LevelWon).ringForUser)
@@ -250,15 +208,17 @@ class ChallengeServiceTest {
     }
 
     @Test
-    fun noStarsAvailableAfterSpendingAllThree() = runTest {
+    fun hintsAreFreeAndUnlimited() = runTest {
+        // The legacy app gave 3 stars to start with, one per hint: a fourth
+        // hint in a row must work just as well.
         val levels = FakeChallengeLevels(mapOf(1 to userThreeInARow), mapOf(1 to 0), levelCount = 5)
         val dao = FakeChallengeProgressDao(progress())
-        val stars = newStarService()
-        repeat(3) { stars.useStar() }
-        val service = newService(levels, dao, stars)
-        assertTrue(service.startCurrentLevel())
-
-        assertEquals(ChallengeHintResult.NoStarsAvailable, service.useStarHint())
+        val service = newService(levels, dao)
+        repeat(4) {
+            dao.upsert(progress())
+            assertTrue(service.startCurrentLevel())
+            assertTrue(service.useHint() is ChallengeHintResult.LevelWon)
+        }
     }
 
     @Test

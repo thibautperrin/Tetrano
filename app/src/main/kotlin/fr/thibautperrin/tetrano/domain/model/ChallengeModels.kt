@@ -38,9 +38,6 @@ data class ChallengeState(
 /**
  * Outcome of [fr.thibautperrin.tetrano.domain.service.ChallengeService.playUserRing]
  * (and, for [LevelFailed], of `abandon`). Ports `ChallengeActivity.postRingPlayedByUser`.
- *
- * `allModesTriedAward` is true when finishing this attempt also earned the
- * "every main mode tried" star ([StarAward.AllModesTried]).
  */
 sealed interface ChallengeMoveResult {
     /** The ring is occupied, out of range, or the attempt is already over (legacy `userTriedPlaying` false). */
@@ -49,7 +46,7 @@ sealed interface ChallengeMoveResult {
     data class ComputerReplied(val computerRing: Int) : ChallengeMoveResult
 
     /** The user's own ring completed a line. Legacy `SITUATION_USER_WINS`. */
-    data class LevelPassed(val level: Int, val allModesTriedAward: Boolean = false) : ChallengeMoveResult
+    data class LevelPassed(val level: Int) : ChallengeMoveResult
 
     /**
      * The attempt is lost. [computerRing] is the computer's reply that ended
@@ -57,20 +54,14 @@ sealed interface ChallengeMoveResult {
      * exhausted the budget (`SITUATION_RINGS_NUMBER_PASSED`) or the user gave
      * up (`SITUATION_ABANDONED`).
      */
-    data class LevelFailed(
-        val level: Int,
-        val computerRing: Int? = null,
-        val allModesTriedAward: Boolean = false,
-    ) : ChallengeMoveResult {
+    data class LevelFailed(val level: Int, val computerRing: Int? = null) : ChallengeMoveResult {
         val computerWon: Boolean get() = computerRing != null
     }
 }
 
-/** Outcome of [fr.thibautperrin.tetrano.domain.service.ChallengeService.useStarHint]. Ports `ChallengeActivity.useAStar`/`StarUsedBean`. */
+/** Outcome of [fr.thibautperrin.tetrano.domain.service.ChallengeService.useHint]. Ports `ChallengeActivity.useAStar`/`StarUsedBean`. */
 sealed interface ChallengeHintResult {
-    data object NoStarsAvailable : ChallengeHintResult
-
-    /** The attempt is already over: no star was spent. */
+    /** The attempt is already over: no hint is given. */
     data object LevelOver : ChallengeHintResult
 
     /**
@@ -79,11 +70,7 @@ sealed interface ChallengeHintResult {
      * `isFinishedJustAfterStar`. [level] is the completed level (the legacy
      * dialog showed the next one).
      */
-    data class LevelWon(
-        val ringForUser: Int,
-        val level: Int,
-        val allModesTriedAward: Boolean = false,
-    ) : ChallengeHintResult
+    data class LevelWon(val ringForUser: Int, val level: Int) : ChallengeHintResult
 
     /**
      * The hint plays a forced pair: [ringForUser] then [ringForComputer].

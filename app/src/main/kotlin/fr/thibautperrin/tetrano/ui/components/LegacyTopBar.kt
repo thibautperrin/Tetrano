@@ -17,7 +17,7 @@ import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 /**
  * The legacy `Theme.AppCompat.Light.DarkActionBar` action bar: dark bar,
  * white title and overflow icon. [title] is a slot so screens can put a
- * [StarBadge] or a dynamic title there. Insets cover the display cutout
+ * dynamic title there. Insets cover the display cutout
  * too (landscape), not just the status bar.
  */
 @OptIn(ExperimentalMaterial3Api::class)

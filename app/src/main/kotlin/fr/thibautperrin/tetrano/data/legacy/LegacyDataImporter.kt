@@ -10,7 +10,8 @@ import javax.inject.Singleton
 /**
  * One-time import of everything the legacy 2015 app kept outside its
  * SQLite database (which Room migrates on its own via `MIGRATION_1_2`):
- * `challengeVars.bin` and the two `SharedPreferences` files. See
+ * `challengeVars.bin` and the settings `SharedPreferences` file (the game
+ * counters of the other one only ever fed the stars, which are gone). See
  * docs/PLAN.md P5.
  *
  * Idempotent and safe to call on every app start: it does nothing once
@@ -30,7 +31,6 @@ class LegacyDataImporter @Inject constructor(
         if (preferences.legacyImportDone.first()) return
 
         runCatching { importSettings() }
-        runCatching { importStats() }
         runCatching { importChallengeProgress() }
 
         // Only the files this importer itself is responsible for. The
@@ -55,27 +55,17 @@ class LegacyDataImporter @Inject constructor(
         settings.aiLevel?.let { preferences.setAiLevel(it) }
     }
 
-    private suspend fun importStats() {
-        val stats = preferencesReader.readStats()
-        if (stats.isEmpty) return
-        stats.gamesTwoPlayers?.let { preferences.setGamesPlayedTwoPlayers(it) }
-        stats.gamesAgainstComputer?.let { preferences.setGamesPlayedAgainstComputer(it) }
-        stats.gamesWonAgainstComputer?.let { preferences.setGamesWonAgainstComputer(it) }
-        stats.gamesOnline?.let { preferences.setGamesPlayedOnline(it) }
-        stats.gamesBluetooth?.let { preferences.setGamesPlayedBluetooth(it) }
-    }
-
     private suspend fun importChallengeProgress() {
         val vars = challengeVarsReader.read() ?: return
         if (!vars.isPlausible()) return
 
-        preferences.setNumberStars(vars.numberStars)
+        // The star count is dropped: hints are free now.
         challengeProgressDao.upsert(
             ChallengeProgressEntity(
                 level = vars.level,
                 symmetry = vars.symmetry,
                 normallyPlayed = vars.normallyPlayed,
-                playedByStars = vars.playedByStars,
+                playedByHints = vars.playedByStars,
                 nextTimeAdvert = vars.nextTimeAdvert,
             ),
         )

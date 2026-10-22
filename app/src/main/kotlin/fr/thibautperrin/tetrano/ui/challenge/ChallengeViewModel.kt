@@ -9,7 +9,6 @@ import fr.thibautperrin.tetrano.domain.model.ChallengeHintResult
 import fr.thibautperrin.tetrano.domain.model.ChallengeMoveResult
 import fr.thibautperrin.tetrano.domain.model.ChallengeState
 import fr.thibautperrin.tetrano.domain.service.ChallengeService
-import fr.thibautperrin.tetrano.domain.service.StarService
 import fr.thibautperrin.tetrano.ui.components.BoardVisualState
 import fr.thibautperrin.tetrano.ui.components.MovingRing
 import kotlinx.coroutines.CoroutineScope
@@ -49,9 +48,10 @@ import javax.inject.Inject
  * - the computer's reply wins: same flight, the tray goes grey at 1200 ms,
  *   the line blinks from 1200 ms, the end dialog shows at
  *   [COMPUTER_WIN_DIALOG_MS];
- * - star hint (`useAStar`): the user's ring flies over 0–1000 ms, the
- *   computer's over 1000–2000 ms ([HINT_FLIGHT_MS]/[HINT_FLIGHT_FRAMES]),
- *   then only the computer's ring blinks and the user may play; a hint that
+ * - hint (`useAStar`, free since the stars are gone): the user's ring
+ *   flies over 0–1000 ms, the computer's over 1000–2000 ms
+ *   ([HINT_FLIGHT_MS]/[HINT_FLIGHT_FRAMES]), then only the computer's ring
+ *   blinks and the user may play; a hint that
  *   wins at once flies the user's ring over 1200 ms, blinks the line from
  *   there and shows the end dialog at [HINT_WIN_DIALOG_MS].
  *
@@ -62,7 +62,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ChallengeViewModel @Inject constructor(
     private val challengeService: ChallengeService,
-    private val starService: StarService,
     preferences: TetranoPreferencesDataSource,
 ) : ViewModel() {
 
@@ -93,9 +92,6 @@ class ChallengeViewModel @Inject constructor(
             colors.collect(::applyColors)
         }
         viewModelScope.launch {
-            starService.numberStars.collect { stars -> _uiState.update { it.copy(numberStars = stars) } }
-        }
-        viewModelScope.launch {
             applyColors(colors.first()) // never draw the first position in the default colors
             loadCurrentLevel(showExplanationsIfFirstLevel = true)
         }
@@ -110,13 +106,9 @@ class ChallengeViewModel @Inject constructor(
             ChallengeAction.ExplanationsMenuClicked -> _uiState.update { it.copy(showExplanationsPage = 1) }
             ChallengeAction.ExplanationsNextClicked -> _uiState.update { it.copy(showExplanationsPage = 2) }
             ChallengeAction.ExplanationsDismissed -> _uiState.update { it.copy(showExplanationsPage = null) }
-            ChallengeAction.UseStarMenuClicked -> onUseStarMenuClicked()
-            ChallengeAction.NoStarsAcknowledged -> _uiState.update { it.copy(showNoStarsMessage = false) }
-            ChallengeAction.UseStarConfirmed -> useStarHint()
-            ChallengeAction.UseStarDismissed -> _uiState.update { it.copy(showConfirmUseStar = false) }
+            ChallengeAction.HintMenuClicked -> useHint()
             ChallengeAction.EndDialogContinueClicked -> continueAfterEndDialog()
             ChallengeAction.EndDialogQuitClicked -> _exit.trySend(ChallengeExit.Quit)
-            ChallengeAction.AllModesTriedAwardAcknowledged -> _uiState.update { it.copy(showAllModesTriedAward = false) }
         }
     }
 
@@ -171,7 +163,6 @@ class ChallengeViewModel @Inject constructor(
                 is ChallengeMoveResult.LevelPassed -> endAttempt(
                     reply = reply,
                     dialog = ChallengeEndDialog(ChallengeEndSituation.USER_WON, result.level),
-                    allModesTriedAward = result.allModesTriedAward,
                 )
                 is ChallengeMoveResult.LevelFailed -> {
                     val computerRing = result.computerRing
@@ -179,13 +170,11 @@ class ChallengeViewModel @Inject constructor(
                         endAttempt(
                             reply = reply,
                             dialog = ChallengeEndDialog(ChallengeEndSituation.RAN_OUT_OF_RINGS, result.level),
-                            allModesTriedAward = result.allModesTriedAward,
                         )
                     } else {
                         endAttempt(
                             reply = reply,
                             dialog = ChallengeEndDialog(ChallengeEndSituation.COMPUTER_WON, result.level),
-                            allModesTriedAward = result.allModesTriedAward,
                             flight = Flight(computerRing, PLAYER_COMPUTER, COMPUTER_FLIGHT_MS, COMPUTER_FLIGHT_FRAMES),
                             dialogDelayMs = COMPUTER_WIN_DIALOG_MS,
                         )
@@ -215,7 +204,6 @@ class ChallengeViewModel @Inject constructor(
             endAttempt(
                 reply = reply,
                 dialog = ChallengeEndDialog(ChallengeEndSituation.ABANDONED, result.level),
-                allModesTriedAward = result.allModesTriedAward,
             )
         }
     }
@@ -229,7 +217,6 @@ class ChallengeViewModel @Inject constructor(
     private fun endAttempt(
         reply: ServiceReply<*>,
         dialog: ChallengeEndDialog,
-        allModesTriedAward: Boolean,
         flight: Flight? = null,
         dialogDelayMs: Long = 0L,
     ) {
@@ -239,9 +226,7 @@ class ChallengeViewModel @Inject constructor(
             updateBoard { it.copy(trayPlayer = NOBODY, dragEnabled = false) }
             if (reply.winningLine.isNotEmpty()) startBlink(reply.winningLine.map { it.toInt() })
             delay(dialogDelayMs - (flight?.durationMs ?: 0L))
-            _uiState.update {
-                it.copy(endDialog = dialog, showAllModesTriedAward = it.showAllModesTriedAward || allModesTriedAward)
-            }
+            _uiState.update { it.copy(endDialog = dialog) }
         }
     }
 
@@ -252,39 +237,21 @@ class ChallengeViewModel @Inject constructor(
         viewModelScope.launch { loadCurrentLevel(showExplanationsIfFirstLevel = false) }
     }
 
-    /** Ports the `menu_use_a_star` item: confirmation if a star is left, else the no-stars message. */
-    private fun onUseStarMenuClicked() {
-        if (isLevelOver) return
-        viewModelScope.launch {
-            val stars = starService.numberStars.first()
-            _uiState.update {
-                it.copy(numberStars = stars, showNoStarsMessage = stars <= 0, showConfirmUseStar = stars > 0)
-            }
-        }
-    }
-
-    /** Ports `useAStar`. */
-    private fun useStarHint() {
-        _uiState.update { it.copy(showConfirmUseStar = false) }
+    /** Ports the `menu_use_a_star` item and `useAStar`, minus the star: no confirmation, no limit. */
+    private fun useHint() {
         if (isLevelOver) return
         // autoriserDeplacement(0, 0): no drag (nor pending flight) until the hint has played out.
         cancelSequence()
         updateBoard { it.copy(dragEnabled = false) }
         viewModelScope.launch {
-            val reply = callService { challengeService.useStarHint() }
+            val reply = callService { challengeService.useHint() }
             when (val result = reply.result) {
-                ChallengeHintResult.NoStarsAvailable -> {
-                    // A computer ring cut mid-flight above has landed: the user's turn.
-                    updateBoard { it.copy(trayPlayer = PLAYER_USER, dragEnabled = true) }
-                    _uiState.update { it.copy(showNoStarsMessage = true) }
-                }
                 ChallengeHintResult.LevelOver -> Unit
                 is ChallengeHintResult.LevelWon -> {
                     cancelBlinks()
                     endAttempt(
                         reply = reply,
                         dialog = ChallengeEndDialog(ChallengeEndSituation.USER_WON, result.level),
-                        allModesTriedAward = result.allModesTriedAward,
                         flight = Flight(result.ringForUser, PLAYER_USER, COMPUTER_FLIGHT_MS, COMPUTER_FLIGHT_FRAMES),
                         dialogDelayMs = HINT_WIN_DIALOG_MS,
                     )

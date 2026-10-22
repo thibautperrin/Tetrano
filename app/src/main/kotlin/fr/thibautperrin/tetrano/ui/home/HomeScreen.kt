@@ -16,7 +16,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,27 +24,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.ui.components.LegacyButton
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.components.StarBadge
 import fr.thibautperrin.tetrano.ui.components.TetranoBackground
 import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.LocalLegacyDimens
 import kotlinx.coroutines.delay
 
-/** Wires [HomeViewModel] to the stateless [HomeScreen]. */
+/** Turns [HomeScreen]'s actions into navigation. */
 @Composable
 fun HomeRoute(
     onNavigateToPlayMenu: () -> Unit,
     onNavigateToRules: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel(),
 ) {
-    val uiModel by viewModel.uiState.collectAsState()
     HomeScreen(
-        uiModel = uiModel,
         onAction = { action ->
             when (action) {
                 HomeAction.PlayClicked -> onNavigateToPlayMenu()
@@ -58,7 +52,7 @@ fun HomeRoute(
 
 /**
  * Ports `MainActivity` (`activity_main.xml`): the dark action bar titled
- * "Tetrano" (plus the rewrite's star count), and four `button_texte_style`
+ * "Tetrano", and four `button_texte_style`
  * buttons stacked at the top of the `fond_inverse` collage — Play (which
  * flashes blue for 500 ms when tapped, as in the legacy listener), Rules,
  * Settings and About (a button-less, dismiss-outside dialog).
@@ -68,7 +62,7 @@ fun HomeRoute(
  * even that would make them too small does the page scroll.
  */
 @Composable
-fun HomeScreen(uiModel: HomeUiModel, onAction: (HomeAction) -> Unit) {
+fun HomeScreen(onAction: (HomeAction) -> Unit) {
     val dimens = LocalLegacyDimens.current
     var showAbout by remember { mutableStateOf(false) }
     var playFlashing by remember { mutableStateOf(false) }
@@ -80,16 +74,7 @@ fun HomeScreen(uiModel: HomeUiModel, onAction: (HomeAction) -> Unit) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        LegacyTopBar(
-            title = stringResource(R.string.app_name),
-            actions = {
-                StarBadge(
-                    count = uiModel.numberStars,
-                    color = LegacyColors.OnActionBar,
-                    modifier = Modifier.padding(end = 16.dp),
-                )
-            },
-        )
+        LegacyTopBar(title = stringResource(R.string.app_name))
         TetranoBackground(modifier = Modifier.weight(1f)) {
             BoxWithConstraints(
                 modifier = Modifier

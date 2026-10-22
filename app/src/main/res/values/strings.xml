@@ -33,7 +33,6 @@
     <string name="Enter_A_Name">Enter a name</string>
     <string name="Cancel">Cancel</string>
     <string name="Settings_Saved">Settings saved</string>
-    <string name="Explanation_Star">A star can be consumed to get a clue when you are blocked  in the challenge mode.</string>
     <string name="Sentence_End_Null">Game ended. No winner.</string>
     <string name="Sentence_End_Win">Game ended. You won !</string>
     <string name="Sentence_End_Lost">Game ended. You lost.</string>
@@ -43,10 +42,6 @@
     <string name="Sentence_Computer_Work">Computer is playing.</string>
     <string name="You_Can_Start">, you can start.</string>
     <string name="Computer">Computer</string>
-    <string name="Star_Won_Two_Players">You win a star because you played %1$d games in 2 player mode.</string>
-    <string name="Star_Won_Against_Computer">You win a star because you have played %1$d games against the computer.</string>
-    <string name="Star_Won_Win_Against_Computer">You win a star because you have won %1$d games against the computer (with level upper than 30).</string>
-    <string name="Star_Won_All_Games">You win a star because you have tried all the 3 main game modes.</string>
     <string name="Mot_Clignoter">Blink</string>
     <string name="OK" translatable="false">OK</string>
 
@@ -65,12 +60,10 @@
     <string name="Number_Of_Rings_Allowed">Allowed rings number:</string>
     <string name="Rings_used">Rings used:</string>
     <string name="Explanations_Challenge1">Welcome in the Challenge mode,\n\nin this mode, you start from an already begun game, and you can use only a limited number of rings to win. If you don’t win the game with this limited number, you lose. If you win the game using the good number of rings, you win and you can go to the next level.</string>
-    <string name="Explanations_Challenge2">If a level seems too difficult, you can by-pass it. To do that, you need to consume one of your stars.</string>
+    <string name="Hint">Hint</string>
+    <string name="Explanations_Challenge2">If a level seems too difficult, open the menu and choose Hint: the computer plays a move that leads towards the win for you. Hints are free and unlimited.</string>
     <string name="Next">Next</string>
     <string name="Explanations">Explanations</string>
-    <string name="Use_Star">Use a star to get a clue</string>
-    <string name="No_More_Stars">You do not have any stars.\n\nTo earn new stars, play 2-player, vs-computer and Challenge games.</string>
-    <string name="Sentence_Confirm_Use_Star">Do you really want using one of your stars to get a piece of advice?</string>
     <string name="All_Levels_Passed">You have passed all the levels. You have finished the challenge mode.</string>
     <string name="Sentence_No_Saved_Game">You haven’t saved a game yet.</string>
     <string name="Delete">Delete</string>

@@ -3,6 +3,7 @@ package fr.thibautperrin.tetrano
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import fr.thibautperrin.tetrano.data.legacy.LegacyDataImporter
+import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 import fr.thibautperrin.tetrano.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -12,13 +13,17 @@ import javax.inject.Inject
  * Application entry point. Kept intentionally thin: Hilt wires up the
  * dependency graph, and the only startup work is kicking off the one-time
  * legacy data import (see docs/PLAN.md P5) — [LegacyDataImporter] itself
- * is a no-op after the first successful run.
+ * is a no-op after the first successful run — and dropping the settings
+ * left over from the removed stars.
  */
 @HiltAndroidApp
 class TetranoApplication : Application() {
 
     @Inject
     lateinit var legacyDataImporter: LegacyDataImporter
+
+    @Inject
+    lateinit var preferences: TetranoPreferencesDataSource
 
     @Inject
     @ApplicationScope
@@ -28,6 +33,7 @@ class TetranoApplication : Application() {
         super.onCreate()
         applicationScope.launch {
             legacyDataImporter.importIfNeeded()
+            preferences.removeObsoleteKeys()
         }
     }
 }

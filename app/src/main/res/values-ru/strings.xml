@@ -34,7 +34,6 @@
     <string name="Enter_A_Name">Введите имя</string>
     <string name="Cancel">отменить</string>
     <string name="Settings_Saved">Параметры сохраняются</string>
-    <string name="Explanation_Star">Вы можете использовать звезду в режиме вызов для намека, когда вы заблокированы.</string>
     <string name="Sentence_End_Null">Игра закончилась. Нет победителем.</string>
     <string name="Sentence_End_Win">Вы выиграли!</string>
     <string name="Sentence_End_Lost">Вы потеряли.</string>
@@ -44,10 +43,6 @@
     <string name="Sentence_Computer_Work">Компьютер играет</string>
     <string name="You_Can_Start">, Вы можете начать.</string>
     <string name="Computer">компьютер</string>
-    <string name="Star_Won_Two_Players">Вы выигрываете звезду, потому что вы играли %1$d игр в режиме 2 игрока.</string>
-    <string name="Star_Won_Against_Computer">Вы выигрываете звезду, потому что вы играли %1$d игр против компьютера.</string>
-    <string name="Star_Won_Win_Against_Computer">Вы выигрываете звезду, потому что вы победили %1$d партий против компьютера (с уровнем верхней, чем 30).</string>
-    <string name="Star_Won_All_Games">Вы выигрываете звезду, потому что вы пытались все 3 основных режима игры.</string>
     <string name="Mot_Clignoter">мигать</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-ru/strings.xml (P8 challenge/saved-games screens). -->
@@ -65,12 +60,10 @@
     <string name="Number_Of_Rings_Allowed">Уполномоченный количество колец:</string>
     <string name="Rings_used">Кольца используются</string>
     <string name="Explanations_Challenge1">Добро пожаловать в режиме Challenge,\n\nВ этом режиме, вы начинаете с начавшейся игре, и вы можете использовать только ограниченное количество колец, чтобы выиграть. Если вы не выиграть игру с этого ограниченного числа, вы проиграете. Если вы выиграли игру, используя большое количество колец, вы выиграете и вы можете перейти к следующему уровню.</string>
-    <string name="Explanations_Challenge2">Если уровень кажется слишком трудным, вы можете передать его. Для этого вам нужно использовать одну из ваших звезд.</string>
+    <string name="Hint">Подсказка</string>
+    <string name="Explanations_Challenge2">Если уровень кажется слишком сложным, откройте меню и выберите «Подсказка»: компьютер сделает за вас ход, ведущий к победе. Подсказки бесплатны и не ограничены.</string>
     <string name="Next">Следующий</string>
     <string name="Explanations">Пояснения</string>
-    <string name="Use_Star">Используйте звезду, чтобы получить ключ</string>
-    <string name="No_More_Stars">У вас больше нет звёзд.\n\nЧтобы заработать новые звёзды, играйте в режиме на 2 игроков, против компьютера и в режиме вызов.</string>
-    <string name="Sentence_Confirm_Use_Star">Вы действительно хотите использовать один из ваших звезд, чтобы получить ключ?</string>
     <string name="All_Levels_Passed">Вам удалось все уровни. Вы закончили режим вызов!</string>
     <string name="Sentence_No_Saved_Game">Вы не имеют никаких сохраненных игр.</string>
     <string name="Delete">удалить</string>

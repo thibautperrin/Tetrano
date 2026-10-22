@@ -24,7 +24,6 @@
     <string name="Enter_A_Name">Inserire un nome di partito</string>
     <string name="Cancel">Cancellare</string>
     <string name="Settings_Saved">Impostazioni salvate</string>
-    <string name="Explanation_Star">È possibile utilizzare una stella nella modalità sfida per un suggerimento quando si è bloccato.</string>
     <string name="Sentence_End_Null">Gioco finito. Nessun vincitore.</string>
     <string name="Sentence_End_Win">Gioco finito. Hai vinto !</string>
     <string name="Sentence_End_Lost">Gioco finito. Hai perso.</string>
@@ -34,10 +33,6 @@
     <string name="Sentence_Computer_Work">Il computer gioca.</string>
     <string name="You_Can_Start">, Si può iniziare.</string>
     <string name="Computer">Computer</string>
-    <string name="Star_Won_Two_Players">Si vince una stella perché hai giocato %1$d partite in 2 modalità giocatore.</string>
-    <string name="Star_Won_Against_Computer">Si vince una stella perché hai giocato %1$d partite contro il computer.</string>
-    <string name="Star_Won_Win_Against_Computer">Si vince una stella perché hai vinto %1$d partite contro il computer (con livello superiore a 30).</string>
-    <string name="Star_Won_All_Games">Si vince una stella perché avete provato tutte le 3 modalità di gioco principali.</string>
     <string name="Mot_Clignoter">Lampeggiare</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-it/strings.xml (P8 challenge/saved-games screens). -->
@@ -55,12 +50,10 @@
     <string name="Number_Of_Rings_Allowed">Numero autorizzato di fornelli:</string>
     <string name="Rings_used">Anelli usati:</string>
     <string name="Explanations_Challenge1">Benvenuti nella modalità Sfida,\n\nin questa modalità, si parte da un gioco già iniziato, ed è possibile utilizzare solo un numero limitato di squilli per vincere. Se non si vince la partita con questo numero limitato, si perde. Se vinci il gioco utilizzando il buon numero di squilli, si vince e si può passare al livello successivo.</string>
-    <string name="Explanations_Challenge2">Se il livello sembra troppo difficile, si può passare. Per questo è necessario utilizzare una delle stelle.</string>
+    <string name="Hint">Suggerimento</string>
+    <string name="Explanations_Challenge2">Se un livello ti sembra troppo difficile, apri il menu e scegli Suggerimento: il computer gioca per te una mossa che porta alla vittoria. I suggerimenti sono gratuiti e illimitati.</string>
     <string name="Next">Successiva</string>
     <string name="Explanations">Spiegazioni</string>
-    <string name="Use_Star">Utilizzare una stella per ottenere un indizio</string>
-    <string name="No_More_Stars">Non avete più stelle.\n\nPer guadagnare nuove stelle, giocate partite a 2 giocatori, contro il computer e in modalità sfida.</string>
-    <string name="Sentence_Confirm_Use_Star">Vuoi davvero di utilizzare una delle stelle per ottenere un indizio?</string>
     <string name="All_Levels_Passed">Sei riuscito a tutti i livelli. È terminata la modalità di sfida!</string>
     <string name="Sentence_No_Saved_Game">Non avete nessun gioco salvati.</string>
     <string name="Delete">Rimuovere</string>

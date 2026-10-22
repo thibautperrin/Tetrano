@@ -577,24 +577,24 @@ class Ai(
     }
 
     /**
-     * The result of consuming a star for a hint in Challenge mode: the ring
-     * the user is shown to play, and the computer's immediate reply.
-     * Neither ring is played on [board] by this call — see [playStar].
+     * A Challenge-mode hint, as played by [playHint]: the ring the user is
+     * shown to play, and the computer's immediate reply.
      */
-    data class StarMove(val ringForUser: Int, val ringForComputer: Int)
+    data class HintMove(val ringForUser: Int, val ringForComputer: Int)
 
     /**
-     * Plays out a star-hint pair on [board] (mutating it): the ring that
+     * Plays out a hint pair on [board] (mutating it): the ring that
      * completes the user's advanced fork, then the computer's reply via
-     * [playChallenge]. Ports `playStar`.
+     * [playChallenge]. [numberHintRings] is how many hint pairs this attempt
+     * already played. Ports `playStar` (the legacy app charged a star per hint).
      */
-    fun playStar(levelFork: Int, numberStarRings: Int): StarMove {
-        val ringForUser = bigAdvancedFork(1, levelFork - numberStarRings)
+    fun playHint(levelFork: Int, numberHintRings: Int): HintMove {
+        val ringForUser = bigAdvancedFork(1, levelFork - numberHintRings)
         check(ringForUser != NOT_FOUND) { "A result should have been found for the fork." }
         board.play(ringForUser, 1)
-        val ringForComputer = playChallenge(levelFork, numberStarRings + 1)
+        val ringForComputer = playChallenge(levelFork, numberHintRings + 1)
         board.play(ringForComputer, 2)
-        return StarMove(ringForUser, ringForComputer)
+        return HintMove(ringForUser, ringForComputer)
     }
 
     // ---- Small local helpers over LineOps/BoardTables, kept next to their one caller's shape ----

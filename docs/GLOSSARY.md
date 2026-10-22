@@ -31,7 +31,7 @@ moteur Kotlin (`:engine`).
 | `TacheView` | `ColorBlob` | |
 | `BoutonsJouer` | `IconTextButton` | |
 | `MemoryVarsChallenge` | `ChallengeRepository` + `ChallengeState` | |
-| `StarUsedBean` | `StarHint` | |
-| `GameLog` | `StatsRepository` | |
+| `useAStar` / `StarUsedBean` | `useHint` / `ChallengeHintResult` | indice du Challenge, gratuit depuis la 5.0 (les étoiles ont disparu) |
+| `GameLog` | — | compteurs de parties qui ne servaient qu'aux étoiles : supprimé |
 | niveau IA (0..100) | `aiLevel` | |
 | niveau challenge (1..245) | `challengeLevel` | |

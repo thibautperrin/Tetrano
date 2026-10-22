@@ -31,7 +31,6 @@
     <string name="Enter_A_Name">Entrez un nom de partie</string>
     <string name="Cancel">Annuler</string>
     <string name="Settings_Saved">Réglages enregistrés</string>
-    <string name="Explanation_Star">Vous pouvez utiliser une étoile dans le mode challenge pour obtenir un indice lorsque vous êtes bloqué.</string>
     <string name="Sentence_End_Null">La partie est finie. Match nul.</string>
     <string name="Sentence_End_Win">Vous avez gagné!</string>
     <string name="Sentence_End_Lost"> Vous avez perdu.</string>
@@ -41,10 +40,6 @@
     <string name="Sentence_Computer_Work">C’est à l’ordinateur de jouer.</string>
     <string name="You_Can_Start">, vous pouvez commencer la partie.</string>
     <string name="Computer">Ordinateur</string>
-    <string name="Star_Won_Two_Players">Vous gagnez une étoile car vous avez fait %1$d parties en mode 2 joueurs.</string>
-    <string name="Star_Won_Against_Computer">Vous gagnez une étoile car vous avez fait %1$d parties contre l’ordinateur.</string>
-    <string name="Star_Won_Win_Against_Computer">Vous gagnez une étoile car vous avez gagné %1$d partie contre l’ordinateur (avec des niveaux supérieurs à 30).</string>
-    <string name="Star_Won_All_Games">Vous gagnez une étoile car vous avez testé chacun des trois modes de jeu.</string>
     <string name="Mot_Clignoter">Clignoter</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-fr/strings.xml (P8 challenge/saved-games screens). -->
@@ -62,12 +57,10 @@
     <string name="Number_Of_Rings_Allowed">Nombre d’anneaux autorisés:</string>
     <string name="Rings_used">Anneaux utilisés:</string>
     <string name="Explanations_Challenge1">Bienvenue dans le mode challenge,\n\ndans ce mode de jeu, vous partez d’une partie déjà commencée, et vous avez droit à un certain nombre d’anneaux pour gagner. Ainsi, si vous dépassez le nombre d’anneaux prévu, vous avez perdu. Si vous réussissez, vous passez au niveau suivant.</string>
-    <string name="Explanations_Challenge2">Si un niveau vous semble trop difficile, vous pouvez le passer. Pour cela, vous devez utiliser une de vos étoiles. </string>
+    <string name="Hint">Indice</string>
+    <string name="Explanations_Challenge2">Si un niveau vous semble trop difficile, ouvrez le menu et choisissez Indice : l’ordinateur joue pour vous un coup qui mène vers la victoire. Les indices sont gratuits et illimités.</string>
     <string name="Next">Suivant</string>
     <string name="Explanations">Explications</string>
-    <string name="Use_Star">Utiliser une étoile pour obtenir un indice</string>
-    <string name="No_More_Stars">Vous n’avez plus d’étoile.\n\nPour gagner de nouvelles étoiles, jouez des parties à 2, contre l’ordinateur, et en mode challenge.</string>
-    <string name="Sentence_Confirm_Use_Star">Voulez-vous vraiment utiliser une de vos étoiles pour obtenir un indice?</string>
     <string name="All_Levels_Passed">Vous avez réussi tous les niveaux. Vous avez fini le mode challenge!</string>
     <string name="Sentence_No_Saved_Game">Vous n’avez pas encore de parties sauvegardées.</string>
     <string name="Delete">Supprimer</string>

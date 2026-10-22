@@ -24,7 +24,6 @@
     <string name="Enter_A_Name">gib einen Namen ein</string>
     <string name="Cancel">abbrechen</string>
     <string name="Settings_Saved">Einstellungen gespeichert</string>
-    <string name="Explanation_Star">Sie können einen Stern in der Challenge-Modus für einen Hinweis verwenden, wenn Sie blockiert sind.</string>
     <string name="Sentence_End_Null">Spiel beendet. Kein Sieger.</string>
     <string name="Sentence_End_Win"> Sie haben gewonnen!</string>
     <string name="Sentence_End_Lost">Sie haben verloren.</string>
@@ -34,10 +33,6 @@
     <string name="Sentence_Computer_Work">Der Computer ist gerade am Spielen.</string>
     <string name="You_Can_Start">, du kannst anfangen.</string>
     <string name="Computer">Computer</string>
-    <string name="Star_Won_Two_Players">Sie gewinnen einen Stern, weil Sie %1$d Spiele in 2-Spieler-Modus gespielt.</string>
-    <string name="Star_Won_Against_Computer">Sie gewinnen einen Stern, weil Sie %1$d Spielen gegen den Computer gespielt haben.</string>
-    <string name="Star_Won_Win_Against_Computer">Sie gewinnen einen Stern, weil Sie %1$d Spielen gegen den Computer (mit Niveau oberen als 30) gewonnen zu haben.</string>
-    <string name="Star_Won_All_Games">Sie gewinnen einen Stern, weil Sie alle 3 Haupt Spielmodi versucht haben.</string>
     <string name="Mot_Clignoter">letzter Zug</string>
 
     <!-- Reused verbatim (value) from seed_assets/strings/values-de/strings.xml (P8 challenge/saved-games screens). -->
@@ -55,12 +50,10 @@
     <string name="Number_Of_Rings_Allowed">Autorisierte Anzahl der Ringe:</string>
     <string name="Rings_used">Verwendet Ringe:</string>
     <string name="Explanations_Challenge1">Willkommen in der Challenge-Modus,\n\nin diesem Modus starten Sie von einem Spiel bereits begonnen, und Sie können nur eine begrenzte Anzahl von Ringen zu verwenden, um zu gewinnen. Wenn Sie das Spiel mit dieser begrenzten Anzahl nicht gewinnen, verlieren Sie. Wenn Sie das Spiel mit dem guten Anzahl von Ringen gewinnen, gewinnen Sie und Sie können auf die nächste Ebene zu gehen.</string>
-    <string name="Explanations_Challenge2">Wenn der Pegel zu schwierig erscheint, können Sie es übergeben. Dafür benötigen Sie einen Ihrer Sterne verwenden.</string>
+    <string name="Hint">Tipp</string>
+    <string name="Explanations_Challenge2">Wenn dir ein Level zu schwer erscheint, öffne das Menü und wähle Tipp: Der Computer spielt für dich einen Zug, der zum Sieg führt. Tipps sind kostenlos und unbegrenzt.</string>
     <string name="Next">Weiter</string>
     <string name="Explanations">Erläuterungen</string>
-    <string name="Use_Star">Verwenden Sie einen Stern, um einen Anhaltspunkt zu bekommen</string>
-    <string name="No_More_Stars">Sie haben keine Sterne mehr.\n\nUm neue Sterne zu verdienen, spielen Sie im 2-Spieler-Modus, gegen den Computer und im Challenge-Modus.</string>
-    <string name="Sentence_Confirm_Use_Star">Wollen Sie wirklich zu einem Ihrer Sterne zu verwenden, um einen Anhaltspunkt zu bekommen?</string>
     <string name="All_Levels_Passed">Sie verwaltet alle Ebenen. Sie sind auf der Challenge-Modus abgeschlossen!</string>
     <string name="Sentence_No_Saved_Game">Sie haben keine gespeicherten Spiele.</string>
     <string name="Delete">löschen</string>

@@ -23,12 +23,10 @@ import javax.inject.Inject
  * Orchestrates a single game in progress: turn order, playing/undoing
  * moves, and — in [GameMode.VS_COMPUTER] — running the computer's reply.
  * Ports `GestionJeu`/`GestionJeu2Joueurs`/`GestionJeuContreOrdinateur` (see
- * docs/GLOSSARY.md, docs/PLAN.md P6). Bluetooth and online play are out of
- * scope (see docs/PLAN.md §10) — [Factory.create] rejects those modes.
+ * docs/GLOSSARY.md, docs/PLAN.md P6).
  *
  * Deliberately **not** this class's job: animations, recording
- * finished-game stats and awarding stars (`GestionJeu`'s `logGame`/`GameLog`
- * in the legacy app), and persisting a save via [SavedGameService] using
+ * and persisting a save via [SavedGameService] using
  * [playedRings]/[startingPlayer] — the caller (the game ViewModel) does
  * those. Keeping this class to game mechanics only avoids tangling it up
  * with the database and preferences layers.
@@ -108,7 +106,6 @@ class GameSessionService private constructor(
                 played >= 2 -> 2
                 else -> return emptyList()
             }
-            else -> error("unsupported mode $mode")
         }
         cancelAi()
         val undone = List(count) {
@@ -220,9 +217,6 @@ class GameSessionService private constructor(
             initialMoves: ByteArray = ByteArray(0),
             startingPlayer: Int = 1,
         ): GameSessionService {
-            require(mode == GameMode.TWO_PLAYERS || mode == GameMode.VS_COMPUTER) {
-                "GameSessionService does not support $mode"
-            }
             val game = Game()
             if (startingPlayer == 2) {
                 game.restart(changingBeginner = true)

@@ -7,8 +7,7 @@ import androidx.room.PrimaryKey
 /**
  * Challenge mode progress. Always a single row (`id = 0`) — ports the six
  * variables `MemoryVarsChallenge` used to keep in a flat binary file (see
- * docs/PLAN.md P4/P5). `numberStars` lives in the settings DataStore
- * instead, since it's also spent/earned outside Challenge mode.
+ * docs/PLAN.md P4/P5). The legacy `numberStars` is gone: hints are free.
  */
 @Entity(tableName = "challenge_progress")
 class ChallengeProgressEntity(
@@ -24,9 +23,13 @@ class ChallengeProgressEntity(
     /** Rings played normally so far on the current level attempt, or null. Ports `normallyPlayedChallenge`. */
     @ColumnInfo(name = "normally_played", typeAffinity = ColumnInfo.BLOB)
     val normallyPlayed: ByteArray?,
-    /** Rings played via star hints on the current level attempt, or null. Ports `playedByStarsChallenge`. */
+    /**
+     * Rings played via hints on the current level attempt, or null. Ports
+     * `playedByStarsChallenge` — hints used to cost a star, hence the column
+     * name, kept so the schema needs no migration.
+     */
     @ColumnInfo(name = "played_by_stars", typeAffinity = ColumnInfo.BLOB)
-    val playedByStars: ByteArray?,
+    val playedByHints: ByteArray?,
     /** Whether the next failure on this level should show an ad prompt. Ports `nextTimeAdvert`. */
     @ColumnInfo(name = "next_time_advert")
     val nextTimeAdvert: Boolean,
@@ -38,7 +41,7 @@ class ChallengeProgressEntity(
             level == other.level &&
             symmetry == other.symmetry &&
             normallyPlayed.contentEqualsOrBothNull(other.normallyPlayed) &&
-            playedByStars.contentEqualsOrBothNull(other.playedByStars) &&
+            playedByHints.contentEqualsOrBothNull(other.playedByHints) &&
             nextTimeAdvert == other.nextTimeAdvert
     }
 
@@ -47,14 +50,14 @@ class ChallengeProgressEntity(
         result = 31 * result + level
         result = 31 * result + symmetry
         result = 31 * result + (normallyPlayed?.contentHashCode() ?: 0)
-        result = 31 * result + (playedByStars?.contentHashCode() ?: 0)
+        result = 31 * result + (playedByHints?.contentHashCode() ?: 0)
         result = 31 * result + nextTimeAdvert.hashCode()
         return result
     }
 
     override fun toString(): String =
         "ChallengeProgressEntity(id=$id, level=$level, symmetry=$symmetry, " +
-            "normallyPlayed=${normallyPlayed?.toList()}, playedByStars=${playedByStars?.toList()}, " +
+            "normallyPlayed=${normallyPlayed?.toList()}, playedByHints=${playedByHints?.toList()}, " +
             "nextTimeAdvert=$nextTimeAdvert)"
 
     private fun ByteArray?.contentEqualsOrBothNull(other: ByteArray?): Boolean =

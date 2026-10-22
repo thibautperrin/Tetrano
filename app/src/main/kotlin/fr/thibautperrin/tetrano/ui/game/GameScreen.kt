@@ -15,19 +15,16 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,10 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.thibautperrin.tetrano.R
 import fr.thibautperrin.tetrano.domain.model.GameMode
-import fr.thibautperrin.tetrano.domain.model.StarAward
 import fr.thibautperrin.tetrano.ui.components.FitText
 import fr.thibautperrin.tetrano.ui.components.LegacyTopBar
-import fr.thibautperrin.tetrano.ui.components.StarBadge
 import fr.thibautperrin.tetrano.ui.theme.LegacyColors
 import fr.thibautperrin.tetrano.ui.theme.isLandscape
 
@@ -92,9 +87,8 @@ fun GameScreen(
 
     BackHandler { onAction(GameAction.BackPressed) }
 
-    val readyToExit = uiModel.exitRequested && uiModel.starDialogs.isEmpty()
-    LaunchedEffect(readyToExit) {
-        if (readyToExit) onExit()
+    LaunchedEffect(uiModel.exitRequested) {
+        if (uiModel.exitRequested) onExit()
     }
 
     uiModel.reviewRequest?.let { request ->
@@ -148,12 +142,6 @@ fun GameScreen(
         )
     }
 
-    uiModel.starDialogs.firstOrNull()?.let { dialog ->
-        // One dialog window per award, not one window whose text changes.
-        key(uiModel.starDialogs.size) {
-            StarAwardDialog(dialog, onDismiss = { onAction(GameAction.StarDialogDismissed) })
-        }
-    }
 }
 
 private val TitleFontSize = 20.sp
@@ -188,19 +176,6 @@ private fun GameMenu(
         item(R.string.Mot_Clignoter) { onAction(GameAction.BlinkClicked) }
         if (mode == GameMode.VS_COMPUTER) item(R.string.action_settings, onNavigateToSettings)
     }
-}
-
-/** `ApplicationTetrano.displayMessageStars`: the star count as title, the award then `Explanation_Star`. */
-@Composable
-private fun StarAwardDialog(dialog: StarDialog, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { StarBadge(count = dialog.starCount) },
-        text = { Text("${starAwardMessage(dialog.award)}\n\n${stringResource(R.string.Explanation_Star)}") },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.OK)) }
-        },
-    )
 }
 
 // GestionJeu2Joueurs.mettreLeBonTitre / GestionJeuContreOrdinateur.mettreLeBonTitre, ported.
@@ -239,14 +214,4 @@ private fun gameTitle(mode: GameMode, uiModel: GameUiModel): String {
             }
         }
     }
-}
-
-@Composable
-private fun starAwardMessage(award: StarAward): String = when (award) {
-    is StarAward.GamesPlayed -> when (award.mode) {
-        GameMode.VS_COMPUTER -> stringResource(R.string.Star_Won_Against_Computer, award.count)
-        else -> stringResource(R.string.Star_Won_Two_Players, award.count)
-    }
-    is StarAward.GamesWonAgainstComputer -> stringResource(R.string.Star_Won_Win_Against_Computer, award.count)
-    StarAward.AllModesTried -> stringResource(R.string.Star_Won_All_Games)
 }

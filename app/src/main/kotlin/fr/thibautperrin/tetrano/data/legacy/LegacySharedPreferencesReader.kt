@@ -26,22 +26,12 @@ data class LegacySettingsSnapshot(
             userName == null && aiLevel == null
 }
 
-data class LegacyStatsSnapshot(
-    val gamesTwoPlayers: Int?,
-    val gamesAgainstComputer: Int?,
-    val gamesWonAgainstComputer: Int?,
-    val gamesOnline: Int?,
-    val gamesBluetooth: Int?,
-) {
-    val isEmpty: Boolean
-        get() = gamesTwoPlayers == null && gamesAgainstComputer == null &&
-            gamesWonAgainstComputer == null && gamesOnline == null && gamesBluetooth == null
-}
-
 /**
- * Reads the two legacy `SharedPreferences` files by their exact legacy
- * names and keys (`StaticFields`, see docs/GLOSSARY.md) for the one-time
- * import in docs/PLAN.md P5. Nothing writes to these files again.
+ * Reads the legacy settings `SharedPreferences` file by its exact legacy
+ * name and keys (`StaticFields`, see docs/GLOSSARY.md) for the one-time
+ * import in docs/PLAN.md P5, and deletes it along with the game-counters
+ * file (`gameLog`, only ever used for the stars, which are gone). Nothing
+ * writes to these files again.
  */
 class LegacySharedPreferencesReader @Inject constructor(@param:ApplicationContext private val context: Context) {
 
@@ -59,17 +49,6 @@ class LegacySharedPreferencesReader @Inject constructor(@param:ApplicationContex
             player2Name = prefs.stringOrNull(KEY_PLAYER2_NAME),
             userName = prefs.stringOrNull(KEY_USER_NAME),
             aiLevel = prefs.intOrNull(KEY_LEVEL),
-        )
-    }
-
-    fun readStats(): LegacyStatsSnapshot {
-        val prefs = context.getSharedPreferences(STATS_FILE_NAME, Context.MODE_PRIVATE)
-        return LegacyStatsSnapshot(
-            gamesTwoPlayers = prefs.intOrNull(KEY_GAMES_2P),
-            gamesAgainstComputer = prefs.intOrNull(KEY_GAMES_COMPUTER),
-            gamesWonAgainstComputer = prefs.intOrNull(KEY_GAMES_WON_COMPUTER),
-            gamesOnline = prefs.intOrNull(KEY_GAMES_ONLINE),
-            gamesBluetooth = prefs.intOrNull(KEY_GAMES_BLUETOOTH),
         )
     }
 
@@ -99,10 +78,5 @@ class LegacySharedPreferencesReader @Inject constructor(@param:ApplicationContex
         const val KEY_PLAYER2_NAME = "player2Namme"
         const val KEY_USER_NAME = "userName"
         const val KEY_LEVEL = "level"
-        const val KEY_GAMES_2P = "nbGames2P"
-        const val KEY_GAMES_COMPUTER = "nbGamesComp"
-        const val KEY_GAMES_WON_COMPUTER = "nbWonGamesComp"
-        const val KEY_GAMES_ONLINE = "nbGamesOnline"
-        const val KEY_GAMES_BLUETOOTH = "nbGamesBlt"
     }
 }

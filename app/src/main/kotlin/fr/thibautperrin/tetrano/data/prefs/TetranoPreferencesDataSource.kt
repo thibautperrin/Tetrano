@@ -15,10 +15,9 @@ import javax.inject.Singleton
 
 /**
  * Raw key/value access over the settings DataStore (`settings.preferences_pb`,
- * see docs/PLAN.md P4). Ports the two legacy SharedPreferences files —
- * `preferences` (colors, names, AI level) and `gameLog` (per-mode game
- * counters) — plus the [legacyImportDone] flag gating the one-time import
- * from the 2015 app's data (see docs/PLAN.md P5).
+ * see docs/PLAN.md P4). Ports the legacy `preferences` SharedPreferences
+ * file (colors, names, AI level), plus the [legacyImportDone] flag gating
+ * the one-time import from the 2015 app's data (see docs/PLAN.md P5).
  *
  * This is a thin, typed data source: default values here are the same
  * ones the legacy code used, but as plain constants rather than string
@@ -60,23 +59,6 @@ class TetranoPreferencesDataSource @Inject constructor(
         )
     }
 
-    /** Challenge-mode hint currency. Ports `MemoryVarsChallenge.numberStars`. */
-    val numberStars: Flow<Int> = intFlow(Keys.NUMBER_STARS, DEFAULT_NUMBER_STARS)
-
-    val gamesPlayedTwoPlayers: Flow<Int> = intFlow(Keys.GAMES_2P, 0)
-    val gamesPlayedAgainstComputer: Flow<Int> = intFlow(Keys.GAMES_COMPUTER, 0)
-    val gamesWonAgainstComputer: Flow<Int> = intFlow(Keys.GAMES_WON_COMPUTER, 0)
-    val gamesPlayedOnline: Flow<Int> = intFlow(Keys.GAMES_ONLINE, 0)
-    val gamesPlayedBluetooth: Flow<Int> = intFlow(Keys.GAMES_BLUETOOTH, 0)
-
-    /**
-     * True once Challenge mode has been attempted at least once. Bluetooth
-     * is gone and online isn't implemented yet (see docs/PLAN.md §10), so
-     * [StarService]'s "tried every mode" star uses this instead of the two
-     * counters above — see docs/PLAN.md P6 for that adjustment.
-     */
-    val hasTriedChallenge: Flow<Boolean> = dataStore.data.map { it[Keys.HAS_TRIED_CHALLENGE] == true }
-
     /** True once the one-time import from the legacy 2015 data has completed. See docs/PLAN.md P5. */
     val legacyImportDone: Flow<Boolean> = dataStore.data.map { it[Keys.LEGACY_IMPORT_DONE] == true }
 
@@ -117,16 +99,14 @@ class TetranoPreferencesDataSource @Inject constructor(
             it[Keys.PUZZLE_SYMMETRY] = progress.currentSymmetry
         }
     }
-    suspend fun setNumberStars(count: Int) = setInt(Keys.NUMBER_STARS, count)
 
-    suspend fun setGamesPlayedTwoPlayers(count: Int) = setInt(Keys.GAMES_2P, count)
-    suspend fun setGamesPlayedAgainstComputer(count: Int) = setInt(Keys.GAMES_COMPUTER, count)
-    suspend fun setGamesWonAgainstComputer(count: Int) = setInt(Keys.GAMES_WON_COMPUTER, count)
-    suspend fun setGamesPlayedOnline(count: Int) = setInt(Keys.GAMES_ONLINE, count)
-    suspend fun setGamesPlayedBluetooth(count: Int) = setInt(Keys.GAMES_BLUETOOTH, count)
-
-    suspend fun setHasTriedChallenge(tried: Boolean) {
-        dataStore.edit { it[Keys.HAS_TRIED_CHALLENGE] = tried }
+    /**
+     * Drops the keys of the removed star mechanism (the star count, the
+     * per-mode game counters that earned them, "Challenge tried"), which
+     * 5.0 builds before their removal may have written.
+     */
+    suspend fun removeObsoleteKeys() {
+        dataStore.edit { prefs -> Keys.OBSOLETE.forEach { prefs.remove(it) } }
     }
 
     suspend fun setLegacyImportDone(done: Boolean) {
@@ -170,19 +150,20 @@ class TetranoPreferencesDataSource @Inject constructor(
         val PUZZLE_SEEN = stringSetPreferencesKey("puzzle_seen")
         val PUZZLE_CURRENT = intPreferencesKey("puzzle_current")
         val PUZZLE_SYMMETRY = intPreferencesKey("puzzle_symmetry")
-        val NUMBER_STARS = intPreferencesKey("number_stars")
-        val GAMES_2P = intPreferencesKey("games_two_players")
-        val GAMES_COMPUTER = intPreferencesKey("games_against_computer")
-        val GAMES_WON_COMPUTER = intPreferencesKey("games_won_against_computer")
-        val GAMES_ONLINE = intPreferencesKey("games_online")
-        val GAMES_BLUETOOTH = intPreferencesKey("games_bluetooth")
-        val HAS_TRIED_CHALLENGE = booleanPreferencesKey("has_tried_challenge")
         val LEGACY_IMPORT_DONE = booleanPreferencesKey("legacy_import_done")
+        val OBSOLETE: List<Preferences.Key<*>> = listOf(
+            intPreferencesKey("number_stars"),
+            intPreferencesKey("games_two_players"),
+            intPreferencesKey("games_against_computer"),
+            intPreferencesKey("games_won_against_computer"),
+            intPreferencesKey("games_online"),
+            intPreferencesKey("games_bluetooth"),
+            booleanPreferencesKey("has_tried_challenge"),
+        )
     }
 
     companion object {
         const val DEFAULT_AI_LEVEL: Int = 10
-        const val DEFAULT_NUMBER_STARS: Int = 3
         const val DEFAULT_NEURAL_SIMULATIONS: Int = 512
         const val DEFAULT_ANALYSIS_SIMULATIONS: Int = 5_000
     }
