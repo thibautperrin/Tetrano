@@ -10,9 +10,12 @@ plus de nœuds et un coup qui gagne lentement par une suite forcée avec moins d
 second.
 
 Ce travail tourne **en parallèle du plan de livraison** : outil hors appli (module Gradle `:wingraph`),
-priorité basse, nombre de threads réglable, pause / reprise sans perte ; il vit dans sa **propre
-branche** (`claude/tetrano-winning-strategy-graph-*`) et n'est pas intégré à la branche principale de
-l'appli. Mode d'emploi : `tools/wingraph/README.md`.
+priorité basse, nombre de threads réglable, pause / reprise sans perte. Mode d'emploi :
+`tools/wingraph/README.md`.
+
+**Intégré (2026-10-28)** : niveaux 102 (premier anneau sur une place forte, graphe de 2 519 nœuds)
+et 103 (premier anneau sur une place faible, graphe de 30 376 nœuds prouvé ensuite avec
+`start=1`), proposés seulement quand l'ordinateur commence ; repli sur le niveau 101 hors graphe.
 
 Décisions (2026-10-22) :
 

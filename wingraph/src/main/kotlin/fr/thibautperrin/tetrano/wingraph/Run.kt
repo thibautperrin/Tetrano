@@ -20,6 +20,9 @@ class RunConfig(val props: Properties) {
     /** df-pn evaluations per top-tree job. */
     val jobEvals: Long get() = long("job_evals", 500_000)
 
+    /** Proof-number cost per ring below the root for unexpanded nodes (see [TopTree.depthPn]); 0 = off. */
+    val depthPn: Long get() = long("depth_pn", 0)
+
     /** Largest df-pn search the extractor runs on one position (budgets grow ×4 up to it). */
     val maxChooseEvals: Long get() = long("max_choose_evals", 25_000_000)
 
@@ -110,6 +113,8 @@ class Run(val dir: File, overrides: Map<String, String>) {
         tree = if (treeFile.exists()) TopTree.load(treeFile) else TopTree(TNode(start.rootA, start.rootD, null, 0))
         require(tree!!.root.a == start.rootA && tree!!.root.d == start.rootD) { "tree.bin does not match start=$start" }
         wireTree(tree!!)
+        tree!!.depthPn = config.depthPn
+        tree!!.recomputeAll()
         // The first move: cell 0, a corner (all 16 corners and centres are equivalent).
         if (start.fromEmpty) book.putIfAbsent(0L, 0L, 0)
     }

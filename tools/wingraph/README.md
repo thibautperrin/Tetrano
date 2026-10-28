@@ -3,8 +3,18 @@
 Calcule, pour l'ordinateur qui **commence**, un coup gagnant dans chaque position où il peut se
 trouver, de sorte qu'il gagne quelle que soit la défense. Plan et choix : `docs/WINNING_GRAPH_PLAN.md`.
 Code : module Gradle `:wingraph` (outil PC, hors appli) ; les règles de jeu du joueur imbattable et
-le format du graphe sont dans `:engine` (`engine/.../wingraph/`), pour que l'appli les rejoue plus
-tard à l'identique. Rien n'est branché dans l'appli.
+le format du graphe sont dans `:engine` (`engine/.../wingraph/`), et l'appli les rejoue à
+l'identique : niveaux 102 et 103 (`AiService`), seulement quand l'ordinateur commence.
+
+## Les deux graphes
+
+| Fichier | Premier coup | Nœuds | Vérification | Dans l'appli |
+|---|---|---|---|---|
+| `graph/tetrano_win.bin` | une place forte (coin, case 0) | 2 519 | 1,76 M positions, ≤ 56 anneaux | `res/raw/tetrano_win_strong.bin`, niveau 102 |
+| `graph/tetrano_win_weak.bin` | une place faible (case 1) | 30 376 | 15,1 M positions, ≤ 58 anneaux | `res/raw/tetrano_win_weak.bin`, niveau 103 |
+
+Le second a été calculé avec `start=1` et `depth_pn=3` (voir « Divers »), ~56 h au total ; le
+guide des joueurs (`tools/guide`, chapitre 4) en tire ses chiffres.
 
 ## Une fois (et après chaque modification du code)
 
@@ -101,9 +111,22 @@ contre un adversaire aléatoire puis contre le réseau :
 runs\main\app\bin\wingraph.bat play graph=runs\main\graph-best.bin model=..\..\app\src\main\res\raw\tetrano_nn.bin games=3000
 ```
 
+(`first=weak` pour un graphe calculé après un premier coup faible : le joueur ouvre alors sur une
+des 48 places faibles.)
+
 ## Divers
 
 - `wingraph bench model=<réseau>` : vitesse du réseau et de df-pn sur cette machine.
+- `depth_pn=N` (réglage, défaut 0) : coût de N par anneau au-delà de la racine, ajouté aux nombres de
+  preuve des feuilles non développées. Sans lui, une branche dont chaque nœud ET n'a qu'une réponse
+  forcée garde le même `pn` à toutes les profondeurs et la recherche y creuse indéfiniment (la
+  réponse « coin adjacent » après un premier coup faible était descendue à 45 anneaux sans jamais
+  essayer d'alternative). Avec `depth_pn=3`, cette branche s'est prouvée en une minute.
+- `java -cp "wingraph/build/install/wingraph/lib/*" fr.thibautperrin.tetrano.wingraph.DiagMain <tree.bin> <réponse> [profondeur]` :
+  affiche une branche de l'arbre de pilotage (diagnostic d'une preuve qui piétine).
+- `wingraph export graph=<fichier> out=<fichier> [start=1] [rate=0.1]` : écrit les positions du
+  parcours vérifié (valeur exacte, coup du graphe aux nœuds) au format des données d'entraînement
+  du réseau (`tools/nn/data.py`) ; voir `tools/nn/README.md`, « Positions prouvées ».
 - `start=0,a,b,…` (premier lancement d'un autre dossier, `dir=`) : part d'une position plus avancée,
   pour les essais ; les tests (`gradlew :wingraph:test`) s'en servent pour faire tout le parcours
   preuve → assemblage → réduction → vérification en une seconde.

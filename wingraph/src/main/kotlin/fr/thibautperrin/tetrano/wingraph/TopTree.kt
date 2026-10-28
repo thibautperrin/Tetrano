@@ -66,6 +66,34 @@ class TopTree(val root: TNode) {
     var nodeCount: Int = 1
         private set
 
+    /**
+     * Proof-number cost of each ring below the root, added to the numbers of unexpanded nodes
+     * (leaves and pending moves). Without it a long forcing line costs no more than a short one
+     * (an AND node with a single forced reply adds nothing), and the search can dig one line
+     * dozens of plies deep while shallower alternatives wait. Heuristic only: proofs stay exact.
+     */
+    var depthPn: Long = 0
+
+    private val rootRings = java.lang.Long.bitCount(root.a or root.d)
+
+    private fun depthCost(rings: Int): Long = depthPn * max(0, rings - rootRings)
+
+    /** [node]'s proof number as the search sees it: unexpanded nodes pay for their depth. */
+    private fun effPn(node: TNode): Long =
+        if (node.state == TNode.LEAF || node.state == TNode.BUSY) {
+            min(INF, node.pn + depthCost(java.lang.Long.bitCount(node.a or node.d)))
+        } else node.pn
+
+    /** Recomputes every inner node bottom-up (after loading, or when [depthPn] changed). */
+    fun recomputeAll() {
+        fun visit(n: TNode) {
+            val kids = n.children ?: return
+            for (k in kids) visit(k)
+            if (n.state == TNode.INNER) recompute(n)
+        }
+        visit(root)
+    }
+
     // ---- initial numbers ----
 
     /** OR leaf from the attacker's win probability [p]. */
@@ -98,7 +126,7 @@ class TopTree(val root: TNode) {
         val kids = node.children ?: return null
         val open = kids.filter { it.state == TNode.LEAF || it.state == TNode.INNER }
         val ordered = if (node.isOr) {
-            open.sortedWith(compareBy<TNode> { it.pn }.thenByDescending { it.dn })
+            open.sortedWith(compareBy<TNode> { effPn(it) }.thenByDescending { it.dn })
         } else {
             open.sortedWith(compareBy<TNode> { it.dn }.thenByDescending { it.pn })
         }
@@ -116,7 +144,7 @@ class TopTree(val root: TNode) {
     private fun maybeWiden(node: TNode) {
         if (node.pendingCount == 0) return
         val kids = node.children ?: emptyArray()
-        val bestOpen = kids.filter { !it.solved }.minOfOrNull { it.pn }
+        val bestOpen = kids.filter { !it.solved }.minOfOrNull { effPn(it) }
         if (bestOpen != null && bestOpen <= pendingPn(node)) return
         val i = node.pendingIndex++
         val move = node.pendingMoves!![i]
@@ -133,7 +161,8 @@ class TopTree(val root: TNode) {
     }
 
     /** Proof number of OR node [node]'s next pending move ([TNode.pendingCount] > 0). */
-    private fun pendingPn(node: TNode): Long = andPn(node.pendingPriors!![node.pendingIndex])
+    private fun pendingPn(node: TNode): Long =
+        andPn(node.pendingPriors!![node.pendingIndex]) + depthCost(java.lang.Long.bitCount(node.a or node.d) + 1)
 
     private fun andPn(prior: Float): Long = AND_PN_BASE + (AND_PN_LOG * -ln(max(prior.toDouble(), 1e-4))).roundToLong()
 
@@ -244,7 +273,7 @@ class TopTree(val root: TNode) {
             for (k in kids) {
                 if (k.state == TNode.PROVED && (best == null || k.size < best.size)) best = k
                 if (k.state != TNode.DISPROVED) allLost = false
-                pn = min(pn, k.pn)
+                pn = min(pn, effPn(k))
                 dn = min(INF, dn + k.dn)
             }
             when {
@@ -267,7 +296,7 @@ class TopTree(val root: TNode) {
             for (k in kids) {
                 if (k.state == TNode.DISPROVED) lost = true
                 if (k.state != TNode.PROVED) allWon = false else size += k.size
-                pn = min(INF, pn + k.pn)
+                pn = min(INF, pn + effPn(k))
                 dn = min(dn, k.dn)
             }
             when {

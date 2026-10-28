@@ -17,7 +17,8 @@ import kotlin.system.exitProcess
  * - `stop dir=<run dir>`: asks the running computation to save and pause.
  * - `verify graph=<file> [start=0,...]`: checks a graph file alone.
  * - `bench model=<net file> [plies=N] [count=N] [job_evals=N]`: speeds of the network and of df-pn.
- * - `play graph=<file> model=<net file> [games=N] [seed=N]`: real games of the app's player.
+ * - `play graph=<file> model=<net file> [games=N] [seed=N] [first=strong|weak]`: real games of the app's player.
+ * - `export graph=<file> out=<file> [start=0,...] [rate=0.1]`: proven training positions ([ProvenExport]).
  */
 fun main(args: Array<String>) {
     val command = args.firstOrNull() ?: error("missing command")
@@ -32,6 +33,7 @@ fun main(args: Array<String>) {
         "verify" -> verifyCommand(options)
         "bench" -> benchCommand(options)
         "play" -> playCommand(options)
+        "export" -> exportCommand(options)
         else -> error("unknown command $command")
     }
     exitProcess(code)
@@ -158,10 +160,11 @@ private fun playCommand(options: Map<String, String>): Int {
     val graph = File(options["graph"] ?: error("graph= missing")).inputStream().use { WinBook.load(it) }
     val net = File(options["model"] ?: error("model= missing")).inputStream().use { QubicNet.load(it) }
     val games = options["games"]?.toInt() ?: 1000
-    val player = UnbeatablePlayer(graph)
+    val rng = kotlin.random.Random(options["seed"]?.toLong() ?: 1L)
+    val first = if (options["first"] == "weak") UnbeatablePlayer.WEAK_RINGS else UnbeatablePlayer.STRONG_RINGS
+    val player = UnbeatablePlayer(graph, first, rng)
     val eval = NetEval(net)
     val policy = FloatArray(64)
-    val rng = kotlin.random.Random(options["seed"]?.toLong() ?: 1L)
     var failures = 0
     for (opponent in listOf("aléatoire", "réseau")) {
         var won = 0
