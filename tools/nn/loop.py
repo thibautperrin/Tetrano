@@ -86,6 +86,10 @@ DEFAULTS = {
     "elo_reference": "",
     "keep_checkpoint_every": 10,
     "keep_data": 0,  # 1: never delete self-play data (to train other networks on it later)
+    # Proven positions (comma-separated files, e.g. from `wingraph export`): a fraction proven_frac
+    # of every training batch is drawn from them (see proven.py).
+    "proven": "",
+    "proven_frac": 0.0,
     "java_heap": "6g",
 }
 
@@ -380,6 +384,10 @@ def main():
         # The warm-start network plays generation 0's self-play (export_weights is atomic).
         model.export_weights(run / "models" / "init.bin")
     rng = np.random.default_rng(int(time.time()))
+    proven = None
+    if cfg["proven"] and cfg["proven_frac"] > 0:
+        proven = np.concatenate([data.load(f) for f in cfg["proven"].split(",")])
+        log(run, f"proven positions: {data.summary(proven)}, {cfg['proven_frac']:.0%} of each batch")
     log(run, f"start at generation {gen}, phase {state['phase']}, config {cfg}")
 
     try:
@@ -428,7 +436,8 @@ def main():
                 for group in optimizer.param_groups:
                     group["lr"] = lr
                 log(run, f"gen {gen} training {steps} steps on {data.summary(window)}, lr {lr:.2e}")
-                result = train.train(model, optimizer, window, steps, cfg["batch"], rng, deadline)
+                result = train.train(model, optimizer, window, steps, cfg["batch"], rng, deadline,
+                                     extra=proven, extra_frac=cfg["proven_frac"])
                 if result is None:
                     raise DeadlineReached()
                 save_checkpoint(run / "checkpoints" / f"gen_{gen:04d}.pt", model, optimizer, gen)

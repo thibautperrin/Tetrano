@@ -222,6 +222,38 @@ appels java de N parties, reprise par tranche ; 0 = un seul appel, comme avant) 
 cosinus jusqu'à `lr_final` en B, quel que soit `--stop-at` ; 0 = comportement d'avant, lié à
 l'heure d'arrêt). Les anciens runs et `config.json` restent valides.
 
+## Positions prouvées (affinage de la nuit du 28 octobre 2026)
+
+Les deux graphes gagnants (`tools/wingraph/graph/`, voir `tools/wingraph/README.md`) donnent des
+positions dont la valeur est **certaine** : en rejouant la stratégie contre toutes les défenses,
+chaque position où l'attaquant est au trait est gagnée pour lui, chaque position où le défenseur est
+au trait est perdue pour lui, et aux nœuds du graphe le coup joué est un coup gagnant prouvé.
+
+1. **Export** (`wingraph export`, drapeau « exact » du format) : toutes les positions du parcours du
+   graphe du coin (taux 0,5) et 12 % de celles du graphe du premier coup faible, soit 4,9 M positions
+   (`runs/proven_data/corner.bin`, `weak.bin`). Les positions à gain immédiat ou face à une double
+   menace sont écartées ; pas de cible « plis restants ».
+   ```
+   java -cp "wingraph/build/install/wingraph/lib/*" fr.thibautperrin.tetrano.wingraph.MainKt export graph=tools/wingraph/graph/tetrano_win.bin out=…/corner.bin rate=0.5
+   java -Xmx16g -cp "…" …MainKt export graph=tools/wingraph/graph/tetrano_win_weak.bin start=1 out=…/weak.bin rate=0.12
+   ```
+2. **Pourquoi les mélanger** : seules, ces positions biaiseraient le réseau (aucune nulle, le premier
+   joueur gagne toujours ; il finirait par jouer n'importe quoi en second, toutes ses positions
+   étant « perdues »). Chaque lot mêle donc des positions prouvées et les parties d'auto-jeu récentes
+   (`train.train(..., extra=, extra_frac=)`).
+3. **Affinage** (`proven.py`) : départ gen 364 (`runs/big`), 6 000 pas de 1024, 35 % de positions
+   prouvées, lr 1e-4 → 1e-5 ; fenêtre = les 1,5 M dernières positions d'auto-jeu de `runs/big`
+   (gen 364 gardée pour le test), 3 % des positions prouvées gardées pour le test. Rapport avant /
+   après : `runs/proven_ft/report.md`.
+4. **Auto-jeu** (`loop.py --proven … --proven-frac 0.25`, dossier `runs/proven`) : générations de
+   500 parties comme `runs/big` (recherche adaptative jusqu'à 2048, calendrier d'ouvertures),
+   25 % de positions prouvées dans chaque lot, fenêtre fixe de 1,5 M positions amorcée avec celle de
+   `runs/big` (`gen_-0001.bin`), lr 5e-5 → 1e-5 jusqu'à l'heure d'arrêt.
+5. **Match** contre gen 364 (`selfplay match`, ouvertures aléatoires jouées dans les deux sens).
+
+Toute la chaîne, reprise étape par étape : `bash proven_night.sh` depuis le `tools/nn` qui contient
+`runs/` (variable `STOP` : heure d'arrêt de l'auto-jeu).
+
 ## Battle petit réseau contre gros réseau, PC et téléphones (`battle.py`)
 
 `battle.bat` (ou `.venv/Scripts/python -u battle.py [--until 05:00]`) enchaîne, en reprenant là où

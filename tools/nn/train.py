@@ -50,9 +50,11 @@ def losses(model, batch):
     return value_loss, policy_loss, ml_loss
 
 
-def train(model, optimizer, window, steps, batch_size, rng, deadline=None, log_every=100):
-    """Runs `steps` optimizer steps on uniform samples of `window`. Returns mean losses, or None if
-    the deadline (epoch seconds) passed first."""
+def train(model, optimizer, window, steps, batch_size, rng, deadline=None, log_every=100, extra=None, extra_frac=0.0):
+    """Runs `steps` optimizer steps on uniform samples of `window` (and, with `extra`, a fraction
+    `extra_frac` of each batch drawn from `extra`). Returns mean losses, or None if the deadline
+    (epoch seconds) passed first."""
+    n_extra = int(round(batch_size * extra_frac)) if extra is not None and len(extra) else 0
     model.train()
     totals = np.zeros(3)
     count = 0
@@ -60,8 +62,11 @@ def train(model, optimizer, window, steps, batch_size, rng, deadline=None, log_e
     for step in range(steps):
         if deadline is not None and time.time() > deadline:
             return None
-        idx = rng.integers(0, len(window), size=batch_size)
-        batch = batch_tensors(window[idx])
+        idx = rng.integers(0, len(window), size=batch_size - n_extra)
+        sample = window[idx]
+        if n_extra:
+            sample = np.concatenate([sample, extra[rng.integers(0, len(extra), size=n_extra)]])
+        batch = batch_tensors(sample)
         value_loss, policy_loss, ml_loss = losses(model, batch)
         loss = value_loss + policy_loss + MOVES_LEFT_WEIGHT * ml_loss
         optimizer.zero_grad(set_to_none=True)

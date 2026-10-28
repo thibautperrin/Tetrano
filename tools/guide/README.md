@@ -2,7 +2,9 @@
 
 Génère `docs/guide/tetrano-guide-fr.html` et `docs/guide/tetrano-guide-en.html` : un guide pour les
 joueurs de Tetrano et de Qubic 4×4×4 (meilleurs coups en premier et en second, plateaux dessinés,
-parties rejouables coup par coup). Chaque page est autonome (CSS, JS et SVG intégrés).
+parties rejouables coup par coup). Chaque page est autonome (CSS, JS et SVG intégrés). Le même
+script écrit la version de l'appli (écran « Stratégie ») : `app/src/main/assets/strategy/strategy-{fr,en}.html`,
+en noir et jaune, sans le lien vers l'autre langue.
 
 ```
 python tools/guide/build_guide.py
