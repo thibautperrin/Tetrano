@@ -5,8 +5,10 @@ The four levels of the 4 × 4 × 4 cube become four sizes of rings. Line up four
 GAME MODES
 • Two players on the same phone
 • Against the computer, from level 0 to level 100, plus level 101: a neural network trained by playing against itself
+• Levels 102 and 103, unbeatable: the computer begins, on a strong or on a weak place, and plays a proven winning strategy — hold out as long as you can
 • Challenge: 245 levels, each starting from a game in progress that you must win with a limited number of rings, with free hints
 • Puzzles: real positions with a forced win, chosen to match your Elo rating
+• Strategy: a guide to the best first moves and the stubbornest defence, with boards and games to step through
 
 GAME ANALYSIS
 • Every finished game is saved automatically

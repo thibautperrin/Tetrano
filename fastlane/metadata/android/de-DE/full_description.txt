@@ -5,8 +5,10 @@ Die vier Ebenen des 4 × 4 × 4-Würfels werden zu vier Ringgrößen. Bringe vie
 SPIELMODI
 • Zu zweit an einem Handy
 • Gegen den Computer, von Level 0 bis Level 100, plus Level 101: ein neuronales Netz, das durch Spiele gegen sich selbst trainiert wurde
+• Level 102 und 103, unschlagbar: Der Computer beginnt, auf einem starken oder einem schwachen Feld, und spielt eine bewiesene Gewinnstrategie – halte so lange durch, wie du kannst
 • Challenge: 245 Level, jedes beginnt mit einer laufenden Partie, die du mit einer begrenzten Anzahl von Ringen gewinnen musst – mit kostenlosen Tipps
 • Rätsel: echte Stellungen mit erzwungenem Sieg, passend zu deiner Elo-Wertung ausgewählt
+• Strategie: ein Leitfaden zu den besten ersten Zügen und der zähesten Verteidigung, mit Brettern und Partien zum Nachspielen
 
 PARTIEANALYSE
 • Jede beendete Partie wird automatisch gespeichert

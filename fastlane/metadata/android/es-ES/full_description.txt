@@ -5,8 +5,10 @@ Los cuatro niveles del cubo de 4 × 4 × 4 se convierten en cuatro tamaños de a
 MODOS DE JUEGO
 • Dos jugadores en el mismo móvil
 • Contra el ordenador, del nivel 0 al 100, y además el nivel 101: una red neuronal entrenada jugando contra sí misma
+• Niveles 102 y 103, imbatibles: el ordenador empieza, en una casilla fuerte o en una débil, y juega una estrategia ganadora demostrada; aguanta todo lo que puedas
 • Desafío: 245 niveles, cada uno con una partida en curso que debes ganar con un número limitado de anillos, con pistas gratuitas
 • Problemas: posiciones reales con victoria forzada, elegidas según tu Elo
+• Estrategia: una guía de las mejores primeras jugadas y de la defensa más tenaz, con tableros y partidas para seguir paso a paso
 
 ANÁLISIS DE PARTIDAS
 • Cada partida terminada se guarda automáticamente

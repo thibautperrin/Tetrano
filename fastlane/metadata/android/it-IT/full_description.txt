@@ -5,8 +5,10 @@ I quattro piani del cubo 4 × 4 × 4 diventano quattro taglie di anelli. Allinea
 MODALITÀ DI GIOCO
 • In due sullo stesso telefono
 • Contro il computer, dal livello 0 al livello 100, più il livello 101: una rete neurale addestrata giocando contro se stessa
+• Livelli 102 e 103, imbattibili: il computer inizia, su una casella forte o su una debole, e gioca una strategia vincente dimostrata: resisti il più a lungo possibile
 • Sfida: 245 livelli, ognuno con una partita già in corso da vincere con un numero limitato di anelli, con suggerimenti gratuiti
 • Rompicapi: posizioni reali con vittoria forzata, scelte in base al tuo punteggio Elo
+• Strategia: una guida alle migliori prime mosse e alla difesa più tenace, con scacchiere e partite da rivedere passo per passo
 
 ANALISI DELLE PARTITE
 • Ogni partita finita viene salvata automaticamente

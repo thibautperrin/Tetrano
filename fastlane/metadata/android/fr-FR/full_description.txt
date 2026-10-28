@@ -5,8 +5,10 @@ Les quatre niveaux du cube de 4 × 4 × 4 deviennent quatre tailles d’anneaux.
 MODES DE JEU
 • À deux sur le même téléphone
 • Contre l’ordinateur, du niveau 0 au niveau 100, plus le niveau 101 : un réseau de neurones entraîné en jouant contre lui-même
+• Niveaux 102 et 103, imbattables : l’ordinateur commence, sur une place forte ou sur une place faible, et joue une stratégie gagnante prouvée — à vous de durer le plus longtemps possible
 • Challenge : 245 niveaux, chacun partant d’une partie en cours que vous devez gagner avec un nombre limité d’anneaux, avec des indices gratuits
 • Puzzles : de vraies positions avec une victoire forcée, choisies selon votre classement Elo
+• Stratégie : un guide des meilleurs premiers coups et de la défense la plus tenace, avec plateaux et parties à rejouer
 
 ANALYSE DES PARTIES
 • Chaque partie terminée est enregistrée automatiquement
