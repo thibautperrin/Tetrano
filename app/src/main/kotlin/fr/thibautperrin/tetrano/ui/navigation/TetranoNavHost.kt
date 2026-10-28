@@ -22,6 +22,7 @@ import fr.thibautperrin.tetrano.ui.home.HomeRoute
 import fr.thibautperrin.tetrano.ui.playmenu.PlayMenuRoute
 import fr.thibautperrin.tetrano.ui.puzzles.PuzzleRoute
 import fr.thibautperrin.tetrano.ui.rules.RulesRoute
+import fr.thibautperrin.tetrano.ui.strategy.StrategyScreen
 import fr.thibautperrin.tetrano.ui.rules.WinningExamplesRoute
 import fr.thibautperrin.tetrano.ui.settings.SettingsRoute
 import fr.thibautperrin.tetrano.ui.setup.ComputerSetupRoute
@@ -54,11 +55,13 @@ fun TetranoNavHost(
             HomeRoute(
                 onNavigateToPlayMenu = { navController.navigateFrom(entry, TetranoRoute.PlayMenu) },
                 onNavigateToRules = { navController.navigateFrom(entry, TetranoRoute.Rules) },
+                onNavigateToStrategy = { navController.navigateFrom(entry, TetranoRoute.Strategy) },
                 onNavigateToSettings = { navController.navigateFrom(entry, TetranoRoute.Settings) },
                 onNavigateToAbout = { navController.navigateFrom(entry, TetranoRoute.About) },
             )
         }
         composable<TetranoRoute.About> { AboutScreen() }
+        composable<TetranoRoute.Strategy> { StrategyScreen() }
         composable<TetranoRoute.PlayMenu> { entry ->
             PlayMenuRoute(
                 onNavigateToTwoPlayersSetup = { navController.navigateFrom(entry, TetranoRoute.TwoPlayersSetup()) },

@@ -8,6 +8,7 @@
     <string name="About">О приложении</string>
     <string name="action_settings">Настройки</string>
     <string name="Rules_Of_Game">Правила игры</string>
+    <string name="Strategy">Стратегия</string>
     <string name="Long_Sentence_Rules">Tetrano — игра для двух игроков.\n\nИгроки по очереди ставят на поле кольцо своего цвета. Побеждает тот, кто первым выстроит четыре кольца своего цвета.\n\nЛиния из четырёх колец может быть:\n• концентрической: четыре кольца разного размера в одной клетке;\n• прямой: четыре кольца в строке, столбце или по диагонали — все одного размера либо по возрастанию или убыванию размера.\n\nЧтобы сделать ход, перетащите кольцо из-под поля в нужную клетку.\n\nУдачной игры!</string>
     <string name="Winning_Situation_Example">Примеры побед</string>
     <string name="User">Пользователь</string>
@@ -76,6 +77,9 @@
     <string name="Previous_Mistake">Предыдущая ошибка</string>
     <string name="Next_Mistake">Следующая ошибка</string>
     <string name="Level_Neural">Нейросеть</string>
+    <string name="Level_Unbeatable_Strong">непобедимый 1: первое кольцо на сильной клетке</string>
+    <string name="Level_Unbeatable_Weak">непобедимый 2: первое кольцо на слабой клетке</string>
+    <string name="Level_Unbeatable_Hint">Непобедимые уровни 102 и 103: пусть начинает компьютер</string>
 
     <!-- Analysis, puzzles and the new settings (2026-10). -->
     <string name="back">Назад</string>

@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 fun HomeRoute(
     onNavigateToPlayMenu: () -> Unit,
     onNavigateToRules: () -> Unit,
+    onNavigateToStrategy: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToAbout: () -> Unit,
 ) {
@@ -43,6 +44,7 @@ fun HomeRoute(
             when (action) {
                 HomeAction.PlayClicked -> onNavigateToPlayMenu()
                 HomeAction.RulesClicked -> onNavigateToRules()
+                HomeAction.StrategyClicked -> onNavigateToStrategy()
                 HomeAction.SettingsClicked -> onNavigateToSettings()
                 HomeAction.AboutClicked -> onNavigateToAbout()
             }
@@ -52,9 +54,10 @@ fun HomeRoute(
 
 /**
  * Ports `MainActivity` (`activity_main.xml`): the dark action bar titled
- * "Tetrano", and four `button_texte_style`
+ * "Tetrano", and five `button_texte_style`
  * buttons stacked at the top of the `fond_inverse` collage — Play (which
  * flashes blue for 500 ms when tapped, as in the legacy listener), Rules,
+ * Strategy (the opening guide, since 5.0),
  * Settings and About (a screen of its own since 5.0, where the 2015 app
  * showed a one-line dialog).
  *
@@ -113,6 +116,12 @@ fun HomeScreen(onAction: (HomeAction) -> Unit) {
                         modifier = buttonModifier,
                     )
                     LegacyButton(
+                        text = stringResource(R.string.Strategy),
+                        onClick = { onAction(HomeAction.StrategyClicked) },
+                        fontSize = dimens.title2,
+                        modifier = buttonModifier,
+                    )
+                    LegacyButton(
                         text = stringResource(R.string.action_settings),
                         onClick = { onAction(HomeAction.SettingsClicked) },
                         fontSize = dimens.title2,
@@ -130,6 +139,6 @@ fun HomeScreen(onAction: (HomeAction) -> Unit) {
     }
 }
 
-private const val BUTTON_COUNT = 4
+private const val BUTTON_COUNT = 5
 private const val PLAY_FLASH_MILLIS = 500L
 private val MIN_BUTTON_HEIGHT = 40.dp

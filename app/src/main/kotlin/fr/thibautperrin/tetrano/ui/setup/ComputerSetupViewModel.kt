@@ -75,7 +75,11 @@ class ComputerSetupViewModel @Inject constructor(
         } else {
             true
         }
-        _uiState.update { it.copy(aiLevel = level, userBegins = userBeginByDefault) }
+        // A new game at an Unbeatable level chosen last time: the computer begins, as it must.
+        if (saved == null && AiService.isUnbeatable(level)) userBeginByDefault = false
+        _uiState.update {
+            it.copy(aiLevel = level.coerceAtMost(maxLevel(userBeginByDefault)), userBegins = userBeginByDefault)
+        }
     }
 
     private var playJob: Job? = null
@@ -85,14 +89,16 @@ class ComputerSetupViewModel @Inject constructor(
             is ComputerSetupAction.LevelChanged -> setLevel(action.level)
             ComputerSetupAction.LevelIncremented -> setLevel(_uiState.value.aiLevel + 1)
             ComputerSetupAction.LevelDecremented -> setLevel(_uiState.value.aiLevel - 1)
-            ComputerSetupAction.UserBeginsSelected -> _uiState.update { it.copy(userBegins = true) }
+            ComputerSetupAction.UserBeginsSelected -> _uiState.update {
+                it.copy(userBegins = true, aiLevel = it.aiLevel.coerceAtMost(maxLevel(userBegins = true)))
+            }
             ComputerSetupAction.ComputerBeginsSelected -> _uiState.update { it.copy(userBegins = false) }
             ComputerSetupAction.PlayClicked -> play()
         }
     }
 
     private fun setLevel(level: Int) {
-        _uiState.update { it.copy(aiLevel = level.coerceIn(MIN_LEVEL, MAX_LEVEL)) }
+        _uiState.update { it.copy(aiLevel = level.coerceIn(MIN_LEVEL, maxLevel(it.userBegins))) }
     }
 
     private fun play() {
@@ -127,8 +133,13 @@ class ComputerSetupViewModel @Inject constructor(
     }
 
     companion object {
-        /** The legacy `seekBarLevel` range, plus the neural level [AiService.NEURAL_LEVEL] on top. */
+        /**
+         * The legacy `seekBarLevel` range, plus the neural level [AiService.NEURAL_LEVEL] on top,
+         * then the two Unbeatable levels when the computer begins.
+         */
         const val MIN_LEVEL = 0
-        const val MAX_LEVEL = AiService.NEURAL_LEVEL
+        const val MAX_LEVEL = AiService.MAX_LEVEL
+
+        fun maxLevel(userBegins: Boolean): Int = if (userBegins) AiService.NEURAL_LEVEL else AiService.MAX_LEVEL
     }
 }

@@ -6,6 +6,7 @@
     <string name="About">Acerca de</string>
     <string name="action_settings">Ajustes</string>
     <string name="Rules_Of_Game">Reglas del juego</string>
+    <string name="Strategy">Estrategia</string>
     <string name="Long_Sentence_Rules">Tetrano es un juego para dos jugadores.\n\nPor turnos, cada jugador coloca en el tablero un anillo de su color. Gana el primero que alinea cuatro anillos de su color.\n\nUna línea de cuatro anillos puede ser:\n• concéntrica: cuatro anillos de distintos tamaños en la misma casilla;\n• recta: cuatro anillos en una fila, una columna o una diagonal, todos del mismo tamaño o de tamaño creciente o decreciente.\n\nPara jugar, arrastra un anillo desde debajo del tablero y suéltalo en una casilla.\n\n¡Que te diviertas!</string>
     <string name="Winning_Situation_Example">Ejemplos de victoria</string>
     <string name="User">Usuario</string>
@@ -74,6 +75,9 @@
     <string name="Previous_Mistake">Error anterior</string>
     <string name="Next_Mistake">Siguiente error</string>
     <string name="Level_Neural">red neuronal</string>
+    <string name="Level_Unbeatable_Strong">imbatible 1: primer anillo en una casilla fuerte</string>
+    <string name="Level_Unbeatable_Weak">imbatible 2: primer anillo en una casilla débil</string>
+    <string name="Level_Unbeatable_Hint">Niveles imbatibles 102 y 103: deja que empiece el ordenador</string>
 
     <!-- Analysis, puzzles and the new settings (2026-10). -->
     <string name="back">Atrás</string>

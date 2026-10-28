@@ -6,6 +6,7 @@
     <string name="About">Info</string>
     <string name="action_settings">Impostazioni</string>
     <string name="Rules_Of_Game">Regole del gioco</string>
+    <string name="Strategy">Strategia</string>
     <string name="Long_Sentence_Rules">Tetrano è un gioco per due giocatori.\n\nA turno, ogni giocatore posa sul tavoliere un anello del proprio colore. Vince chi per primo allinea quattro anelli del proprio colore.\n\nUn allineamento di quattro anelli può essere:\n• concentrico: quattro anelli di taglie diverse nella stessa casella;\n• rettilineo: quattro anelli su una riga, una colonna o una diagonale, tutti della stessa taglia oppure di taglia crescente o decrescente.\n\nPer giocare, trascina un anello da sotto il tavoliere fino a una casella.\n\nBuon divertimento!</string>
     <string name="Winning_Situation_Example">Esempi di vittoria</string>
     <string name="User">Utente</string>
@@ -74,6 +75,9 @@
     <string name="Previous_Mistake">Errore precedente</string>
     <string name="Next_Mistake">Errore successivo</string>
     <string name="Level_Neural">rete neurale</string>
+    <string name="Level_Unbeatable_Strong">imbattibile 1: primo anello su una casella forte</string>
+    <string name="Level_Unbeatable_Weak">imbattibile 2: primo anello su una casella debole</string>
+    <string name="Level_Unbeatable_Hint">Livelli imbattibili 102 e 103: lascia iniziare il computer</string>
 
     <!-- Analysis, puzzles and the new settings (2026-10). -->
     <string name="back">Indietro</string>

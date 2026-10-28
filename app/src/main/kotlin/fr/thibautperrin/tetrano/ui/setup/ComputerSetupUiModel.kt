@@ -3,8 +3,8 @@ package fr.thibautperrin.tetrano.ui.setup
 import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 
 /**
- * @param aiLevel the AI difficulty, [ComputerSetupViewModel.MIN_LEVEL]..[ComputerSetupViewModel.MAX_LEVEL]
- *   (the legacy `seekBarLevel`).
+ * @param aiLevel the AI difficulty, [ComputerSetupViewModel.MIN_LEVEL]..[ComputerSetupViewModel.maxLevel]
+ *   (the legacy `seekBarLevel`, then the neural and the Unbeatable levels).
  * @param userBegins whether the user is the one to (re)start playing next —
  *   the legacy "User" / "Computer" radio choice.
  */

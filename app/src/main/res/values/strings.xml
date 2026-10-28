@@ -9,6 +9,7 @@
     <string name="About">About</string>
     <string name="action_settings">Settings</string>
     <string name="Rules_Of_Game">Rules of game</string>
+    <string name="Strategy">Strategy</string>
     <string name="Long_Sentence_Rules">Tetrano is a game for two players.\n\nTake turns placing a ring of your color on the board. The first player to line up four rings of their color wins.\n\nA line of four rings can be:\n• concentric: four rings of different sizes in the same square;\n• straight: four rings on a row, a column or a diagonal, either all the same size, or in increasing or decreasing size.\n\nTo play, drag a ring from below the board and drop it on a square.\n\nHave fun!</string>
     <string name="Winning_Situation_Example">Winning situation examples</string>
     <string name="User">User</string>
@@ -78,6 +79,9 @@
     <string name="Previous_Mistake">Previous mistake</string>
     <string name="Next_Mistake">Next mistake</string>
     <string name="Level_Neural">neural network</string>
+    <string name="Level_Unbeatable_Strong">unbeatable 1: first ring on a strong place</string>
+    <string name="Level_Unbeatable_Weak">unbeatable 2: first ring on a weak place</string>
+    <string name="Level_Unbeatable_Hint">Unbeatable levels 102 and 103: let the computer begin</string>
 
     <!-- Analysis, puzzles and the new settings (2026-10). -->
     <string name="back">Back</string>

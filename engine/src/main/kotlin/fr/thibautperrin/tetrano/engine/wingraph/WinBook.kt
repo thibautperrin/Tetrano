@@ -1,9 +1,11 @@
 package fr.thibautperrin.tetrano.engine.wingraph
 
+import fr.thibautperrin.tetrano.engine.nn.QubicGeometry
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.random.Random
 
 /**
  * The winning graph as shipped: for each canonical attacker-to-move position
@@ -86,9 +88,15 @@ class WinBook private constructor(
 
 /**
  * The Unbeatable player: the first player following [WinRules] with [book].
- * Not thread-safe.
+ * On the empty board it opens on a random ring of [firstRings] (all
+ * equivalent by symmetry: the strong rings for the corner graph, the weak
+ * ones for the graph proven after a weak first ring). Not thread-safe.
  */
-class UnbeatablePlayer(private val book: WinBook) {
+class UnbeatablePlayer(
+    private val book: WinBook,
+    private val firstRings: Long = STRONG_RINGS,
+    private val random: Random = Random.Default,
+) {
     private val form = CanonicalForm()
     private val vcf = WinRules.newVcf()
 
@@ -99,8 +107,23 @@ class UnbeatablePlayer(private val book: WinBook) {
      * player started on an empty board).
      */
     fun chooseRing(attacker: Long, defender: Long): Int {
+        if (attacker == 0L && defender == 0L) {
+            var bits = firstRings
+            repeat(random.nextInt(java.lang.Long.bitCount(firstRings))) { bits = bits and (bits - 1) }
+            return java.lang.Long.numberOfTrailingZeros(bits)
+        }
         form.of(attacker, defender)
         val decision = WinRules.decide(form.attacker, form.defender, book, vcf)
         return if (decision == WinRules.NONE) -1 else form.toReal(WinRules.move(decision))
+    }
+
+    companion object {
+        /** The 16 rings on 7 lines (corners and centres of the cube). */
+        val STRONG_RINGS: Long = (0 until QubicGeometry.CELLS)
+            .filter { QubicGeometry.cellDegree(it) == 7 }
+            .fold(0L) { bits, cell -> bits or (1L shl cell) }
+
+        /** The 48 rings on 4 lines. */
+        val WEAK_RINGS: Long = STRONG_RINGS.inv()
     }
 }

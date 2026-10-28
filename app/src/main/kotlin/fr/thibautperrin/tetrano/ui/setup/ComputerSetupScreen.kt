@@ -56,8 +56,8 @@ fun ComputerSetupRoute(
  * Ports `JouerContreOrdiActivity` (`activity_jouer_contre_ordi.xml`), on a
  * black page titled "1 player" (the activity's manifest label, see
  * [SetupPage]): "Who begins?", the User / Computer radio buttons, "Level"
- * and its number, the ◀ level bar ▶ row (0..101, ±1 per arrow; 101 = neural network), and the
- * big Play button.
+ * and its number, the ◀ level bar ▶ row (0..101, ±1 per arrow; 101 = neural network; 102 and
+ * 103 = Unbeatable, only when the computer begins), and the big Play button.
  * - Portrait: all of it stacked, Play centered in the height left over.
  * - Landscape (`layout-land`): the settings on the left two thirds, Play
  *   vertically centered on the right third (the legacy `fill_parent` +
@@ -144,9 +144,15 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
             color = TetranoPalette.Text,
         )
     }
-    if (uiModel.aiLevel >= AiService.NEURAL_LEVEL) {
+    val levelName = when (uiModel.aiLevel) {
+        AiService.NEURAL_LEVEL -> R.string.Level_Neural
+        AiService.UNBEATABLE_STRONG_LEVEL -> R.string.Level_Unbeatable_Strong
+        AiService.UNBEATABLE_WEAK_LEVEL -> R.string.Level_Unbeatable_Weak
+        else -> null
+    }
+    if (levelName != null) {
         FitText(
-            text = stringResource(R.string.Level_Neural),
+            text = stringResource(levelName),
             maxFontSize = dimens.title3,
             color = TetranoPalette.Text,
             textAlign = TextAlign.End,
@@ -163,7 +169,7 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
         Slider(
             value = uiModel.aiLevel.toFloat(),
             onValueChange = { onAction(ComputerSetupAction.LevelChanged(it.roundToInt())) },
-            valueRange = ComputerSetupViewModel.MIN_LEVEL.toFloat()..ComputerSetupViewModel.MAX_LEVEL.toFloat(),
+            valueRange = ComputerSetupViewModel.MIN_LEVEL.toFloat()..ComputerSetupViewModel.maxLevel(uiModel.userBegins).toFloat(),
             colors = SliderDefaults.colors(
                 thumbColor = TetranoPalette.Accent,
                 activeTrackColor = TetranoPalette.Accent,
@@ -175,6 +181,15 @@ private fun ComputerSettings(uiModel: ComputerSetupUiModel, onAction: (ComputerS
             onClick = { onAction(ComputerSetupAction.LevelIncremented) },
             contentDescription = stringResource(R.string.level_higher),
             modifier = Modifier.widthIn(min = MIN_TOUCH_TARGET).width(dimens.mediumMargin),
+        )
+    }
+    if (uiModel.userBegins && uiModel.aiLevel == AiService.NEURAL_LEVEL) {
+        FitText(
+            text = stringResource(R.string.Level_Unbeatable_Hint),
+            maxFontSize = dimens.title3,
+            color = TetranoPalette.TextSecondary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

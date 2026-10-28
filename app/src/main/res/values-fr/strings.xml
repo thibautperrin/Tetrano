@@ -6,6 +6,7 @@
     <string name="About">À propos</string>
     <string name="action_settings">Paramètres</string>
     <string name="Rules_Of_Game">Règles du jeu</string>
+    <string name="Strategy">Stratégie</string>
     <string name="Long_Sentence_Rules">Tetrano se joue à deux.\n\nChacun son tour, les joueurs posent un anneau de leur couleur sur le plateau. Le premier qui aligne quatre anneaux de sa couleur gagne.\n\nUn alignement de quatre anneaux peut être :\n• concentrique : quatre anneaux de tailles différentes dans la même case ;\n• en ligne : quatre anneaux sur une rangée, une colonne ou une diagonale, soit tous de la même taille, soit de taille croissante ou décroissante.\n\nPour jouer, faites glisser un anneau depuis le bas de l’écran jusqu’à une case du plateau.\n\nBon jeu !</string>
     <string name="Winning_Situation_Example">Exemples d’alignements gagnants</string>
     <string name="User">Utilisateur</string>
@@ -74,6 +75,9 @@
     <string name="Previous_Mistake">Erreur précédente</string>
     <string name="Next_Mistake">Erreur suivante</string>
     <string name="Level_Neural">réseau de neurones</string>
+    <string name="Level_Unbeatable_Strong">imbattable 1 : premier anneau sur une place forte</string>
+    <string name="Level_Unbeatable_Weak">imbattable 2 : premier anneau sur une place faible</string>
+    <string name="Level_Unbeatable_Hint">Niveaux imbattables 102 et 103 : laissez l’ordinateur commencer</string>
 
     <!-- Analysis, puzzles and the new settings (2026-10). -->
     <string name="back">Retour</string>

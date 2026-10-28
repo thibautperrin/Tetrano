@@ -68,6 +68,10 @@ sealed interface TetranoRoute {
     @Serializable
     data object WinningExamples : TetranoRoute
 
+    /** The opening guide (first and second player), built by tools/guide. */
+    @Serializable
+    data object Strategy : TetranoRoute
+
     @Serializable
     data object About : TetranoRoute
 

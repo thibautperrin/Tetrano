@@ -2,6 +2,7 @@ package fr.thibautperrin.tetrano.domain.service
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import fr.thibautperrin.tetrano.data.assets.NeuralNets
+import fr.thibautperrin.tetrano.data.assets.WinGraphs
 import fr.thibautperrin.tetrano.data.prefs.TetranoPreferencesDataSource
 import fr.thibautperrin.tetrano.domain.model.AiProgressState
 import fr.thibautperrin.tetrano.domain.model.GameMode
@@ -42,6 +43,10 @@ class GameSessionServiceTest {
             TetranoPreferencesDataSource(
                 PreferenceDataStoreFactory.create(scope = backgroundScope) { File.createTempFile("prefs", ".preferences_pb") },
             ),
+            object : WinGraphs {
+                override val strong get() = error("levels 102 and 103 are not used in these tests")
+                override val weak get() = error("levels 102 and 103 are not used in these tests")
+            },
         ),
     )
 

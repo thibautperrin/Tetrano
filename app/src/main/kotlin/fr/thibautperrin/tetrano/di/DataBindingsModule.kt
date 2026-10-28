@@ -10,6 +10,8 @@ import fr.thibautperrin.tetrano.data.assets.NeuralNetDataSource
 import fr.thibautperrin.tetrano.data.assets.NeuralNets
 import fr.thibautperrin.tetrano.data.assets.PuzzleCatalog
 import fr.thibautperrin.tetrano.data.assets.PuzzleDataSource
+import fr.thibautperrin.tetrano.data.assets.WinGraphDataSource
+import fr.thibautperrin.tetrano.data.assets.WinGraphs
 import javax.inject.Singleton
 
 @Module
@@ -27,4 +29,8 @@ abstract class DataBindingsModule {
     @Binds
     @Singleton
     abstract fun bindPuzzleCatalog(impl: PuzzleDataSource): PuzzleCatalog
+
+    @Binds
+    @Singleton
+    abstract fun bindWinGraphs(impl: WinGraphDataSource): WinGraphs
 }

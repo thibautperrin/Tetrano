@@ -118,11 +118,15 @@ class GameSessionService private constructor(
 
     /**
      * Restarts from an empty board, cancelling any search in progress.
+     * At the Unbeatable levels, which only exist when the computer begins, a computer that began
+     * begins again.
      * @see Game.restart for the exact [changingBeginner] semantics.
      */
     fun restart(changingBeginner: Boolean) {
         cancelAi()
-        game.restart(changingBeginner)
+        val computerBeginsAgain = mode == GameMode.VS_COMPUTER && AiService.isUnbeatable(aiLevel) &&
+            game.startingPlayer() == COMPUTER_PLAYER
+        game.restart(changingBeginner && !computerBeginsAgain)
         publish()
         triggerAiMoveIfNeeded()
     }
