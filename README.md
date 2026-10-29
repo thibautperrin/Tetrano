@@ -32,7 +32,8 @@ neural network, puzzles and game analysis.
 
 - **Two players** on the same phone, each with a name and a ring color.
 - **Against the computer**, from level 0 to level 100 (the original 2015 engine, which hunts for
-  forks and blocks yours), plus **level 101**, a neural network trained by self-play that guides a
+  forks and blocks yours), plus **level 101**, a neural network trained by self-play (and, since 5.1, on the positions
+  proven by the winning graphs) that guides a
   Gumbel Monte-Carlo tree search, backed by an exact search for forced wins; and, when the
   computer begins, **levels 102 and 103**, unbeatable: they play a proven winning strategy (a
   verified graph of 2,519 positions after a first ring on a strong place, 30,376 after one on a
@@ -66,7 +67,7 @@ To play, drag a ring from below the board and drop it on a square.
 | [`tools/qubic-solver/`](tools/qubic-solver) | Notes and experiments on solving Qubic. |
 | [`docs/`](docs) | The 2026 rewrite plan, a French → English glossary of the 2015 code, the old online protocol. |
 
-The history starts with the 2015 Java app (tag `v4.1-legacy`); version 5.0 is the 2026 rewrite, 5.1 adds the Unbeatable levels and the Strategy guide.
+The history starts with the 2015 Java app (tag `v4.1-legacy`); version 5.0 is the 2026 rewrite, 5.1 adds the Unbeatable levels, the Strategy guide and a level-101 network fine-tuned on proven positions.
 
 ## Building
 

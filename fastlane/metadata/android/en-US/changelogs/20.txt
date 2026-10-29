@@ -1,3 +1,4 @@
 • Levels 102 and 103, unbeatable: the computer begins and plays a proven winning strategy
 • New Strategy guide: the best first moves and the stubbornest defence
+• Level 101: the neural network has learned from proven positions
 • Updated tools and libraries

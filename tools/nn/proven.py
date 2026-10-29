@@ -99,10 +99,11 @@ def main():
     rng = np.random.default_rng(step + 7)
     started = time.time()
     while step < args.steps:
-        n = min(500, args.steps - step)
+        n = min(500 - step % 500, args.steps - step)
         for group in optimizer.param_groups:
             group["lr"] = lr_at(step, args.steps, args.lr, args.lr_final, args.warmup)
-        # The learning rate is set per chunk of 500 steps except during the warm-up.
+        # The learning rate is set per chunk (up to the next multiple of 500 steps, where the state is
+        # saved), and at every step of the warm-up.
         if step < args.warmup:
             n = 1
         losses = train.train(model, optimizer, sp_train, n, args.batch, rng, log_every=0,

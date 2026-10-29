@@ -1,3 +1,4 @@
 • Niveles 102 y 103, imbatibles: el ordenador empieza y juega una estrategia ganadora demostrada
 • Nueva guía Estrategia: las mejores primeras jugadas y la defensa más tenaz
+• Nivel 101: la red neuronal ha aprendido de posiciones demostradas
 • Herramientas y bibliotecas actualizadas

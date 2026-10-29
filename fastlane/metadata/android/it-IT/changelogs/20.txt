@@ -1,3 +1,4 @@
 • Livelli 102 e 103, imbattibili: il computer inizia e gioca una strategia vincente dimostrata
 • Nuova guida Strategia: le migliori prime mosse e la difesa più tenace
+• Livello 101: la rete neurale ha imparato da posizioni dimostrate
 • Strumenti e librerie aggiornati

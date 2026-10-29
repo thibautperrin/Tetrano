@@ -251,6 +251,19 @@ au trait est perdue pour lui, et aux nœuds du graphe le coup joué est un coup 
    `runs/big` (`gen_-0001.bin`), lr 5e-5 → 1e-5 jusqu'à l'heure d'arrêt.
 5. **Match** contre gen 364 (`selfplay match`, ouvertures aléatoires jouées dans les deux sens).
 
+**Résultats** :
+
+| Positions de test | perte valeur avant → après affinage | précision valeur avant → après |
+|---|---|---|
+| auto-jeu (gen 364 de `runs/big`) | 0,341 → 0,347 | 86,4 % → 86,0 % |
+| prouvées | 0,129 → 0,019 | 94,9 % → 99,4 % |
+| prouvées, nœuds du graphe | 0,029 → 0,023 | 99,7 % → 99,9 % |
+
+Le réseau affiné fait jeu égal avec gen 364 (196,5 / 400, 256 simulations) ; après 30 générations
+d'auto-jeu (gen 0-29, 15 000 parties), gen 29 aussi (395 / 800, 512 simulations) : pas plus fort au
+jeu, mais il ne se trompe presque plus sur les positions décidées. C'est le réseau du niveau 101
+depuis la version 5.1 (`app/src/main/res/raw/tetrano_nn.bin`).
+
 Toute la chaîne, reprise étape par étape : `bash proven_night.sh` depuis le `tools/nn` qui contient
 `runs/` (variable `STOP` : heure d'arrêt de l'auto-jeu).
 
