@@ -12,6 +12,29 @@ class GumbelMctsTest {
     private val net = QubicNet.load(checkNotNull(javaClass.getResourceAsStream("/nn/fixture_net.bin")))
 
     @Test
+    fun evaluationCacheChangesNothingButTheCost() {
+        val mine = bits(0, 21, 42)
+        val theirs = bits(63, 1, 17)
+        val plain = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false))
+        val cached = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, netCacheBits = 12))
+        val a = plain.search(mine, theirs, 400)
+        val b = cached.search(mine, theirs, 400)
+        assertEquals(a.value, b.value, 0f)
+        assertTrue(a.policy.contentEquals(b.policy))
+        assertTrue("transpositions found: ${cached.cacheHits}", cached.cacheHits > 0)
+        assertEquals(plain.evaluations, cached.evaluations + cached.cacheHits)
+    }
+
+    @Test
+    fun rootValueIsTheChosenMovesValue() {
+        // v(t) + v(t+1) should be near 0 when the reported value is the chosen move's Q.
+        val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false))
+        val r = mcts.search(bits(0, 21), bits(63, 42), 256)
+        val q = r.moveValues[r.move]
+        assertEquals(q, r.value, 1e-6f)
+    }
+
+    @Test
     fun completesOwnLine() {
         val r = GumbelMcts(net).search(bits(0, 1, 2, 40), bits(60, 61, 62), 32)
         assertEquals(3, r.move)

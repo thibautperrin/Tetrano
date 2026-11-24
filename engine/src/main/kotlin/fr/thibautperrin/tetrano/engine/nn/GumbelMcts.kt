@@ -92,6 +92,13 @@ class GumbelMcts(
          * on average over self-play positions instead of 0).
          */
         val chosenMoveValue: Boolean = true,
+        /**
+         * > 0: network evaluations are kept in a table of 2^this entries keyed by the exact
+         * position, shared by every search of this instance: a position reached again by another
+         * order of moves (a transposition, frequent in Qubic) costs no evaluation. Visit counts
+         * stay per path. 0 disables it.
+         */
+        val netCacheBits: Int = 0,
     )
 
     /** Exact status of a node, for the player to move there. */
@@ -490,8 +497,25 @@ class GumbelMcts(
             node.netWdl[2] = 0f
             return
         }
-        evaluations++
-        net.evaluate(node.mine, node.theirs, workspace!!, netPolicy, node.netWdl)
+        val slot = cacheSlot(node.mine, node.theirs)
+        if (slot >= 0 && cacheMine[slot] == node.mine && cacheTheirs[slot] == node.theirs && cacheValid[slot]) {
+            cacheHits++
+            System.arraycopy(cachePolicy, slot * 64, netPolicy, 0, 64)
+            System.arraycopy(cacheWdl, slot * 3, node.netWdl, 0, 3)
+            cachedMovesLeft = cacheMovesLeft[slot]
+        } else {
+            evaluations++
+            net.evaluate(node.mine, node.theirs, workspace!!, netPolicy, node.netWdl)
+            cachedMovesLeft = workspace.movesLeft
+            if (slot >= 0) {
+                cacheMine[slot] = node.mine
+                cacheTheirs[slot] = node.theirs
+                cacheValid[slot] = true
+                System.arraycopy(netPolicy, 0, cachePolicy, slot * 64, 64)
+                System.arraycopy(node.netWdl, 0, cacheWdl, slot * 3, 3)
+                cacheMovesLeft[slot] = cachedMovesLeft
+            }
+        }
         var maxLogit = Float.NEGATIVE_INFINITY
         for (i in 0 until n) maxLogit = max(maxLogit, netPolicy[node.moves[i]])
         if (classes == null) {
@@ -510,7 +534,27 @@ class GumbelMcts(
             for (i in 0 until n) node.logits[i] = ln(mass[i] / total).toFloat()
         }
         node.netValue = node.netWdl[0] - node.netWdl[2]
-        node.netMovesLeft = workspace.movesLeft
+        node.netMovesLeft = cachedMovesLeft
+    }
+
+    private var cachedMovesLeft = 0f
+    private val cacheSize = if (config.netCacheBits > 0 && net != null) 1 shl config.netCacheBits else 0
+    private val cacheMine = LongArray(cacheSize)
+    private val cacheTheirs = LongArray(cacheSize)
+    private val cacheValid = BooleanArray(cacheSize)
+    private val cachePolicy = FloatArray(cacheSize * 64)
+    private val cacheWdl = FloatArray(cacheSize * 3)
+    private val cacheMovesLeft = FloatArray(cacheSize)
+
+    /** Network evaluations answered by the cache ([Config.netCacheBits]). */
+    var cacheHits: Long = 0L
+        private set
+
+    private fun cacheSlot(mine: Long, theirs: Long): Int {
+        if (cacheSize == 0) return -1
+        var h = mine * -0x61c8864680b583ebL xor java.lang.Long.rotateLeft(theirs * -0x3d4d51c2d82b14b1L, 23)
+        h = h xor (h ushr 29)
+        return h.toInt() and (cacheSize - 1)
     }
 
     private fun child(node: Node, index: Int): Node {

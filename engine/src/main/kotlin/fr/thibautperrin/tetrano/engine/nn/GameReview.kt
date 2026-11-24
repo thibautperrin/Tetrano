@@ -72,7 +72,7 @@ class GameReview(
     // next, so reviewing from the last position to the first reuses the later proofs.
     private val mcts = GumbelMcts(
         net,
-        GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f, rootSolveBudget = solveBudget, solverLog2 = 18),
+        GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f, rootSolveBudget = solveBudget, solverLog2 = 18, netCacheBits = 14),
     )
 
     /**

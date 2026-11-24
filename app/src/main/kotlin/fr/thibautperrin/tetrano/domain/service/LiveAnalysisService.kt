@@ -89,7 +89,7 @@ class LiveAnalysisService @Inject constructor(
             }
         }
         try {
-            val mcts = GumbelMcts(neuralNets.net, GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f))
+            val mcts = GumbelMcts(neuralNets.net, GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f, netCacheBits = 15))
             val root = mcts.newRoot(position.mine, position.theirs)
             var target = FIRST_STEP
             while (true) {
