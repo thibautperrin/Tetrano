@@ -33,7 +33,7 @@ import torch
 
 import data
 import train
-from model import load_checkpoint
+from model import build_model, load_checkpoint, model_config
 from winproc import keep_system_awake, run_child  # keep_system_awake: also imported from here
 
 ROOT = Path(__file__).resolve().parents[2]  # the Tetrano repository
@@ -42,6 +42,17 @@ SELFPLAY_LIB = ROOT / "selfplay" / "build" / "install" / "selfplay" / "lib"
 DEFAULTS = {
     "hidden": 48,
     "layers": 6,
+    # Network format: 2 (QubicNet) or 3 (QubicNetV3, free cells and live lines; q_head, global_every).
+    "version": 2,
+    "q_head": 1,
+    "global_every": 0,
+    # "v3": self-play records of format v3 (exact values, move values; see selfplay Records.kt).
+    "format": "",
+    # > 0: every self-play position is first solved exactly within this many evaluations.
+    "root_solve": 0,
+    # Share of self-play games starting from a "game under way" (legacy AI or policy prefix, then a
+    # weak move; see selfplay Openings.kt HumanOpenings) instead of the opening schedule.
+    "human_share": 0.0,
     "games": 2000,
     # > 0: a generation's self-play runs as successive java calls of chunk_games games each
     # (data/partial/), so that stopping loses at most one chunk; 0: one call.
@@ -167,8 +178,8 @@ def elo_from_score(score):
 
 def save_checkpoint(path, model, optimizer, gen):
     tmp = path.with_suffix(".tmp")
-    torch.save({"hidden": model.hidden, "layers": model.layers, "model": model.state_dict(),
-                "optimizer": optimizer.state_dict(), "generation": gen}, tmp)
+    torch.save({"hidden": model.hidden, "layers": model.layers, "config": model_config(model),
+                "model": model.state_dict(), "optimizer": optimizer.state_dict(), "generation": gen}, tmp)
     os.replace(tmp, path)
 
 
@@ -222,7 +233,7 @@ def window_files(files, max_positions):
     chosen, total = [], 0
     for f in reversed(files):
         chosen.append(f)
-        total += f.stat().st_size // data.RECORD.itemsize
+        total += data.count(f)
         if total >= max_positions:
             break
     return list(reversed(chosen))
@@ -248,7 +259,10 @@ def selfplay_args(cfg, model, games, out, seed, offset=0):
             + ([f"disputed={cfg['disputed']}"] if cfg["disputed"] else [])
             + ([f"openings={cfg['openings']}", f"offset={offset}", f"schedule_seed={cfg['schedule_seed']}"]
                if cfg["openings"] else [])
-            + ([f"adaptive=1", f"policy_min_sims={cfg['policy_min_sims']}"] if cfg["adaptive"] else []))
+            + ([f"adaptive=1", f"policy_min_sims={cfg['policy_min_sims']}"] if cfg["adaptive"] else [])
+            + ([f"format={cfg['format']}"] if cfg.get("format") else [])
+            + ([f"root_solve={cfg['root_solve']}"] if cfg.get("root_solve") else [])
+            + ([f"human_share={cfg['human_share']}"] if cfg.get("human_share") else []))
 
 
 SUMMED = ("games", "positions", "firstWins", "secondWins", "draws", "evals", "openingDraws", "openingsKept")
@@ -366,7 +380,9 @@ def main():
     gen = state["generation"]
     # Chunks of finished generations (a kill between the state's update and their deletion).
     remove_partials(run, gen if state["phase"] != "selfplay" else gen - 1)
-    model = train.new_model(cfg["hidden"], cfg["layers"])
+    torch.manual_seed(0)
+    model = build_model({k: cfg[k] for k in ("version", "hidden", "layers")} | {"q_head": bool(cfg["q_head"]),
+                                                                            "global_every": cfg["global_every"]})
     optimizer = train.make_optimizer(model, cfg["lr_peak"], cfg["weight_decay"])
     last_trained = gen if state["phase"] == "eval" else gen - 1
     if last_trained >= 0:

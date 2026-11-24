@@ -17,7 +17,17 @@ package fr.thibautperrin.tetrano.engine.nn
  * analysis screen keeps searching the position on display) can refine the
  * verdicts of the moves leading to and from it.
  */
-class GameReview(net: QubicNet, private val simulations: Int = 96) {
+class GameReview(
+    net: QubicNet,
+    /** Simulations per position (the maximum with [adaptive]). */
+    private val simulations: Int = 96,
+    /** True: [GumbelMcts.searchAdaptive] up to [simulations] (few where the search agrees with itself). */
+    private val adaptive: Boolean = false,
+    /** > 0: every position is first solved exactly within this many evaluations ([ExactSolver]). */
+    solveBudget: Long = 0L,
+    /** Exact values of the positions on a winning graph's walk, if given. */
+    private val oracle: fr.thibautperrin.tetrano.engine.wingraph.WinGraphOracle? = null,
+) {
 
     enum class Verdict { BEST, GOOD, INACCURACY, MISTAKE, BLUNDER, MISSED_WIN, ALLOWED_WIN }
 
@@ -58,23 +68,29 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
     /** A verdict on a move and the expected score it lost (0..1). */
     class Judgement(val expectedScoreLoss: Float, val verdict: Verdict)
 
-    private val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f))
+    // One search for the whole review: its exact solver keeps its tables from one position to the
+    // next, so reviewing from the last position to the first reuses the later proofs.
+    private val mcts = GumbelMcts(
+        net,
+        GumbelMcts.Config(gumbelNoise = false, movesLeftWeight = 0f, rootSolveBudget = solveBudget, solverLog2 = 18),
+    )
 
     /**
-     * Reviews [moves] (rings in play order). [onPosition] receives each
-     * position's search as soon as it is done (in order) and may return
-     * false to stop; the verdicts are only final in the returned list.
+     * Reviews [moves] (rings in play order), from the last position to the first.
+     * [onPosition] receives each position's index as soon as it is done and may return false to
+     * stop (the result is then empty); the verdicts are only final in the returned list.
      */
     fun review(
         moves: ByteArray,
         onPosition: ((index: Int, total: Int) -> Boolean)? = null,
     ): List<PositionReview> {
         val count = moves.size
-        val evaluations = ArrayList<Evaluation>(count + 1)
-        for (i in 0..count) {
-            evaluations += evaluate(moves, i)
-            if (onPosition != null && !onPosition(i, count + 1)) break
+        val found = arrayOfNulls<Evaluation>(count + 1)
+        for (i in count downTo 0) {
+            found[i] = evaluate(moves, i)
+            if (onPosition != null && !onPosition(i, count + 1)) return emptyList()
         }
+        val evaluations = found.map { it!! }
         return List(evaluations.size) { i ->
             val e = evaluations[i]
             val played = if (i < count) moves[i].toInt() else -1
@@ -89,9 +105,21 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
     /** The position after the first [count] of [moves], searched with this review's simulations. */
     fun evaluate(moves: ByteArray, count: Int): Evaluation {
         finalEvaluation(moves, count)?.let { return it }
-        val position = Position.after(moves, count)
-        return Evaluation.of(mcts.search(position.mine, position.theirs, simulations))
+        oracle?.lookup(moves, count)?.let { (won, move) ->
+            val status = if (won) GumbelMcts.Status.WIN else GumbelMcts.Status.LOSS
+            if (won || move >= 0) {
+                return Evaluation(if (won) floatArrayOf(1f, 0f, 0f) else floatArrayOf(0f, 0f, 1f), GumbelMcts.exactValue(status), status, move, 0)
+            }
+            // Lost for the side to move: the search still names the most resistant move.
+            val position = Position.after(moves, count)
+            val r = search(position)
+            return Evaluation(floatArrayOf(0f, 0f, 1f), -1f, status, r.move, r.simulations)
+        }
+        return Evaluation.of(search(Position.after(moves, count)))
     }
+
+    private fun search(position: Position): GumbelMcts.Result =
+        if (adaptive) mcts.searchAdaptive(position.mine, position.theirs, simulations) else mcts.search(position.mine, position.theirs, simulations)
 
     /**
      * Verdict on move [ply] of [moves], from the evaluations of the positions before ([before])
@@ -104,8 +132,9 @@ class GameReview(net: QubicNet, private val simulations: Int = 96) {
         val loss = (beforeScore - afterScore).coerceAtLeast(0f)
         val verdict = when {
             before.status == GumbelMcts.Status.WIN && after.status != GumbelMcts.Status.LOSS -> Verdict.MISSED_WIN
+            // A proven draw or win before the move has a safe move by definition.
             before.status != GumbelMcts.Status.LOSS && after.status == GumbelMcts.Status.WIN &&
-                hasSafeMove(Position.after(moves, ply)) -> Verdict.ALLOWED_WIN
+                (before.status == GumbelMcts.Status.DRAW || hasSafeMove(Position.after(moves, ply))) -> Verdict.ALLOWED_WIN
             played == before.bestRing -> Verdict.BEST
             loss >= BLUNDER -> Verdict.BLUNDER
             loss >= MISTAKE -> Verdict.MISTAKE

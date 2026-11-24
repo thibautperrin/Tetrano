@@ -202,10 +202,12 @@ class AnalysisViewModel @Inject constructor(
         reviewProgress = 0f
         val moves = main
         viewModelScope.launch {
+            var done = 0
             reviewSession.evaluateAll(moves).collect { (index, evaluation) ->
                 if (moves !== main) return@collect
                 offerEvaluation(index, evaluation)
-                reviewProgress = (index + 1f) / (moves.size + 1)
+                done++
+                reviewProgress = done.toFloat() / (moves.size + 1)
                 publish()
             }
             reviewProgress = null

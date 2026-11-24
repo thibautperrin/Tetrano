@@ -93,7 +93,29 @@ internal class Position(
     val policy: FloatArray,
     val value: Float,
     val flags: Int,
+    /** Exact value for the side to move (EXACT_* codes of Records.kt), when the search proved it. */
+    val exact: Int = EXACT_UNKNOWN,
+    /** Per move: the mover's value after it × 100 (well-visited moves only), else [Q_UNKNOWN]; null if none. */
+    val q: ByteArray? = null,
 )
+
+/** Moves visited at least this often at the root get a recorded value (Q head target). */
+private const val Q_MIN_VISITS = 8
+
+/** The recorded per-move values of a search result (see [Position.q]), or null. */
+private fun moveValues(result: GumbelMcts.Result): ByteArray? {
+    var any = false
+    val q = ByteArray(64) { c ->
+        val v = result.moveValues[c]
+        if (!v.isNaN() && result.visits[c] >= Q_MIN_VISITS) {
+            any = true
+            Math.round(v.coerceIn(-1f, 1f) * 100f).toByte()
+        } else {
+            Q_UNKNOWN
+        }
+    }
+    return if (any) q else null
+}
 
 /** A self-play game: recorded positions, the winner (0 first, 1 second, -1 draw) and its length in plies. */
 internal class PlayedGame(val positions: List<Position>, val winner: Int, val plies: Int)
@@ -201,7 +223,18 @@ private fun playGame(mcts: GumbelMcts, spec: SearchSpec, start: Start): PlayedGa
             GumbelMcts.Status.UNKNOWN -> if (result.simulations == 0 || result.simulations < spec.policyMinSims) 0 else FLAG_POLICY
             else -> FLAG_EXACT
         }
-        positions += Position(mine, theirs, ply, result.policy, result.value, flags)
+        val exact = when (result.status) {
+            GumbelMcts.Status.WIN -> EXACT_WIN
+            GumbelMcts.Status.LOSS -> EXACT_LOSS
+            GumbelMcts.Status.DRAW -> EXACT_DRAW
+            GumbelMcts.Status.UNKNOWN -> EXACT_UNKNOWN
+        }
+        val q = if (result.status == GumbelMcts.Status.UNKNOWN) moveValues(result) else null
+        positions += Position(
+            mine, theirs, ply, result.policy, result.value,
+            flags or (if (mcts.config.chosenMoveValue) FLAG_CHOSEN_Q else 0) or (if (q != null) FLAG_MOVE_VALUES else 0),
+            exact, q,
+        )
         if (result.move < 0) return PlayedGame(positions, -1, ply)
         val after = mine or (1L shl result.move)
         ply++
@@ -233,6 +266,33 @@ internal fun encode(game: PlayedGame, out: ByteBuffer) {
     }
 }
 
+/** Like [encode], as v3 records (Records.kt): the exact value and the move values too. */
+internal fun encodeV3(game: PlayedGame, out: ByteBuffer) {
+    val winner = game.winner
+    val r = Record3()
+    for (p in game.positions) {
+        val mover = p.ply % 2
+        r.mine = p.mine
+        r.theirs = p.theirs
+        r.outcome = when (winner) {
+            -1 -> 1
+            mover -> 0
+            else -> 2
+        }
+        // In v3 files the "exact" flag means "field exact is valid", which for the search's proofs it is.
+        r.flags = p.flags
+        r.ply = p.ply
+        r.movesLeft = (game.plies - p.ply).coerceIn(0, 255)
+        for (c in 0 until 64) r.policy[c] = Math.round(p.policy[c].coerceIn(0f, 1f) * 65535f).toShort()
+        r.value = p.value
+        r.exact = p.exact
+        r.source = 0
+        r.evals = 0
+        if (p.q != null) p.q.copyInto(r.q) else r.q.fill(Q_UNKNOWN)
+        r.write(out)
+    }
+}
+
 /**
  * Self-play games written to `out=`. Normally to `<out>.tmp`, renamed at the end. With `resume=1`,
  * straight to `out` with a line per finished game in `<out>.idx` (game index, end offset in out,
@@ -256,6 +316,12 @@ private fun selfPlay(options: Map<String, String>) {
     val offset = options.long("offset", 0L)
     val outFile = File(options["out"] ?: error("out= required"))
     val resume = options["resume"] == "1"
+    // format=v3: records of Records.kt (exact values, move values) behind a header.
+    val v3 = options["format"] == "v3"
+    val recordSize = if (v3) RECORD3_SIZE else RECORD_SIZE
+    val headerSize = if (v3) V3_HEADER.toLong() else 0L
+    val rootSolve = options.long("root_solve", 0L)
+    val humanShare = options["human_share"]?.toDouble() ?: 0.0
     val tmp = if (resume) outFile else File(outFile.path + ".tmp")
     val index = File(outFile.path + ".idx")
     val started = System.nanoTime()
@@ -277,33 +343,39 @@ private fun selfPlay(options: Map<String, String>) {
             }
             index.writeText(index.readLines().filter { it.endsWith(";") }.joinToString("") { "$it\n" })
         }
-        if (outFile.exists()) java.io.RandomAccessFile(outFile, "rw").use { it.setLength(end) }
-        positionsCount.set(end / RECORD_SIZE)
+        end = maxOf(end, headerSize)
+        if (outFile.exists()) java.io.RandomAccessFile(outFile, "rw").use { it.setLength(if (it.length() >= headerSize) end else 0L) }
+        positionsCount.set((end - headerSize) / recordSize)
     }
     val todo = (0 until games).filter { it !in done }
     val next = AtomicInteger(0)
     val failure = java.util.concurrent.atomic.AtomicReference<Throwable>()
-    FileOutputStream(tmp, resume).use { file ->
+    if (v3 && (!resume || !tmp.exists() || tmp.length() < headerSize)) tmp.writeBytes(v3Header())
+    FileOutputStream(tmp, resume || v3).use { file ->
         FileOutputStream(index, true).use { indexOut ->
             val pool = Executors.newFixedThreadPool(threads)
             repeat(threads) { t ->
                 pool.execute(failFast(failure) {
                     // A resumed run draws other openings than the first attempt.
                     val rng = Random(seed * 1000 + t + done.size * 1_000_003L)
-                    val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true), rng)
+                    val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true, rootSolveBudget = rootSolve), rng)
+                    val judgeH = filter?.Judge()
+                    val human = if (humanShare > 0 && net != null) HumanOpenings(net, rng, judgeH?.let { j -> j::acceptsFirstPlayer }) else null
                     val judge = filter?.Judge()
                     val openings = schedule?.let { OpeningMaker(it, judge?.let { j -> j::acceptsFirstPlayer }, rng) }
                     while (true) {
                         val k = next.getAndIncrement()
                         if (k >= todo.size || failure.get() != null) break
                         val g = todo[k]
-                        val game = if (openings != null) {
+                        val game = if (human != null && HumanOpenings.chosen(offset + g, humanShare, seed)) {
+                            playGame(mcts, spec, human.start())
+                        } else if (openings != null) {
                             playGame(mcts, spec, openings.start(offset + g))
                         } else {
                             playGame(mcts, spec, randomPlies, rng, judge)
                         }
-                        val buffer = ByteBuffer.allocate(game.positions.size * RECORD_SIZE).order(ByteOrder.LITTLE_ENDIAN)
-                        encode(game, buffer)
+                        val buffer = ByteBuffer.allocate(game.positions.size * recordSize).order(ByteOrder.LITTLE_ENDIAN)
+                        if (v3) encodeV3(game, buffer) else encode(game, buffer)
                         synchronized(file) {
                             file.write(buffer.array())
                             if (resume) {

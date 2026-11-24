@@ -193,6 +193,96 @@ internal class OpeningMaker(
     }
 }
 
+/**
+ * "Game under way" starts for self-play (`human_share=`): positions like those of games between
+ * people, which the analysis must judge (plan § 5.3), not recorded themselves:
+ * - half: a prefix of 6 to 24 plies of the legacy AI against itself (levels 10 to 85 per side);
+ * - half: 4 to 20 plies drawn from the network's policy (one forward pass per move), then one
+ *   weak move: drawn from the policy flattened (temperature 2) or, one time in three, uniformly.
+ * Drawn again if the game is over or the side to move can complete a line at once; half of them
+ * also if not disputed (see [disputed]), so that decided positions do not take over.
+ */
+internal class HumanOpenings(
+    private val net: fr.thibautperrin.tetrano.engine.nn.QubicNet,
+    private val rng: Random,
+    /** Half of the starts must be disputed for it (given whether the first player is to move), when given. */
+    private val disputed: ((mine: Long, theirs: Long, firstToMove: Boolean) -> Boolean)? = null,
+) {
+    private val ws = net.newWorkspace()
+    private val logits = FloatArray(64)
+    private val wdl = FloatArray(3)
+    private val prior = FloatArray(64)
+    private var wantDisputed = false
+
+    fun start(): Start {
+        while (true) {
+            val legacy = rng.nextBoolean()
+            val plies = if (legacy) 6 + rng.nextInt(19) else 4 + rng.nextInt(17)
+            val levels = intArrayOf(10 + rng.nextInt(76), 10 + rng.nextInt(76))
+            var mine = 0L
+            var theirs = 0L
+            var over = false
+            for (ply in 0..plies) {
+                val weak = !legacy && ply == plies
+                if (legacy && ply == plies) break
+                val cell = when {
+                    legacy -> legacyMove(mine, theirs, ply, levels[ply % 2], rng)
+                    weak -> {
+                        policy(mine, theirs)
+                        if (rng.nextInt(3) == 0) randomFreeCell(mine or theirs, rng) else sampleFromPrior(prior, 2.0, rng)
+                    }
+                    else -> {
+                        policy(mine, theirs)
+                        sampleFromPrior(prior, 1.0, rng)
+                    }
+                }
+                val (m, t, o) = play(cell, mine, theirs)
+                mine = m
+                theirs = t
+                if (o) {
+                    over = true
+                    break
+                }
+            }
+            if (over || (mine or theirs) == -1L || Tactics.threats(mine, theirs) != 0L) continue
+            val ply = QubicGeometry.popCount(mine or theirs)
+            if (wantDisputed && disputed != null && !disputed.invoke(mine, theirs, ply % 2 == 0)) continue
+            wantDisputed = !wantDisputed
+            return Start(mine, theirs, ply)
+        }
+    }
+
+    /** (side to move after, opponent, game over) once [cell] is played by the side to move [mine]. */
+    private fun play(cell: Int, mine: Long, theirs: Long): Triple<Long, Long, Boolean> {
+        val after = mine or (1L shl cell)
+        return Triple(theirs, after, Tactics.wonWith(after, cell))
+    }
+
+    private fun policy(mine: Long, theirs: Long) {
+        net.evaluate(mine, theirs, ws, logits, wdl)
+        val free = (mine or theirs).inv()
+        var max = Float.NEGATIVE_INFINITY
+        for (c in 0 until 64) if ((free ushr c) and 1L != 0L) max = maxOf(max, logits[c])
+        var total = 0f
+        for (c in 0 until 64) {
+            prior[c] = if ((free ushr c) and 1L != 0L) kotlin.math.exp(logits[c] - max) else 0f
+            total += prior[c]
+        }
+        for (c in 0 until 64) prior[c] /= total
+    }
+
+    companion object {
+        /** Whether game [index] of the run starts this way (a fixed share, the same on every resume). */
+        fun chosen(index: Long, share: Double, seed: Long): Boolean {
+            var h = (index + 1) * -0x61c8864680b583ebL xor seed * -0x3d4d51c2d82b14b1L
+            h = h xor (h ushr 31)
+            h *= -0x4b47d5b1a6d5e2b7L
+            h = h xor (h ushr 29)
+            return (h ushr 11).toDouble() / (1L shl 53).toDouble() < share
+        }
+    }
+}
+
 /** `openings`: the classes found and how a cycle of the schedule is spread. */
 internal fun printOpeningSchedule(options: Map<String, String>) {
     val schedule = OpeningSchedule(options["schedule_seed"]?.toLong() ?: 1L)
