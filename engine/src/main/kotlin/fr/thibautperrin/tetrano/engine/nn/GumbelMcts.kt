@@ -70,6 +70,28 @@ class GumbelMcts(
         val stableRounds: Int = 4,
         val decidedStableRounds: Int = 2,
         val decidedValue: Float = 0.8f,
+        /**
+         * > 0: before searching, the root is solved by [ExactSolver] within this many
+         * evaluations (counted, never timed). Proven won or drawn: the solver's move, no
+         * simulation; proven lost: the search still picks the most resistant move, the result
+         * says lost.
+         */
+        val rootSolveBudget: Long = 0L,
+        /**
+         * > 0: an inner node is solved by [ExactSolver] when its visits reach 16, 128 and 1024,
+         * within this many evaluations per visit; a proven node then backs up its exact value.
+         */
+        val treeSolvePerVisit: Int = 0,
+        /** Table size (log2 entries, each of the 2 proof searches) of the [ExactSolver]. */
+        val solverLog2: Int = 18,
+        /**
+         * The root value reported ([Result.value]): true, the completed Q of the move chosen
+         * (what the position is worth if that move is played); false, the prior-weighted mix of
+         * every visited move's Q (Gumbel paper, eq. 33), which counts the bad moves tried too
+         * and so underrates the position for the side to move (measured: v(t) + v(t+1) = -0.28
+         * on average over self-play positions instead of 0).
+         */
+        val chosenMoveValue: Boolean = true,
     )
 
     /** Exact status of a node, for the player to move there. */
@@ -113,6 +135,13 @@ class GumbelMcts(
         var netMovesLeft: Float = 0f
             internal set
         val netWdl: FloatArray = FloatArray(3)
+
+        /** What [ExactSolver] proved at this root while [status] stays searchable (a proven loss), else UNKNOWN. */
+        internal var proven: Status = Status.UNKNOWN
+
+        /** When [status] is [Status.DRAW] by the solver: a move holding the draw. */
+        internal var exactMove: Int = -1
+        internal var solveTried = false
     }
 
     /** Outcome of [search]. Cells are ring numbers 0..63. */
@@ -230,9 +259,45 @@ class GumbelMcts(
                 simulate(root, 0)
             }
         }
+        if (root.status == Status.UNKNOWN && !root.solveTried && config.rootSolveBudget > 0 && root.moves.size > 1) {
+            root.solveTried = true
+            val answer = solver().solve(root.mine, root.theirs, config.rootSolveBudget, opponentFirst = root.netValue < 0f)
+            when (answer.outcome) {
+                ExactSolver.Outcome.WIN -> if (answer.move >= 0) {
+                    root.status = Status.WIN
+                    root.winningMove = answer.move
+                } else {
+                    root.proven = Status.WIN
+                }
+                ExactSolver.Outcome.DRAW -> if (answer.move >= 0) {
+                    root.status = Status.DRAW
+                    root.exactMove = answer.move
+                } else {
+                    root.proven = Status.DRAW
+                }
+                ExactSolver.Outcome.LOSS -> root.proven = Status.LOSS
+                ExactSolver.Outcome.UNKNOWN -> {}
+            }
+        }
         if (root.status == Status.WIN) preferShortestWin(root)
         if (root.status != Status.UNKNOWN || root.moves.size <= 1) return immediateResult(root)
         return null
+    }
+
+    private var exactSolver: ExactSolver? = null
+
+    private fun solver(): ExactSolver = exactSolver ?: ExactSolver(config.solverLog2).also { exactSolver = it }
+
+    /** In-tree solving ([Config.treeSolvePerVisit]) of inner node [node], whose visits just reached [visits]. */
+    private fun solveInner(node: Node, visits: Int) {
+        if (visits != 16 && visits != 128 && visits != 1024) return
+        val answer = solver().solve(node.mine, node.theirs, config.treeSolvePerVisit.toLong() * visits, opponentFirst = node.netValue < 0f, findMove = false)
+        node.status = when (answer.outcome) {
+            ExactSolver.Outcome.WIN -> Status.WIN
+            ExactSolver.Outcome.LOSS -> Status.LOSS
+            ExactSolver.Outcome.DRAW -> Status.DRAW
+            ExactSolver.Outcome.UNKNOWN -> Status.UNKNOWN
+        }
     }
 
     /** One round of sequential halving: [done] simulations, the move class [chosen], whether it [stopped] early. */
@@ -495,6 +560,7 @@ class GumbelMcts(
             n.valueSum[i] += value
             n.totalVisits++
             updateStatus(n, i)
+            if (d > 0 && config.treeSolvePerVisit > 0 && n.status == Status.UNKNOWN) solveInner(n, n.totalVisits)
         }
     }
 
@@ -622,6 +688,7 @@ class GumbelMcts(
     private fun immediateResult(root: Node): Result {
         val move = when {
             root.status == Status.WIN -> root.winningMove
+            root.status == Status.DRAW && root.exactMove >= 0 -> root.exactMove
             root.moves.isNotEmpty() -> member(root, root.logits.indices.maxBy { root.logits[it] })
             else -> -1
         }
@@ -667,17 +734,31 @@ class GumbelMcts(
                 moveClass[it] = i
             }
         }
-        val value = when (root.status) {
-            Status.UNKNOWN -> mixedValue(root)
-            else -> exactValue(root.status)
+        val status = if (root.status == Status.UNKNOWN) root.proven else root.status
+        val value = when (status) {
+            Status.UNKNOWN -> rootValue(root, move)
+            else -> exactValue(status)
         }
-        val wdl = when (root.status) {
+        val wdl = when (status) {
             Status.WIN -> floatArrayOf(1f, 0f, 0f)
             Status.LOSS -> floatArrayOf(0f, 0f, 1f)
             Status.DRAW -> floatArrayOf(0f, 1f, 0f)
             Status.UNKNOWN -> root.netWdl.copyOf()
         }
-        return Result(move, root.status, value, wdl, policy, prior, simulations, moveValues, visits, moveClass)
+        return Result(move, status, value, wdl, policy, prior, simulations, moveValues, visits, moveClass)
+    }
+
+    /** [Result.value] of an unsolved root: see [Config.chosenMoveValue]. */
+    private fun rootValue(root: Node, move: Int): Float {
+        if (!config.chosenMoveValue || move < 0) return mixedValue(root)
+        for (i in root.moves.indices) {
+            if (cellsOf(root, i) and (1L shl move) != 0L) {
+                val c = root.children[i]
+                if (c != null && c.status != Status.UNKNOWN) return -exactValue(c.status)
+                return if (root.visits[i] > 0) root.valueSum[i] / root.visits[i] else root.netValue
+            }
+        }
+        return mixedValue(root)
     }
 
     private inline fun forEachCell(cells: Long, action: (Int) -> Unit) {

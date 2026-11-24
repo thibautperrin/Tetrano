@@ -31,6 +31,9 @@ import kotlin.random.Random
  * - `puzzles data=<dir> model=<file> out=<file> ...` (the app's puzzle set, see [generatePuzzles])
  * - `openings [schedule_seed=N] [cycle=N]` (summary of a cycle of [OpeningSchedule])
  * - `battle a=<file> b=<file> sims_a=N sims_b=N out=<dir> ...` (paired games on scheduled openings, see [battle])
+ * - `relabel in=<file> out=<file> budget=N` (exact values of training positions, see [relabel])
+ * - `truth model=<file> out=<dir> ...` (benchmark of positions with exact values, see [truth])
+ * - `judge bench=<dir> model=<file> ...` (accuracy of a network and its search on that benchmark, see [judge])
  *
  * Output lines starting with `RESULT ` are machine-readable `key=value` pairs
  * read by tools/nn/loop.py.
@@ -52,6 +55,9 @@ fun main(args: Array<String>) {
         "battle" -> battle(options)
         "calibrate" -> calibrate(options)
         "rounds" -> rounds(options)
+        "relabel" -> relabel(options)
+        "truth" -> truth(options)
+        "judge" -> judge(options)
         else -> error("unknown command $command")
     }
 }
