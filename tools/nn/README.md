@@ -267,6 +267,48 @@ depuis la version 5.1 (`app/src/main/res/raw/tetrano_nn.bin`).
 Toute la chaîne, reprise étape par étape : `bash proven_night.sh` depuis le `tools/nn` qui contient
 `runs/` (variable `STOP` : heure d'arrêt de l'auto-jeu).
 
+## Valeurs exactes et réseau v3 (plan `docs/NN_IMPROVEMENT_PLAN.md`, novembre 2026)
+
+But : une analyse juste de n'importe quelle position, y compris après des fautes des deux joueurs.
+
+### Pièces
+
+| Où | Quoi |
+|---|---|
+| `engine/.../nn/ExactSolver.kt` | valeur exacte (gain / nulle / perte) du joueur au trait : deux preuves df-pn (`ProofSearch`, le `DfPn` de `:wingraph` généralisé aux deux joueurs, vérifié identique), deux réfutations = nulle ; budget en évaluations, jamais en temps |
+| `GumbelMcts` | `rootSolveBudget` (racine résolue avant la recherche), `treeSolvePerVisit` (nœuds résolus à 16, 128, 1024 visites), `netCacheBits` (évaluations du réseau gardées par position : transpositions), `chosenMoveValue` (valeur rendue = Q du coup choisi ; l'ancienne moyenne des coups visités sous-estimait la position de 0,28 en moyenne) |
+| `engine/.../wingraph/WinGraphOracle.kt` | positions exactes tant que le premier joueur suit un des deux graphes gagnants |
+| `GameReview`, appli | revue de la dernière position à la première, solveur (20 000 évaluations) + recherche adaptative 64 → 256 ; analyse en continu : solveur sur un second fil, le résultat exact remplace l'estimation |
+| `selfplay relabel / truth / judge` | valeurs exactes des données existantes ; banc de vérité ; justesse d'un réseau et de sa recherche sur ce banc |
+| format v3 des données (`Records.kt`, `data.py`) | en-tête 16 octets + 224 octets : en plus du v2, valeur exacte, valeur de chaque coup, drapeau « valeur = Q du coup choisi » ; les fichiers v2 se lisent toujours |
+| `model.py` `QubicNetV3`, `QubicNet.kt` version 3 | passage de messages sur les seules cases libres et lignes vivantes (aucune information perdue, ~1,5× moins de calcul en moyenne), tête Q optionnelle (valeur de chaque coup), contexte global optionnel |
+| `train.py` | cible de valeur = valeur exacte si connue, sinon issue de la partie (mêlée à la valeur de recherche quand c'est le Q du coup choisi) ; cible Q = valeur exacte du coup joué (position suivante exacte) et valeurs de recherche des coups bien visités |
+| `v3_night.py` | chaîne reprenable : `truth`, `judge0`, `relabel`, `ablate`, `pretrain`, `judge1`, `summary` (dossier `runs/v3`) |
+| `v3_train.py` | entraînement supervisé (ablations, pré-entraînement) sur les données ré-étiquetées |
+| `v3_selfplay.py` / `.bat` | auto-jeu du réseau v3 depuis le pré-entraîné (T4) |
+
+### Banc de vérité (`runs/v3/truth`)
+
+`positions.csv` (positions de 150 parties d'auto-jeu « A », de 150 parties « humaines » « B » : ancienne IA
+contre elle-même, ancienne IA contre le réseau, réseau avec fautes injectées ; « C » : les 792 positions à 2 et
+3 coups à symétrie près et 1 200 positions de 4 à 8 coups), `labels.csv` (valeur exacte, coup qui la garde),
+`moves.csv` (valeur exacte de chaque coup pour 400 positions). Mesure d'un réseau :
+
+```
+java -cp "../../selfplay/build/install/selfplay/lib/*" fr.thibautperrin.tetrano.selfplay.MainKt judge bench=runs/v3/truth model=<réseau.bin> sims=0,64,256 [root_solve=30000] [old_value=1]
+```
+
+Rapport `runs/v3/truth/judge_<nom>.md` : erreur de valeur, part prouvée, coup juste, cohérence v(t)+v(t+1),
+rappel et précision des fautes, temps, par famille et par tranche de plis.
+
+### Auto-jeu v3 (après le pré-entraînement)
+
+Double-clic sur `v3_selfplay.bat` (ou `.venv/Scripts/python -u v3_selfplay.py --until 07:30`) : dossier
+`runs/v3/selfplay`, reprise comme `loop.py`. Générations de 500 parties, recherche adaptative jusqu'à 2048,
+solveur à la racine (20 000 évaluations), 35 % de parties « entamées », données v3, fenêtre amorcée avec
+1,5 M positions ré-étiquetées, 10 % de positions des graphes. Reconstruire l'outil d'abord :
+`./gradlew :selfplay:installDist`.
+
 ## Battle petit réseau contre gros réseau, PC et téléphones (`battle.py`)
 
 `battle.bat` (ou `.venv/Scripts/python -u battle.py [--until 05:00]`) enchaîne, en reprenant là où
