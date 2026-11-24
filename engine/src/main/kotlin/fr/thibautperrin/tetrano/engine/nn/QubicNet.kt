@@ -6,6 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.exp
 import kotlin.math.sqrt
+import kotlin.math.tanh
 
 /**
  * The Tetrano value/policy network: message passing on the cell <-> line
@@ -14,17 +15,23 @@ import kotlin.math.sqrt
  * 192 board automorphisms. Trained by `tools/nn` (PyTorch, `model.py`),
  * which defines the reference forward pass this class mirrors.
  *
- * Inputs, from the point of view of the player to move ("mine"):
+ * Versions 1 and 2 (`QubicNet` in model.py) run on every cell and line. Inputs, from the point of
+ * view of the player to move ("mine"):
  * - per cell: state {empty, mine, theirs} and degree class {4 lines, 7 lines};
  * - per line: {empty, mine 1/2/3, theirs 1/2/3, dead (both colours)};
  * - "I am the first player" (equal ring counts).
- *
  * Version 2 adds a third head, the number of plies left until the end of
  * the game ([Workspace.movesLeft]); version 1 files (no such head) still
  * load, with 0 plies left.
  *
- * File format (little endian): int32 magic [MAGIC], int32 version (1 or 2),
- * int32 H, int32 L, int32 parameter count, then float32 parameters in the
+ * Version 3 (`QubicNetV3` in model.py) runs on the free cells and the live lines only (a line
+ * holding both colours can never be completed; an occupied cell acts only through its live
+ * lines), so it gets cheaper as the game goes on; it may have a Q head ([Workspace.q]: the
+ * mover's value after each move) and a global context every few layers.
+ *
+ * File format (little endian): int32 magic [MAGIC], int32 version (1, 2 or 3),
+ * int32 H, int32 L, int32 parameter count, [version 3: int32 flags (1: Q head),
+ * int32 global context period (0: none)], then float32 parameters in the
  * order read by the constructor. Linear weights are stored transposed,
  * `[in][out]`, so the forward pass is a sequence of vectorizable axpy loops.
  *
@@ -35,9 +42,14 @@ class QubicNet private constructor(
     val hidden: Int,
     val layers: Int,
     params: FloatArray,
-    /** True iff the file has the moves-left head (version 2). */
-    val hasMovesLeft: Boolean,
+    val version: Int,
+    /** True iff the network has a Q head (version 3 only): [Workspace.q] is then filled. */
+    val hasQHead: Boolean = false,
+    private val globalEvery: Int = 0,
 ) {
+    /** True iff the file has the moves-left head (version 2 or later). */
+    val hasMovesLeft: Boolean = version >= 2
+    private val v3 = version >= 3
 
     private var offset = 0
     private val all = params
@@ -49,29 +61,38 @@ class QubicNet private constructor(
     }
 
     private val h = hidden
-    private val valueIn = 3 * h + 1
+    private val valueIn = if (v3) 3 * h + 3 else 3 * h + 1
 
-    private val cellEmbed = take(3 * h)
+    // Version 1-2 embeddings (cell states); version 3 only has degree, first and lines.
+    private val cellEmbed = if (v3) 0 else take(3 * h)
     private val degreeEmbed = take(2 * h)
     private val firstEmbed = take(h)
     private val lineEmbed = take(8 * h)
 
     private class Block(
-        val lnGamma: Int, val lnBeta: Int, val w1: Int, val b1: Int, val w2: Int, val b2: Int,
+        val inSize: Int, val lnGamma: Int, val lnBeta: Int, val w1: Int, val b1: Int, val w2: Int, val b2: Int,
     )
 
     private fun block(inSize: Int): Block = Block(
-        lnGamma = take(inSize), lnBeta = take(inSize),
+        inSize = inSize, lnGamma = take(inSize), lnBeta = take(inSize),
         w1 = take(inSize * h), b1 = take(h), w2 = take(h * h), b2 = take(h),
     )
 
     private val lineBlocks = arrayOfNulls<Block>(layers)
     private val cellBlocks = arrayOfNulls<Block>(layers)
 
+    /** Version 3: (weights, bias) of the global context layer after layer k, or -1. */
+    private val globalW = IntArray(layers) { -1 }
+    private val globalB = IntArray(layers) { -1 }
+
     init {
         for (k in 0 until layers) {
             lineBlocks[k] = block(2 * h)
-            cellBlocks[k] = block(2 * h)
+            cellBlocks[k] = block(if (v3) 3 * h else 2 * h)
+            if (v3 && globalEvery > 0 && (k + 1) % globalEvery == 0) {
+                globalW[k] = take(2 * h * h)
+                globalB[k] = take(h)
+            }
         }
     }
 
@@ -81,6 +102,12 @@ class QubicNet private constructor(
     private val polB1 = take(h)
     private val polW2 = take(h)
     private val polB2 = take(1)
+    private val qLnGamma = if (hasQHead) take(h) else 0
+    private val qLnBeta = if (hasQHead) take(h) else 0
+    private val qW1 = if (hasQHead) take(h * h) else 0
+    private val qB1 = if (hasQHead) take(h) else 0
+    private val qW2 = if (hasQHead) take(h) else 0
+    private val qB2 = if (hasQHead) take(1) else 0
     private val valLnGamma = take(valueIn)
     private val valLnBeta = take(valueIn)
     private val valW1 = take(valueIn * h)
@@ -102,14 +129,21 @@ class QubicNet private constructor(
     inner class Workspace {
         internal val cell = FloatArray(QubicGeometry.CELLS * h)
         internal val line = FloatArray(QubicGeometry.LINES * h)
-        internal val input = FloatArray(maxOf(2 * h, valueIn))
-        internal val normed = FloatArray(maxOf(2 * h, valueIn))
+        internal val input = FloatArray(maxOf(3 * h, valueIn))
+        internal val normed = FloatArray(maxOf(3 * h, valueIn))
         internal val mid = FloatArray(h)
         internal val out = FloatArray(h)
+        internal val freeCells = IntArray(QubicGeometry.CELLS)
+        internal val liveLines = IntArray(QubicGeometry.LINES)
+        internal val liveCount = IntArray(QubicGeometry.CELLS)
+        internal val lineLive = BooleanArray(QubicGeometry.LINES)
 
         /** Plies left until the end of the game, as estimated by the last [evaluate] (0 for a version-1 network). */
         var movesLeft: Float = 0f
             internal set
+
+        /** With a Q head: the mover's value (-1..1) after each free cell, from the last [evaluate] (0 for occupied cells). */
+        val q: FloatArray = FloatArray(QubicGeometry.CELLS)
     }
 
     fun newWorkspace(): Workspace = Workspace()
@@ -121,6 +155,10 @@ class QubicNet private constructor(
      * probabilities for the player to move).
      */
     fun evaluate(mine: Long, theirs: Long, ws: Workspace, policyLogits: FloatArray, wdl: FloatArray) {
+        if (v3) evaluateV3(mine, theirs, ws, policyLogits, wdl) else evaluateV2(mine, theirs, ws, policyLogits, wdl)
+    }
+
+    private fun evaluateV2(mine: Long, theirs: Long, ws: Workspace, policyLogits: FloatArray, wdl: FloatArray) {
         val p = all
         val cell = ws.cell
         val line = ws.line
@@ -160,7 +198,7 @@ class QubicNet private constructor(
                     val cb = c * h
                     for (j in 0 until h) input[h + j] += cell[cb + j]
                 }
-                residualMlp(lb, 2 * h, ws, line, base)
+                residualMlp(lb, ws, line, base)
             }
             val cb2 = cellBlocks[k]!!
             for (c in 0 until QubicGeometry.CELLS) {
@@ -174,22 +212,12 @@ class QubicNet private constructor(
                 }
                 val inv = 1f / degree
                 for (j in h until 2 * h) input[j] *= inv
-                residualMlp(cb2, 2 * h, ws, cell, base)
+                residualMlp(cb2, ws, cell, base)
             }
         }
 
         // Policy head: one logit per cell.
-        for (c in 0 until QubicGeometry.CELLS) {
-            System.arraycopy(cell, c * h, input, 0, h)
-            layerNorm(input, h, polLnGamma, polLnBeta, ws.normed)
-            linear(ws.normed, h, polW1, polB1, h, ws.mid)
-            var logit = p[polB2]
-            for (j in 0 until h) {
-                val v = ws.mid[j]
-                if (v > 0f) logit += v * p[polW2 + j]
-            }
-            policyLogits[c] = logit
-        }
+        for (c in 0 until QubicGeometry.CELLS) policyLogits[c] = cellHead(ws, c, polLnGamma, polLnBeta, polW1, polB1, polW2, polB2)
 
         // Value head: [mean cells, max cells, mean lines, first].
         for (j in 0 until h) {
@@ -207,6 +235,147 @@ class QubicNet private constructor(
             input[2 * h + j] = lineSum / QubicGeometry.LINES
         }
         input[3 * h] = if (first) 1f else 0f
+        valueHeads(ws, wdl)
+    }
+
+    private fun evaluateV3(mine: Long, theirs: Long, ws: Workspace, policyLogits: FloatArray, wdl: FloatArray) {
+        val p = all
+        val cell = ws.cell
+        val line = ws.line
+        val input = ws.input
+        val first = java.lang.Long.bitCount(mine) == java.lang.Long.bitCount(theirs)
+        val occupied = mine or theirs
+
+        // Live lines (not holding both colours), free cells, live lines per free cell.
+        var nl = 0
+        for (l in 0 until QubicGeometry.LINES) {
+            val mask = QubicGeometry.lineMasks[l]
+            val state = lineState(mask, mine, theirs)
+            val live = state != 7
+            ws.lineLive[l] = live
+            if (live) {
+                ws.liveLines[nl++] = l
+                System.arraycopy(p, lineEmbed + state * h, line, l * h, h)
+            }
+        }
+        var nf = 0
+        for (c in 0 until QubicGeometry.CELLS) {
+            if ((occupied ushr c) and 1L != 0L) continue
+            ws.freeCells[nf++] = c
+            val degree = QubicGeometry.cellDegree(c)
+            var live = 0
+            for (i in 0 until degree) if (ws.lineLive[QubicGeometry.cellLine(c, i)]) live++
+            ws.liveCount[c] = live
+            val d = degreeEmbed + (if (degree == 7) 1 else 0) * h
+            val base = c * h
+            for (j in 0 until h) cell[base + j] = p[d + j] + (if (first) p[firstEmbed + j] else 0f)
+        }
+
+        for (k in 0 until layers) {
+            val lb = lineBlocks[k]!!
+            for (i in 0 until nl) {
+                val l = ws.liveLines[i]
+                val base = l * h
+                System.arraycopy(line, base, input, 0, h)
+                java.util.Arrays.fill(input, h, 2 * h, 0f)
+                var bits = QubicGeometry.lineMasks[l] and occupied.inv()
+                while (bits != 0L) {
+                    val c = java.lang.Long.numberOfTrailingZeros(bits)
+                    bits = bits and (bits - 1)
+                    val cb = c * h
+                    for (j in 0 until h) input[h + j] += cell[cb + j]
+                }
+                residualMlp(lb, ws, line, base)
+            }
+            val cb2 = cellBlocks[k]!!
+            for (i in 0 until nf) {
+                val c = ws.freeCells[i]
+                val base = c * h
+                System.arraycopy(cell, base, input, 0, h)
+                java.util.Arrays.fill(input, h, 3 * h, 0f)
+                val degree = QubicGeometry.cellDegree(c)
+                for (d in 0 until degree) {
+                    val l = QubicGeometry.cellLine(c, d)
+                    if (!ws.lineLive[l]) continue
+                    val lbase = l * h
+                    for (j in 0 until h) input[h + j] += line[lbase + j]
+                }
+                val inv = 1f / maxOf(1, ws.liveCount[c])
+                for (j in 0 until h) {
+                    val s = input[h + j]
+                    input[h + j] = s * 0.25f
+                    input[2 * h + j] = s * inv
+                }
+                residualMlp(cb2, ws, cell, base)
+            }
+            if (globalW[k] >= 0) {
+                // Global context: mean and max of the free cells, projected, added to each.
+                for (j in 0 until h) {
+                    var sum = 0f
+                    var max = -1e4f
+                    for (i in 0 until nf) {
+                        val v = cell[ws.freeCells[i] * h + j]
+                        sum += v
+                        if (v > max) max = v
+                    }
+                    input[j] = sum / maxOf(1, nf)
+                    input[h + j] = max
+                }
+                linear(input, 2 * h, globalW[k], globalB[k], h, ws.out)
+                for (i in 0 until nf) {
+                    val base = ws.freeCells[i] * h
+                    for (j in 0 until h) cell[base + j] += ws.out[j]
+                }
+            }
+        }
+
+        java.util.Arrays.fill(policyLogits, 0f)
+        java.util.Arrays.fill(ws.q, 0f)
+        for (i in 0 until nf) {
+            val c = ws.freeCells[i]
+            policyLogits[c] = cellHead(ws, c, polLnGamma, polLnBeta, polW1, polB1, polW2, polB2)
+            if (hasQHead) ws.q[c] = tanh(cellHead(ws, c, qLnGamma, qLnBeta, qW1, qB1, qW2, qB2))
+        }
+
+        // Value head: [mean free cells, max free cells, mean live lines, first, free / 64, live / 76].
+        for (j in 0 until h) {
+            var sum = 0f
+            var max = -1e4f
+            for (i in 0 until nf) {
+                val v = cell[ws.freeCells[i] * h + j]
+                sum += v
+                if (v > max) max = v
+            }
+            var lineSum = 0f
+            for (i in 0 until nl) lineSum += line[ws.liveLines[i] * h + j]
+            input[j] = sum / maxOf(1, nf)
+            input[h + j] = max
+            input[2 * h + j] = lineSum / maxOf(1, nl)
+        }
+        input[3 * h] = if (first) 1f else 0f
+        input[3 * h + 1] = nf / 64f
+        input[3 * h + 2] = nl / 76f
+        valueHeads(ws, wdl)
+    }
+
+    /** A per-cell head `W2 · relu(W1 · LN(cell) + b1) + b2` (scalar) on cell [c]. */
+    private fun cellHead(ws: Workspace, c: Int, lnG: Int, lnB: Int, w1: Int, b1: Int, w2: Int, b2: Int): Float {
+        System.arraycopy(ws.cell, c * h, ws.input, 0, h)
+        layerNorm(ws.input, h, lnG, lnB, ws.normed)
+        linear(ws.normed, h, w1, b1, h, ws.mid)
+        val p = all
+        var logit = p[b2]
+        for (j in 0 until h) {
+            val v = ws.mid[j]
+            if (v > 0f) logit += v * p[w2 + j]
+        }
+        return logit
+    }
+
+    /** WDL and moves-left heads on the pooled vector in `ws.input[0 until valueIn]`. */
+    private fun valueHeads(ws: Workspace, wdl: FloatArray) {
+        val p = all
+        val input = ws.input
         layerNorm(input, valueIn, valLnGamma, valLnBeta, ws.normed)
         linear(ws.normed, valueIn, valW1, valB1, h, ws.mid)
         for (j in 0 until h) if (ws.mid[j] < 0f) ws.mid[j] = 0f
@@ -240,9 +409,9 @@ class QubicNet private constructor(
     }
 
     /** `target[base until base+h] += W2 · relu(W1 · LN(input) + b1) + b2`. */
-    private fun residualMlp(b: Block, inSize: Int, ws: Workspace, target: FloatArray, base: Int) {
-        layerNorm(ws.input, inSize, b.lnGamma, b.lnBeta, ws.normed)
-        linear(ws.normed, inSize, b.w1, b.b1, h, ws.mid)
+    private fun residualMlp(b: Block, ws: Workspace, target: FloatArray, base: Int) {
+        layerNorm(ws.input, b.inSize, b.lnGamma, b.lnBeta, ws.normed)
+        linear(ws.normed, b.inSize, b.w1, b.b1, h, ws.mid)
         for (j in 0 until h) if (ws.mid[j] < 0f) ws.mid[j] = 0f
         linear(ws.mid, h, b.w2, b.b2, h, ws.out)
         for (j in 0 until h) target[base + j] += ws.out[j]
@@ -302,15 +471,24 @@ class QubicNet private constructor(
             val hb = ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN)
             require(hb.int == MAGIC) { "not a QNET file" }
             val version = hb.int
-            require(version == 1 || version == 2) { "unsupported QNET version $version" }
+            require(version in 1..3) { "unsupported QNET version $version" }
             val hidden = hb.int
             val layers = hb.int
             val count = hb.int
+            var flags = 0
+            var globalEvery = 0
+            if (version >= 3) {
+                val extra = ByteArray(8)
+                data.readFully(extra)
+                val eb = ByteBuffer.wrap(extra).order(ByteOrder.LITTLE_ENDIAN)
+                flags = eb.int
+                globalEvery = eb.int
+            }
             val raw = ByteArray(count * 4)
             data.readFully(raw)
             val params = FloatArray(count)
             ByteBuffer.wrap(raw).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(params)
-            return QubicNet(hidden, layers, params, hasMovesLeft = version >= 2)
+            return QubicNet(hidden, layers, params, version, hasQHead = flags and 1 != 0, globalEvery = globalEvery)
         }
     }
 }

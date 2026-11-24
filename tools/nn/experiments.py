@@ -115,7 +115,7 @@ def distill(name, hidden, layers, train_set, test_set, steps, deadline, state):
             group["lr"] = lr_at(step, steps)
         model.train()
         batch = train.batch_tensors(train_set[rng.integers(0, len(train_set), BATCH)])
-        v, p, m = train.losses(model, batch)
+        v, p, m, _ = train.losses(model, batch)
         loss = v + p + train.MOVES_LEFT_WEIGHT * m
         opt.zero_grad(set_to_none=True)
         loss.backward()

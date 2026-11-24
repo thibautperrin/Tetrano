@@ -90,7 +90,7 @@ def loss(probe, batches):
     tot = np.zeros(3)
     n = 0
     for b in batches:
-        parts = train.losses(probe, b)
+        parts = train.losses(probe, b)[:3]
         tot += np.array([p.item() for p in parts]) * len(b[0])
         n += len(b[0])
     tot /= n

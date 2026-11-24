@@ -236,7 +236,7 @@ def main():
         for group in optimizer.param_groups:
             group["lr"] = lr
         batch = train.batch_tensors(train_set[rng.integers(0, len(train_set), cfg["batch"])])
-        v, p, m = train.losses(model, batch)
+        v, p, m, _ = train.losses(model, batch)
         loss = v + p + train.MOVES_LEFT_WEIGHT * m
         optimizer.zero_grad(set_to_none=True)
         loss.backward()

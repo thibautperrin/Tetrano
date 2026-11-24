@@ -9,7 +9,8 @@ import struct
 import numpy as np
 import torch
 
-from model import QubicNet, evaluate_bits
+import qubic
+from model import QubicNet, QubicNetV3, evaluate_bits, forward_all
 from model import load_checkpoint as model_load_checkpoint
 
 
@@ -44,6 +45,25 @@ def write_fixture(model, path, n=200, seed=7):
             f.write(np.float32(ml[i]).astype("<f4").tobytes())
 
 
+def write_fixture_v3(model, path, n=200, seed=7):
+    """Like write_fixture, plus the Q head's 64 values per position (v3 networks)."""
+    mine, theirs = random_positions(n, seed)
+    cs, ls, first = qubic.encode(mine, theirs)
+    with torch.no_grad():
+        pol, wdl, ml, q = forward_all(model, torch.from_numpy(cs), torch.from_numpy(ls), torch.from_numpy(first))
+    wdl = torch.softmax(wdl, dim=-1).numpy()
+    ml = (torch.clamp(ml, min=0) * 64.0).numpy()
+    q = q.numpy() if q is not None else np.zeros((n, 64), dtype=np.float32)
+    with open(path, "wb") as f:
+        f.write(struct.pack("<i", n))
+        for i in range(n):
+            f.write(struct.pack("<QQ", int(mine[i]), int(theirs[i])))
+            f.write(pol[i].numpy().astype("<f4").tobytes())
+            f.write(wdl[i].astype("<f4").tobytes())
+            f.write(np.float32(ml[i]).astype("<f4").tobytes())
+            f.write(q[i].astype("<f4").tobytes())
+
+
 def load_checkpoint(path):
     return model_load_checkpoint(path)[0]
 
@@ -57,10 +77,14 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--out", required=True)
     ap.add_argument("--fixture")
+    ap.add_argument("--v3", action="store_true")
+    ap.add_argument("--q-head", type=int, default=1)
+    ap.add_argument("--global-every", type=int, default=0)
     args = ap.parse_args()
     if args.random:
         torch.manual_seed(args.seed)
-        model = QubicNet(args.hidden, args.layers)
+        model = (QubicNetV3(args.hidden, args.layers, bool(args.q_head), args.global_every) if args.v3
+                 else QubicNet(args.hidden, args.layers))
         # Randomize LayerNorm affine params too, so the fixture exercises them.
         with torch.no_grad():
             for m in model.modules():
@@ -72,7 +96,7 @@ def main():
         model = load_checkpoint(args.checkpoint)
     model.export_weights(args.out)
     if args.fixture:
-        write_fixture(model, args.fixture)
+        (write_fixture_v3 if isinstance(model, QubicNetV3) else write_fixture)(model, args.fixture)
     print(f"exported {sum(p.numel() for p in model.parameters())} parameters to {args.out}")
 
 

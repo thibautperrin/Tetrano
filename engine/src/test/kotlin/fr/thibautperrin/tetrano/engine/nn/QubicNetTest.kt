@@ -33,6 +33,39 @@ class QubicNetTest {
         assertParity(v1, "fixture_positions_v1.bin", withMovesLeft = false)
     }
 
+    /** Fixture: `python export.py --random --v3 --hidden 16 --layers 3 --global-every 2 --out fixture_net_v3.bin --fixture fixture_positions_v3.bin`. */
+    @Test
+    fun matchesPyTorchReferenceVersion3() {
+        val v3 = QubicNet.load(resource("fixture_net_v3.bin").inputStream())
+        assertEquals(3, v3.version)
+        assertTrue(v3.hasQHead)
+        val buffer = ByteBuffer.wrap(resource("fixture_positions_v3.bin")).order(ByteOrder.LITTLE_ENDIAN)
+        val count = buffer.int
+        val ws = v3.newWorkspace()
+        val policy = FloatArray(64)
+        val wdl = FloatArray(3)
+        var maxError = 0f
+        var maxMovesLeftError = 0f
+        repeat(count) {
+            val mine = buffer.long
+            val theirs = buffer.long
+            v3.evaluate(mine, theirs, ws, policy, wdl)
+            val free = (mine or theirs).inv()
+            for (c in 0 until 64) {
+                val expected = buffer.float
+                if ((free ushr c) and 1L != 0L) maxError = maxOf(maxError, abs(policy[c] - expected))
+            }
+            for (o in 0 until 3) maxError = maxOf(maxError, abs(wdl[o] - buffer.float))
+            maxMovesLeftError = maxOf(maxMovesLeftError, abs(ws.movesLeft - buffer.float))
+            for (c in 0 until 64) {
+                val expected = buffer.float
+                if ((free ushr c) and 1L != 0L) maxError = maxOf(maxError, abs(ws.q[c] - expected))
+            }
+        }
+        assertTrue("max error $maxError", maxError < 1e-4f)
+        assertTrue("max moves-left error $maxMovesLeftError", maxMovesLeftError < 1e-2f)
+    }
+
     private fun assertParity(net: QubicNet, fixture: String, withMovesLeft: Boolean) {
         val buffer = ByteBuffer.wrap(resource(fixture)).order(ByteOrder.LITTLE_ENDIAN)
         val count = buffer.int
