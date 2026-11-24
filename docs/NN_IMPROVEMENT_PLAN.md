@@ -484,3 +484,46 @@ de la preuve peuvent servir d'indicateur de difficulté ; à trancher à la phas
   Réseau : `runs/proven/checkpoints/gen_0029.pt` via `model.evaluate_bits`.
 - M6 : `qubic.encode` sur les mêmes fichiers ; ligne vivante = état différent de 7.
 - Les scripts étaient jetables (hors dépôt) ; la phase 0 les remplace par `selfplay truth` / `judge`.
+
+---
+
+## Avancement (nuit du 24 au 25 novembre 2026)
+
+Implémenté (branche `claude/neural-network-strategy-081200`) : phases 0 à 3 et l'outillage de la
+phase 4 ; mode d'emploi dans `tools/nn/README.md`, « Valeurs exactes et réseau v3 ». Pas fait :
+cible de politique répartie sur tous les coups gagnants (§ 5.5), réservoir d'exemples difficiles
+(§ 5.6), preuves guidées en ouverture (§ 5.7), mesures sur téléphone.
+
+### Banc de vérité (`runs/v3/truth`, 50 min)
+
+9 340 positions (A : 4 299, B : 3 049, C : 1 992), dont 5 418 à valeur exacte (3 092 gains, 140 nulles,
+2 186 pertes pour le joueur au trait ; 3 922 non résolues à 1 M d'évaluations, surtout avant le 8e pli),
+400 positions avec la valeur exacte de chaque coup.
+
+### Réseau actuel (gen 29) sur le banc, avant / après les changements de la recherche
+
+| Configuration | Erreur de valeur | Prouvées | v(t)+v(t+1) | Erreur plis 8–11 | ms / position (PC) |
+|---|---|---|---|---|---|
+| Réseau seul | 8,1 % | 0 % | +0,012 | 15,5 % | 7 |
+| 64 simulations, ancienne valeur de racine | 3,2 % | 28,6 % | **−0,173** | 4,7 % | 201 |
+| 64 simulations, valeur = Q du coup choisi | 1,8 % | 28,7 % | +0,038 | 1,5 % | 204 |
+| 256 simulations, ancienne valeur | 3,2 % | 28,8 % | **−0,202** | 4,6 % | 660 |
+| 256 simulations, valeur = Q du coup choisi | 1,5 % | 28,8 % | +0,035 | 1,0 % | 673 |
+| 256 simulations + solveur à la racine (30 000) | **1,3 %** | **41,4 %** | +0,067 | 1,0 % | 778 |
+
+- La correction de la valeur de racine (§ 4.1) divise l'erreur par deux et supprime le biais (−0,20 →
+  +0,04), sans aucun coût.
+- Le solveur à la racine fait passer la part prouvée de 29 à 41 % (51 à 67 % entre 8 et 27 plis) pour
+  +15 % de temps.
+- Le réseau seul se trompe sur 8,1 % des positions exactes (11,8 % sur les parties « humaines » B,
+  15,5 % entre 8 et 11 plis) : c'est la marge de l'entraînement.
+- Fautes réelles (le coup change la valeur exacte) : rappel 99 %, mais précision ~30 % : la revue
+  signale aussi des coups qui gardent la valeur exacte mais perdent beaucoup d'espérance estimée
+  (une position gagnée devenue difficile). À trancher pour l'affichage (§ 10, question ouverte).
+
+### Ré-étiquetage (4 h 22)
+
+`runs/proven` (gen 0–29) et `runs/big` (gen 108–364) : 5,51 M positions, dont 1,41 M déjà exactes ;
+le solveur (6 000 évaluations) en a prouvé 1,61 M de plus (790 k gains, 36 k nulles, 780 k pertes),
+2,49 M restent inconnues : 55 % des positions ont maintenant une valeur exacte. `runs/big` gen 0–107
+n'est pas fait (≈ 1 h 45 de plus).
