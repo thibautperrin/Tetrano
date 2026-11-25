@@ -5,7 +5,8 @@
 Run directory `runs/v3/selfplay` (inside the `runs` of this tools/nn, or --runs). On the first launch:
 - its training window is seeded with the newest exact-relabelled positions (data/gen_-0001.bin,
   1.5 M positions, v3);
-- generation 0 plays with the pre-trained network (`runs/v3/train/pretrain_v3/pretrain_v3.pt`).
+- generation 0 plays with the pre-trained network (`runs/v3/train/pretrain_v3/pretrain_v3.pt`),
+  whose shape (version, size, Q head, global context) the run keeps (`network.json`).
 Then `loop.py` generations: 500 games each, adaptive search up to 2048 simulations, every position
 first solved exactly (20 000 evaluations), 35 % of the games from a "game under way" (half of them
 disputed), the others from the opening schedule; records v3 (exact values, move values, chosen-move
@@ -46,6 +47,19 @@ def seed_window(run, runs, positions=1_500_000):
     print(f"window seeded: {data.summary(arr)}", flush=True)
 
 
+def network_config(run, init):
+    """The network shape: the run's (once started), else the starting checkpoint's."""
+    import json
+    import torch
+    config_file = run / "network.json"
+    if config_file.exists():
+        return json.loads(config_file.read_text())
+    cfg = torch.load(init, map_location="cpu", weights_only=False)["config"]
+    run.mkdir(parents=True, exist_ok=True)
+    config_file.write_text(json.dumps(cfg))
+    return cfg
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", default=str(HERE / "runs"))
@@ -71,8 +85,11 @@ def main():
                 t += dt.timedelta(days=1)
             stop_at = t.isoformat(timespec="minutes")
     proven = ",".join(str(f) for f in sorted((runs / "proven_data").glob("*.bin")))
+    # The shape of the network is the pre-trained one's (the night's ablation chooses it).
+    cfg = network_config(run, init)
     argv = ["loop.py", "--run", str(run),
-            "--version", "3", "--hidden", "64", "--layers", "10", "--q-head", "1",
+            "--version", str(cfg["version"]), "--hidden", str(cfg["hidden"]), "--layers", str(cfg["layers"]),
+            "--q-head", str(int(cfg.get("q_head", False))), "--global-every", str(cfg.get("global_every", 0)),
             "--games", "500", "--stream", "1", "--sims", "2048", "--adaptive", "1", "--policy-min-sims", "256",
             "--openings", "schedule", "--disputed", "0.2,0.8", "--schedule-seed", "20261125",
             "--format", "v3", "--root-solve", "20000", "--human-share", "0.35",

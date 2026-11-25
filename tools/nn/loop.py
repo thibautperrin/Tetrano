@@ -390,8 +390,9 @@ def main():
         model.load_state_dict(ckpt["model"])
         optimizer.load_state_dict(ckpt["optimizer"])
     elif args.init_checkpoint:
-        start, ckpt, missing = load_checkpoint(args.init_checkpoint, strict=False)
-        model.load_state_dict(start.state_dict())
+        start, ckpt, _ = load_checkpoint(args.init_checkpoint, strict=False)
+        # The run's network may have a head the checkpoint lacks (it starts from scratch).
+        missing = model.load_state_dict(start.state_dict(), strict=False).missing_keys
         if not missing and "optimizer" in ckpt:
             optimizer.load_state_dict(ckpt["optimizer"])  # same network: continue with its Adam moments
         log(run, f"warm start from {args.init_checkpoint} (new parameters: {missing})")

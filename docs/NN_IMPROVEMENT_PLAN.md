@@ -527,3 +527,54 @@ cible de politique répartie sur tous les coups gagnants (§ 5.5), réservoir d'
 le solveur (6 000 évaluations) en a prouvé 1,61 M de plus (790 k gains, 36 k nulles, 780 k pertes),
 2,49 M restent inconnues : 55 % des positions ont maintenant une valeur exacte. `runs/big` gen 0–107
 n'est pas fait (≈ 1 h 45 de plus).
+
+### Ablations (T2 réduit : 48 × 6, 3 000 pas, 25 min chacune)
+
+Données : les 5,51 M positions ré-étiquetées (393 fichiers). « Banc » = réseau seul sur les 5 418
+positions exactes du banc (part où l'issue la plus probable n'est pas l'issue exacte) ; « test » =
+positions gardées à part.
+
+| Essai | Banc | Banc B | Banc plis 0–11 | Test perte valeur | Test perte politique | Test exactes justes | s / pas |
+|---|---|---|---|---|---|---|---|
+| v2 (graphe complet) | 12,5 % | 19,5 % | 17,0 % | 0,432 | 1,549 | 90,9 % | 0,50 |
+| **v3 (cases libres, lignes vivantes)** | **11,5 %** | **17,4 %** | **14,3 %** | 0,423 | 1,532 | 91,5 % | 0,49 |
+| v3 + tête Q | 12,6 % | 19,2 % | 15,3 % | 0,426 | 1,530 | 91,1 % | 0,52 |
+| v3 + tête Q + contexte global (1 couche sur 3) | 12,1 % | 18,8 % | 15,4 % | **0,415** | **1,466** | 91,5 % | 0,53 |
+
+- Le graphe réduit gagne sur toutes les mesures, au même coût par pas : retenu.
+- La tête Q, à ce budget, coûte un point sur la valeur (sa perte, 0,09, reste loin d'être utile) : non
+  retenue pour l'instant. À réessayer sur un entraînement long, avec des cibles Q plus nombreuses
+  (auto-jeu v3).
+- Le contexte global donne les meilleures pertes de test (politique −0,07) mais pas le meilleur banc ;
+  les écarts de banc (≈ 1 point, écart-type ≈ 0,45 point) sont à la limite du bruit. À reprendre.
+- Choix automatique (meilleur banc) : v3 sans tête Q ni contexte global.
+
+### Pré-entraînement v3 64 × 10 (T3, 11 898 pas, 3 h 39, 1,10 s / pas)
+
+Test : perte de valeur 0,370, politique 1,382, issue exacte juste 93,2 %.
+
+| Banc | gen 29 (v2 64 × 10, 364 générations d'auto-jeu) | v3 pré-entraîné |
+|---|---|---|
+| Réseau seul : erreur de valeur | **8,1 %** | 9,7 % |
+| — famille A / B / C | 6,1 / 11,8 / 2,9 % | 6,5 / 15,3 / 3,1 % |
+| — plis 8–11 | 15,5 % | 18,8 % |
+| Réseau seul : coup juste (400 positions) | 94,1 % | **96,8 %** |
+| 64 simulations : erreur de valeur | 1,8 % | **1,7 %** |
+| 64 simulations : prouvées, coup juste | 28,7 %, 100 % | 28,6 %, 100 % |
+| 64 simulations : v(t)+v(t+1) | +0,038 | +0,053 |
+
+- Le pré-entraînement supervisé seul ne rattrape pas gen 29 sur la valeur du réseau seul (−1,6 point),
+  surtout sur les parties « humaines » (B) : les données d'auto-jeu en contiennent peu, c'est ce que
+  doit apporter l'auto-jeu T4 (35 % de parties entamées). La politique est déjà meilleure et, avec 64
+  simulations, les deux font jeu égal.
+- **Non mis dans l'appli** (critère du § 8 : battre gen 29 sur le banc et à temps égal).
+- Le pré-entraînement a fini à 06 h 12 (pas plus rapides que mesurés) : une heure du créneau inutilisée.
+
+### Suite (créneaux suivants)
+
+1. Fusionner la branche dans le dépôt principal, puis `./gradlew :selfplay:installDist`.
+2. `tools/nn/v3_selfplay.bat` (T4) sur plusieurs créneaux, `--until` à la fin de chacun ; la forme du
+   réseau est celle du pré-entraîné. Juger régulièrement une génération
+   (`judge … sims=0,64,256 root_solve=30000`) contre gen 29.
+3. Si le temps le permet : ré-étiqueter `runs/big` gen 0–107, reprendre l'ablation du contexte global
+   sur un entraînement plus long, puis § 5.5–5.7.

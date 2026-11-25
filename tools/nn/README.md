@@ -304,7 +304,8 @@ rappel et précision des fautes, temps, par famille et par tranche de plis.
 ### Auto-jeu v3 (après le pré-entraînement)
 
 Double-clic sur `v3_selfplay.bat` (ou `.venv/Scripts/python -u v3_selfplay.py --until 07:30`) : dossier
-`runs/v3/selfplay`, reprise comme `loop.py`. Générations de 500 parties, recherche adaptative jusqu'à 2048,
+`runs/v3/selfplay`, reprise comme `loop.py`. Forme du réseau : celle du pré-entraîné (choisie par les
+ablations ; gardée dans `runs/v3/selfplay/network.json`). Générations de 500 parties, recherche adaptative jusqu'à 2048,
 solveur à la racine (20 000 évaluations), 35 % de parties « entamées », données v3, fenêtre amorcée avec
 1,5 M positions ré-étiquetées, 10 % de positions des graphes. Reconstruire l'outil d'abord :
 `./gradlew :selfplay:installDist`.
