@@ -494,7 +494,7 @@ phase 4 ; mode d'emploi dans `tools/nn/README.md`, « Valeurs exactes et réseau
 25 novembre : cible de politique répartie sur les coups gagnants connus (§ 5.5, limitée aux coups
 prouvés sans grosse recherche : enfants prouvés, tables du solveur, 8 meilleurs coups du réseau ;
 les positions perdues gardent la cible de la recherche) et réservoir d'exemples difficiles (§ 5.6).
-Pas fait : preuves guidées en ouverture (§ 5.7), mesures sur téléphone.
+Pas fait : preuves guidées en ouverture (§ 5.7).
 
 ### Banc de vérité (`runs/v3/truth`, 50 min)
 
@@ -571,6 +571,17 @@ Test : perte de valeur 0,370, politique 1,382, issue exacte juste 93,2 %.
   simulations, les deux font jeu égal.
 - **Non mis dans l'appli** (critère du § 8 : battre gen 29 sur le banc et à temps égal).
 - Le pré-entraînement a fini à 06 h 12 (pas plus rapides que mesurés) : une heure du créneau inutilisée.
+
+### Téléphone (Pixel 6a, `selfplay bench` en dex par `app_process`, 2 passages)
+
+| Réseau 64 × 10 | ms / évaluation (positions de 0 à 30 anneaux) | ms / simulation (recherche de 200) |
+|---|---|---|
+| gen 29 (v2) | 3,5–4,0 | 2,6–2,8 |
+| v3 pré-entraîné | 3,5 | 2,9 |
+
+Le graphe réduit ne fait pas gagner de temps sur téléphone (les positions de début et de milieu de
+partie gardent presque toutes leurs lignes vivantes), mais n'en fait pas perdre : un réseau v3 peut
+remplacer gen 29 à budget de simulations égal.
 
 ### Suite (créneaux suivants)
 
