@@ -109,6 +109,35 @@ class ExactSolver(log2Entries: Int = 20, vcfBudget: Int = 5_000) {
         return if (block != 0L) block else (p or o).inv()
     }
 
+    /**
+     * The moves of the player to move already known to win, without searching: immediate wins,
+     * else the moves whose resulting position the tables hold as won (by earlier proofs).
+     */
+    fun knownWinningMoves(mine: Long, theirs: Long): Long = winningMovesAmong(mine, theirs, -1L, 0L)
+
+    /**
+     * Which of the moves [among] of the player to move are proven to win: from the tables, then
+     * by a proof of at most [budgetEach] evaluations per move still unknown (0: tables only).
+     * Immediate wins, if any, are the answer (whatever [among]).
+     */
+    fun winningMovesAmong(mine: Long, theirs: Long, among: Long, budgetEach: Long): Long {
+        val immediate = Tactics.threats(mine, theirs)
+        if (immediate != 0L) return immediate
+        val stmFirst = QubicGeometry.popCount(mine) == QubicGeometry.popCount(theirs)
+        var found = 0L
+        forEach(candidates(mine, theirs) and among) { c ->
+            // After our move, "we win" is asked with us as the attacker, the opponent to move.
+            val after = mine or (1L shl c)
+            var status = known(after, theirs, stmFirst)
+            if (status == ProofSearch.UNKNOWN && budgetEach > 0) {
+                form.of(after, theirs)
+                status = search(stmFirst).prove(form.attacker, form.defender, budgetEach)
+            }
+            if (status == ProofSearch.PROVED) found = found or (1L shl c)
+        }
+        return found
+    }
+
     /** A move after which the opponent is proven lost; the side to move is proven to win. */
     private fun winningMove(mine: Long, theirs: Long, stmFirst: Boolean, maxEvals: Long): Int {
         val vcfMove = vcf.solve(mine, theirs, 20_000)

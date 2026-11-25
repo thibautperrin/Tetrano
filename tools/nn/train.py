@@ -22,6 +22,9 @@ Q_WEIGHT = 0.5
 VALUE_WEIGHT = 1.0
 VALUE_MIX_EARLY = 0.5
 VALUE_MIX_LATE = 0.25
+# Hard examples: exact positions whose value loss is at least this (probability of the exact
+# outcome below e^-0.69 = 1/2).
+HARD_MIN_LOSS = 0.69
 
 
 def new_model(hidden, layers, seed=0):
@@ -98,11 +101,15 @@ def losses(model, batch, outputs=None):
     return value_loss, policy_loss, ml_loss, q_loss
 
 
-def train(model, optimizer, window, steps, batch_size, rng, deadline=None, log_every=100, extra=None, extra_frac=0.0):
+def train(model, optimizer, window, steps, batch_size, rng, deadline=None, log_every=100, extra=None, extra_frac=0.0,
+          extras=None):
     """Runs `steps` optimizer steps on uniform samples of `window` (and, with `extra`, a fraction
-    `extra_frac` of each batch drawn from `extra`). Returns mean losses (value, policy,
-    moves-left, Q), or None if the deadline (epoch seconds) passed first."""
-    n_extra = int(round(batch_size * extra_frac)) if extra is not None and len(extra) else 0
+    `extra_frac` of each batch drawn from `extra`; `extras`: more (array, fraction) pairs alike).
+    Returns mean losses (value, policy, moves-left, Q), or None if the deadline (epoch seconds)
+    passed first."""
+    pools = [(arr, int(round(batch_size * frac))) for arr, frac in ([(extra, extra_frac)] + list(extras or []))
+             if arr is not None and len(arr) and frac > 0]
+    n_extra = sum(k for _, k in pools)
     model.train()
     totals = np.zeros(4)
     count = 0
@@ -113,7 +120,7 @@ def train(model, optimizer, window, steps, batch_size, rng, deadline=None, log_e
         idx = rng.integers(0, len(window), size=batch_size - n_extra)
         sample = window[idx]
         if n_extra:
-            sample = np.concatenate([sample, extra[rng.integers(0, len(extra), size=n_extra)]])
+            sample = np.concatenate([sample] + [arr[rng.integers(0, len(arr), size=k)] for arr, k in pools])
         batch = batch_tensors(sample)
         value_loss, policy_loss, ml_loss, q_loss = losses(model, batch)
         loss = VALUE_WEIGHT * value_loss + policy_loss + MOVES_LEFT_WEIGHT * ml_loss + Q_WEIGHT * q_loss
@@ -164,6 +171,36 @@ def evaluate_full(model, arr, batch_size=4096):
     out["exact_loss"] = sums["exact_loss"] / max(n_exact, 1)
     out["n_exact"] = int(n_exact)
     return out
+
+
+@torch.no_grad()
+def exact_value_losses(model, arr, batch_size=4096):
+    """Per position: the value cross-entropy against the exact value, NaN where none is known."""
+    model.eval()
+    out = np.full(len(arr), np.nan, dtype=np.float32)
+    exact = np.nonzero(arr["exact"] > 0)[0]
+    for start in range(0, len(exact), batch_size):
+        idx = exact[start:start + batch_size]
+        batch = batch_tensors(arr[idx])
+        wdl = forward_all(model, batch[0], batch[1], batch[2])[1]
+        out[idx] = (-(batch[6] * torch.log_softmax(wdl, dim=-1)).sum(dim=-1)).numpy()
+    return out
+
+
+def update_hard(model, reservoir, candidates, max_size, min_loss=HARD_MIN_LOSS):
+    """Hard examples (plan § 5.6): among the reservoir and the candidates, the exact positions the
+    network gets most wrong now (value loss at least min_loss: the exact outcome under about
+    1/2), at most max_size, worst first. Positions learned since leave the reservoir."""
+    pool = candidates if reservoir is None or not len(reservoir) else np.concatenate([reservoir, candidates])
+    pool = pool[pool["exact"] > 0]
+    # Each position once (the same position from several games, or a generation trained again).
+    keys = pool["mine"].astype(np.uint64) * np.uint64(0x9E3779B97F4A7C15) ^ pool["theirs"].astype(np.uint64)
+    _, first = np.unique(keys, return_index=True)
+    pool = pool[np.sort(first)]
+    loss = exact_value_losses(model, pool)
+    keep = np.nonzero(np.nan_to_num(loss, nan=0.0) >= min_loss)[0]
+    keep = keep[np.argsort(-loss[keep], kind="stable")][:max_size]
+    return pool[keep]
 
 
 def evaluate(model, arr, batch_size=4096):

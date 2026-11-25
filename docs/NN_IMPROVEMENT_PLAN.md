@@ -490,9 +490,11 @@ de la preuve peuvent servir d'indicateur de difficulté ; à trancher à la phas
 ## Avancement (nuit du 24 au 25 novembre 2026)
 
 Implémenté (branche `claude/neural-network-strategy-081200`) : phases 0 à 3 et l'outillage de la
-phase 4 ; mode d'emploi dans `tools/nn/README.md`, « Valeurs exactes et réseau v3 ». Pas fait :
-cible de politique répartie sur tous les coups gagnants (§ 5.5), réservoir d'exemples difficiles
-(§ 5.6), preuves guidées en ouverture (§ 5.7), mesures sur téléphone.
+phase 4 ; mode d'emploi dans `tools/nn/README.md`, « Valeurs exactes et réseau v3 ». Ajoutés le
+25 novembre : cible de politique répartie sur les coups gagnants connus (§ 5.5, limitée aux coups
+prouvés sans grosse recherche : enfants prouvés, tables du solveur, 8 meilleurs coups du réseau ;
+les positions perdues gardent la cible de la recherche) et réservoir d'exemples difficiles (§ 5.6).
+Pas fait : preuves guidées en ouverture (§ 5.7), mesures sur téléphone.
 
 ### Banc de vérité (`runs/v3/truth`, 50 min)
 
@@ -577,4 +579,4 @@ Test : perte de valeur 0,370, politique 1,382, issue exacte juste 93,2 %.
    réseau est celle du pré-entraîné. Juger régulièrement une génération
    (`judge … sims=0,64,256 root_solve=30000`) contre gen 29.
 3. Si le temps le permet : ré-étiqueter `runs/big` gen 0–107, reprendre l'ablation du contexte global
-   sur un entraînement plus long, puis § 5.5–5.7.
+   sur un entraînement plus long, puis § 5.7.

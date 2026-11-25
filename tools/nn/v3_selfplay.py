@@ -10,7 +10,9 @@ Run directory `runs/v3/selfplay` (inside the `runs` of this tools/nn, or --runs)
 Then `loop.py` generations: 500 games each, adaptive search up to 2048 simulations, every position
 first solved exactly (20 000 evaluations), 35 % of the games from a "game under way" (half of them
 disputed), the others from the opening schedule; records v3 (exact values, move values, chosen-move
-Q); 10 % of each batch from the winning-graph positions; lr 1e-4 down to 2e-5 at generation 120.
+Q); in won positions half the policy target on the other known winning moves (plan § 5.5); 10 % of
+each batch from the winning-graph positions and 10 % from the hard examples (§ 5.6); lr 1e-4 down
+to 2e-5 at generation 120.
 Same files and stop/resume behaviour as loop.py (`runs/v3/selfplay/log.txt`, `metrics.csv`).
 """
 import argparse
@@ -95,7 +97,8 @@ def main():
             "--format", "v3", "--root-solve", "20000", "--human-share", "0.35",
             "--window-base", "1500000", "--window-per-gen", "0", "--window-max", "1500000",
             "--lr-peak", "1e-4", "--lr-final", "2e-5", "--lr-hold-gens", "20", "--lr-decay-gens", "120",
-            "--keep-data", "1", "--proven", proven, "--proven-frac", "0.1", "--java-heap", "8g"]
+            "--keep-data", "1", "--proven", proven, "--proven-frac", "0.1", "--java-heap", "8g",
+            "--win-spread", "0.5", "--hard-frac", "0.1"]
     if first:
         argv += ["--init-checkpoint", str(init)]
     if stop_at:

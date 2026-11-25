@@ -99,6 +99,13 @@ class GumbelMcts(
          * stay per path. 0 disables it.
          */
         val netCacheBits: Int = 0,
+        /**
+         * > 0: in a won root, the policy ([Result.policy], the training target) gives this share
+         * to the other moves already known to win ([Result.winningMoves]) instead of all to the
+         * chosen one, so that the network learns every winning move rather than the solver's
+         * pick. Immediate wins stay alone (the shortest).
+         */
+        val winPolicySpread: Float = 0f,
     )
 
     /** Exact status of a node, for the player to move there. */
@@ -174,6 +181,12 @@ class GumbelMcts(
          * up to a symmetry of the position, with the same values), -1 if not a legal move.
          */
         val moveClass: IntArray = IntArray(64) { -1 },
+        /**
+         * In a won root: the moves known to win (the chosen one, immediate wins, moves to
+         * children the search or the solver's tables proved lost for the opponent); else 0.
+         * Not every winning move: only those known without further search.
+         */
+        val winningMoves: Long = 0L,
     )
 
     private val workspace = net?.newWorkspace()
@@ -744,8 +757,16 @@ class GumbelMcts(
         val prior = FloatArray(64)
         val moveValues = FloatArray(64) { Float.NaN }
         val n = root.moves.size
+        var winning = 0L
         if (root.status == Status.WIN && root.winningMove >= 0) {
-            policy[root.winningMove] = 1f
+            winning = knownWinningMoves(root)
+            val others = winning and (1L shl root.winningMove).inv()
+            val spread = if (others == 0L || Tactics.threats(root.mine, root.theirs) != 0L) 0f else config.winPolicySpread
+            policy[root.winningMove] = 1f - spread
+            if (spread > 0f) {
+                val share = spread / popCount(others)
+                forEachCell(others) { policy[it] = share }
+            }
         } else if (n > 0) {
             val scores = FloatArray(n)
             sigmas(root, scores)
@@ -789,7 +810,25 @@ class GumbelMcts(
             Status.DRAW -> floatArrayOf(0f, 1f, 0f)
             Status.UNKNOWN -> root.netWdl.copyOf()
         }
-        return Result(move, status, value, wdl, policy, prior, simulations, moveValues, visits, moveClass)
+        return Result(move, status, value, wdl, policy, prior, simulations, moveValues, visits, moveClass, winning)
+    }
+
+    /** [Result.winningMoves] of a won root. */
+    private fun knownWinningMoves(root: Node): Long {
+        val immediate = Tactics.threats(root.mine, root.theirs)
+        if (immediate != 0L) return immediate
+        var found = 1L shl root.winningMove
+        if (config.winPolicySpread <= 0f) return found
+        for (i in root.moves.indices) {
+            if (i < root.children.size && root.children[i]?.status == Status.LOSS) found = found or cellsOf(root, i)
+        }
+        // The moves the network likes best (where the policy target matters) get a small proof each.
+        val order = root.moves.indices.sortedByDescending { root.logits[it] }
+        var among = 0L
+        for (i in order.take(WIN_SPREAD_CANDIDATES)) among = among or cellsOf(root, i)
+        val budget = (config.rootSolveBudget / 16).coerceAtLeast(WIN_SPREAD_MIN_BUDGET)
+        found = found or solver().winningMovesAmong(root.mine, root.theirs, among and found.inv(), budget)
+        return found
     }
 
     /** [Result.value] of an unsolved root: see [Config.chosenMoveValue]. */
@@ -814,6 +853,9 @@ class GumbelMcts(
     }
 
     companion object {
+        /** [Config.winPolicySpread]: classes of moves (best prior first) checked for a win. */
+        private const val WIN_SPREAD_CANDIDATES = 8
+        private const val WIN_SPREAD_MIN_BUDGET = 1_000L
         private val IDENTITY = intArrayOf(0)
         private val ALL_SYMMETRIES = IntArray(QubicGeometry.symmetryCount) { it }
         private val EMPTY_INT = IntArray(0)

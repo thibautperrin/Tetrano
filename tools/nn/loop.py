@@ -101,6 +101,15 @@ DEFAULTS = {
     # of every training batch is drawn from them (see proven.py).
     "proven": "",
     "proven_frac": 0.0,
+    # Hard examples (plan § 5.6): after each generation, the exact positions of the fresh games and
+    # of hard_sample window positions the network gets most wrong join a reservoir (hard.bin, at
+    # most hard_max) drawn for hard_frac of each batch. 0: off.
+    "hard_frac": 0.0,
+    "hard_max": 200_000,
+    "hard_sample": 100_000,
+    # Self-play option win_spread (GumbelMcts.Config.winPolicySpread): in won positions, this share
+    # of the policy target goes to the other known winning moves (plan § 5.5). 0: off.
+    "win_spread": 0.0,
     "java_heap": "6g",
 }
 
@@ -262,7 +271,8 @@ def selfplay_args(cfg, model, games, out, seed, offset=0):
             + ([f"adaptive=1", f"policy_min_sims={cfg['policy_min_sims']}"] if cfg["adaptive"] else [])
             + ([f"format={cfg['format']}"] if cfg.get("format") else [])
             + ([f"root_solve={cfg['root_solve']}"] if cfg.get("root_solve") else [])
-            + ([f"human_share={cfg['human_share']}"] if cfg.get("human_share") else []))
+            + ([f"human_share={cfg['human_share']}"] if cfg.get("human_share") else [])
+            + ([f"win_spread={cfg['win_spread']}"] if cfg.get("win_spread") else []))
 
 
 SUMMED = ("games", "positions", "firstWins", "secondWins", "draws", "evals", "openingDraws", "openingsKept")
@@ -405,6 +415,10 @@ def main():
     if cfg["proven"] and cfg["proven_frac"] > 0:
         proven = np.concatenate([data.load(f) for f in cfg["proven"].split(",")])
         log(run, f"proven positions: {data.summary(proven)}, {cfg['proven_frac']:.0%} of each batch")
+    hard_file = run / "hard.bin"
+    hard = data.load(hard_file) if cfg.get("hard_frac", 0) > 0 and hard_file.exists() else None
+    if hard is not None:
+        log(run, f"hard examples: {len(hard)}, {cfg['hard_frac']:.0%} of each batch")
     log(run, f"start at generation {gen}, phase {state['phase']}, config {cfg}")
 
     try:
@@ -454,9 +468,16 @@ def main():
                     group["lr"] = lr
                 log(run, f"gen {gen} training {steps} steps on {data.summary(window)}, lr {lr:.2e}")
                 result = train.train(model, optimizer, window, steps, cfg["batch"], rng, deadline,
-                                     extra=proven, extra_frac=cfg["proven_frac"])
+                                     extra=proven, extra_frac=cfg["proven_frac"],
+                                     extras=[(hard, cfg.get("hard_frac", 0.0))])
                 if result is None:
                     raise DeadlineReached()
+                if cfg.get("hard_frac", 0) > 0:
+                    sample = window[rng.choice(len(window), size=min(len(window), cfg["hard_sample"]), replace=False)]
+                    hard = train.update_hard(model, hard, np.concatenate([fresh, sample]), cfg["hard_max"])
+                    data.save_v3(hard_file, hard)
+                    row["hard"] = len(hard)
+                    log(run, f"gen {gen} hard examples: {data.summary(hard)}")
                 save_checkpoint(run / "checkpoints" / f"gen_{gen:04d}.pt", model, optimizer, gen)
                 model.export_weights(model_file(run, gen))
                 row.update(window=len(window), steps=steps, lr=f"{lr:.2e}", value_loss=round(result[0], 4),

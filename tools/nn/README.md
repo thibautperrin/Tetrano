@@ -310,6 +310,17 @@ solveur à la racine (20 000 évaluations), 35 % de parties « entamées », don
 1,5 M positions ré-étiquetées, 10 % de positions des graphes. Reconstruire l'outil d'abord :
 `./gradlew :selfplay:installDist`.
 
+Deux options de `loop.py` (activées par `v3_selfplay.py`) :
+
+- `--win-spread 0.5` (§ 5.5) : dans une position gagnée, la moitié de la cible de politique va aux
+  autres coups connus gagnants (enfants prouvés, tables du solveur, et une petite preuve —
+  budget/16 — pour les 8 coups que le réseau préfère), aussi enregistrés comme gagnants dans les
+  valeurs par coup. Un gain immédiat reste seul.
+- `--hard-frac 0.1` (§ 5.6) : après chaque génération, les positions exactes (parties nouvelles et
+  `--hard-sample` positions de la fenêtre) où le réseau donne moins de ½ à l'issue exacte rejoignent
+  `hard.bin` (au plus `--hard-max`, les pires d'abord ; celles apprises en sortent), tiré pour 10 % de
+  chaque lot.
+
 ## Battle petit réseau contre gros réseau, PC et téléphones (`battle.py`)
 
 `battle.bat` (ou `.venv/Scripts/python -u battle.py [--until 05:00]`) enchaîne, en reprenant là où

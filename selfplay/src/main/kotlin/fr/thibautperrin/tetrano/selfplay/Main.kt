@@ -229,7 +229,13 @@ private fun playGame(mcts: GumbelMcts, spec: SearchSpec, start: Start): PlayedGa
             GumbelMcts.Status.DRAW -> EXACT_DRAW
             GumbelMcts.Status.UNKNOWN -> EXACT_UNKNOWN
         }
-        val q = if (result.status == GumbelMcts.Status.UNKNOWN) moveValues(result) else null
+        val q = when {
+            result.status == GumbelMcts.Status.UNKNOWN -> moveValues(result)
+            // A won position: the moves known to win are exact move values.
+            result.status == GumbelMcts.Status.WIN && mcts.config.winPolicySpread > 0f && result.winningMoves != 0L ->
+                ByteArray(64) { c -> if ((result.winningMoves ushr c) and 1L != 0L) Q_WIN else Q_UNKNOWN }
+            else -> null
+        }
         positions += Position(
             mine, theirs, ply, result.policy, result.value,
             flags or (if (mcts.config.chosenMoveValue) FLAG_CHOSEN_Q else 0) or (if (q != null) FLAG_MOVE_VALUES else 0),
@@ -322,6 +328,9 @@ private fun selfPlay(options: Map<String, String>) {
     val headerSize = if (v3) V3_HEADER.toLong() else 0L
     val rootSolve = options.long("root_solve", 0L)
     val humanShare = options["human_share"]?.toDouble() ?: 0.0
+    // win_spread=x: in won positions, share x of the policy target goes to the other known winning
+    // moves, which are also recorded as won in the move values (v3).
+    val winSpread = options["win_spread"]?.toFloat() ?: 0f
     val tmp = if (resume) outFile else File(outFile.path + ".tmp")
     val index = File(outFile.path + ".idx")
     val started = System.nanoTime()
@@ -358,7 +367,7 @@ private fun selfPlay(options: Map<String, String>) {
                 pool.execute(failFast(failure) {
                     // A resumed run draws other openings than the first attempt.
                     val rng = Random(seed * 1000 + t + done.size * 1_000_003L)
-                    val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true, rootSolveBudget = rootSolve), rng)
+                    val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = true, rootSolveBudget = rootSolve, winPolicySpread = winSpread), rng)
                     val judgeH = filter?.Judge()
                     val human = if (humanShare > 0 && net != null) HumanOpenings(net, rng, judgeH?.let { j -> j::acceptsFirstPlayer }) else null
                     val judge = filter?.Judge()

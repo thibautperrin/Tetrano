@@ -35,6 +35,45 @@ class GumbelMctsTest {
     }
 
     @Test
+    fun wonPolicyIsSpreadOverKnownWinningMoves() {
+        val rng = Random(11)
+        val check = ExactSolver(18)
+        var spread = 0
+        // Most random won positions are won by a VCF (nothing to spread): many are needed.
+        repeat(500) {
+            // A random position with 6 to 9 rings each, no line completed and no immediate win for the mover.
+            val rings = 6 + rng.nextInt(4)
+            var mine = 0L
+            var theirs = 0L
+            while (java.lang.Long.bitCount(mine) < rings) {
+                val c = rng.nextInt(64)
+                if (((mine or theirs) ushr c) and 1L == 0L && !Tactics.wonWith(mine or (1L shl c), c)) mine = mine or (1L shl c)
+            }
+            while (java.lang.Long.bitCount(theirs) < rings) {
+                val c = rng.nextInt(64)
+                if (((mine or theirs) ushr c) and 1L == 0L && !Tactics.wonWith(theirs or (1L shl c), c)) theirs = theirs or (1L shl c)
+            }
+            if (Tactics.threats(mine, theirs) != 0L) return@repeat
+            val mcts = GumbelMcts(net, GumbelMcts.Config(gumbelNoise = false, rootSolveBudget = 20_000, winPolicySpread = 0.5f))
+            val r = mcts.search(mine, theirs, 16)
+            if (r.status != GumbelMcts.Status.WIN || java.lang.Long.bitCount(r.winningMoves) < 2) return@repeat
+            spread++
+            assertEquals(0.5f, r.policy[r.move], 1e-6f)
+            assertEquals(1f, r.policy.sum(), 1e-4f)
+            for (c in 0 until 64) {
+                val known = (r.winningMoves ushr c) and 1L != 0L
+                assertEquals("cell $c", known, r.policy[c] > 0f)
+                if (known) {
+                    // After a known winning move, the opponent to move is lost.
+                    val answer = check.solve(theirs, mine or (1L shl c), 200_000, findMove = false)
+                    assertEquals(ExactSolver.Outcome.LOSS, answer.outcome)
+                }
+            }
+        }
+        assertTrue("won positions with several known winning moves: $spread", spread >= 2)
+    }
+
+    @Test
     fun completesOwnLine() {
         val r = GumbelMcts(net).search(bits(0, 1, 2, 40), bits(60, 61, 62), 32)
         assertEquals(3, r.move)
