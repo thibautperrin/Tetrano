@@ -487,7 +487,7 @@ de la preuve peuvent servir d'indicateur de difficulté ; à trancher à la phas
 
 ---
 
-## Avancement (nuit du 24 au 25 novembre 2026)
+## Avancement (24 au 26 novembre 2026)
 
 Implémenté (branche `claude/neural-network-strategy-081200`) : phases 0 à 3 et l'outillage de la
 phase 4 ; mode d'emploi dans `tools/nn/README.md`, « Valeurs exactes et réseau v3 ». Ajoutés le
@@ -583,11 +583,48 @@ Le graphe réduit ne fait pas gagner de temps sur téléphone (les positions de 
 partie gardent presque toutes leurs lignes vivantes), mais n'en fait pas perdre : un réseau v3 peut
 remplacer gen 29 à budget de simulations égal.
 
+### Auto-jeu v3 (T4), nuit du 25 au 26 novembre (19 h 00 – 06 h 50)
+
+45 générations (0 à 44) de 500 parties à partir du v3 pré-entraîné, 13 à 20 min chacune (11 min
+d'auto-jeu, 2 min d'entraînement), 50 pas par génération (2 250 en tout, lr 1e-4) ; politique répartie
+sur les coups gagnants (0,5), 10 % de positions prouvées et 10 % d'exemples difficiles par lot (le
+réservoir atteint 29 000 positions). Match contre gen 29 toutes les 5 générations (200 parties,
+64 simulations chacun, ouvertures aléatoires).
+
+| Banc | gen 29 | v3 pré-entraîné | v3 auto-jeu gen 44 |
+|---|---|---|---|
+| Réseau seul : erreur de valeur | 8,1 % | 9,7 % | **4,6 %** |
+| — famille A / B / C | 6,1 / 11,8 / 2,9 % | 6,5 / 15,3 / 3,1 % | 6,8 / **2,1** / 2,3 % |
+| — plis 8–11 | 15,5 % | 18,8 % | **5,9 %** |
+| Réseau seul : coup juste (400 positions) | 94,1 % | 96,8 % | **97,1 %** |
+| 64 simulations : erreur de valeur | 1,8 % | **1,7 %** | 2,3 % |
+| — famille A | 3,3 % | 2,9 % | 4,2 % |
+| 64 simulations : v(t)+v(t+1) | +0,038 | +0,053 | +0,017 |
+| 256 simulations + solveur à la racine : erreur | **1,3 %** | – | 1,9 % |
+| 256 simulations + solveur à la racine : prouvées | 41,4 % | – | 41,4 % |
+
+| Match contre gen 29 (score) | gen 0 | 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 |
+|---|---|---|---|---|---|---|---|---|---|
+| | 0,500 | 0,480 | 0,440 | 0,468 | 0,443 | 0,472 | 0,460 | 0,448 | 0,445 |
+
+- Le réseau seul a fait un grand pas : erreur divisée par deux par rapport à gen 29, et par sept sur
+  les parties « humaines » (B), que les parties entamées et les exemples difficiles visaient.
+- Mais avec la recherche il fait un peu moins bien que gen 29 (2,3 % contre 1,8 % à 64 simulations,
+  1,9 % contre 1,3 % avec le solveur), surtout sur la famille A et entre 16 et 27 plis, et il perd
+  le match de peu (≈ 0,45, soit ≈ −35 Elo ; l'écart-type d'un match de 200 parties est ≈ 0,035), sans
+  progrès au fil de la nuit. La valeur du réseau seul ne suffit donc pas à prédire la force avec la
+  recherche.
+- 2 250 pas d'entraînement, c'est peu (le pré-entraînement en a fait 11 898, gen 29 a eu 364
+  générations) : la nuit ne tranche pas encore entre « il faut plus d'auto-jeu » et « un réglage
+  dégrade la recherche » (exemples difficiles trop présents, politique répartie). À surveiller sur
+  les créneaux suivants : si le match ne remonte pas, essayer `--hard-frac 0.05` puis `--win-spread 0`.
+- **Non mis dans l'appli** : gen 29 reste le réseau de l'appli.
+
 ### Suite (créneaux suivants)
 
-1. Fusionner la branche dans le dépôt principal, puis `./gradlew :selfplay:installDist`.
-2. `tools/nn/v3_selfplay.bat` (T4) sur plusieurs créneaux, `--until` à la fin de chacun ; la forme du
-   réseau est celle du pré-entraîné. Juger régulièrement une génération
-   (`judge … sims=0,64,256 root_solve=30000`) contre gen 29.
+1. Après la fusion : `git pull` dans le dépôt principal, puis `./gradlew :selfplay:installDist`.
+2. Reprendre `tools/nn/v3_selfplay.bat --until 07:30` (la course repart de la génération 45 dans
+   `runs/v3/selfplay`). Juger régulièrement une génération (`judge … sims=0,64,256
+   root_solve=30000`) et suivre la colonne `elo_score` de `metrics.csv` (match contre gen 29).
 3. Si le temps le permet : ré-étiqueter `runs/big` gen 0–107, reprendre l'ablation du contexte global
    sur un entraînement plus long, puis § 5.7.
