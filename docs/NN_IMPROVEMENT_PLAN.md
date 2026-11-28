@@ -487,7 +487,7 @@ de la preuve peuvent servir d'indicateur de difficulté ; à trancher à la phas
 
 ---
 
-## Avancement (24 au 26 novembre 2026)
+## Avancement (24 au 28 novembre 2026)
 
 Implémenté (branche `claude/neural-network-strategy-081200`) : phases 0 à 3 et l'outillage de la
 phase 4 ; mode d'emploi dans `tools/nn/README.md`, « Valeurs exactes et réseau v3 ». Ajoutés le
@@ -620,11 +620,52 @@ réservoir atteint 29 000 positions). Match contre gen 29 toutes les 5 générat
   les créneaux suivants : si le match ne remonte pas, essayer `--hard-frac 0.05` puis `--win-spread 0`.
 - **Non mis dans l'appli** : gen 29 reste le réseau de l'appli.
 
+### Auto-jeu v3 jusqu'à la génération 189 (27 – 28 novembre, ≈ 20 h de plus)
+
+Reprise de la génération 45 à 189 avec les mêmes réglages : 190 générations en tout, 95 000 parties,
+32 h de calcul, 9 500 pas d'entraînement ; lr descendu à 2e-5 à la génération 120. Le réservoir
+d'exemples difficiles grossit sans cesse (63 000 positions à la fin) : le réseau n'arrive pas à les
+apprendre.
+
+| Banc | gen 29 | v3 gen 44 | v3 gen 100 | v3 gen 150 | v3 gen 189 |
+|---|---|---|---|---|---|
+| Réseau seul : erreur de valeur | 8,1 % | 4,6 % | 4,3 % | 4,3 % | **4,2 %** |
+| — famille A / B / C | **6,1** / 11,8 / 2,9 % | 6,8 / 2,1 / 2,3 % | 6,8 / 1,2 / 2,7 % | 7,3 / 0,9 / 2,3 % | 7,0 / **0,8** / 2,5 % |
+| — plis 8–11 | 15,5 % | 5,9 % | – | – | **3,9 %** |
+| Réseau seul : v(t)+v(t+1) | **+0,012** | +0,093 | +0,067 | +0,067 | +0,093 |
+| 64 simulations : erreur de valeur | **1,8 %** | 2,3 % | 2,0 % | 2,4 % | 2,3 % |
+| — famille A | **3,3 %** | 4,2 % | 3,7 % | 4,3 % | 4,2 % |
+| 256 simulations + solveur à la racine : erreur | **1,3 %** | 1,9 % | – | – | 1,8 % |
+| — famille A ; prouvées | **2,5 %** ; 41,4 % | 3,6 % ; 41,4 % | – | – | 3,3 % ; 41,3 % |
+
+Match contre gen 29 (200 parties toutes les 5 générations, 64 simulations chacun) : entre 0,42 et
+0,48, sans tendance ; moyenne 0,465 des générations 45 à 95, 0,442 de 100 à 185, 0,451 sur les
+5 800 parties (≈ −34 Elo, écart-type ≈ 0,007 : l'écart est réel).
+
+- **Plafond atteint dès la génération 44** : 145 générations de plus n'ont amélioré ni le banc avec
+  recherche ni le match. Le réseau seul s'est encore un peu amélioré, mais uniquement sur les positions
+  déjà bien jugées (famille B, plis 8–11).
+- **Ce que v3 sait mieux** : juger seul une position « humaine » ou décidée (B : 0,8 % contre 11,8 %),
+  le milieu de partie (plis 8–11 : 3,9 % contre 15,5 %), et le coup juste sans recherche (97,1 %
+  contre 94,1 %). C'est utile pour une analyse rapide, à 0 ou peu de simulations.
+- **Ce qu'il sait moins bien** : les positions disputées de jeu fort (famille A, parties de gen 29 :
+  7,0 % contre 6,1 % seul, 4,2 % contre 3,3 % à 64 simulations), là où la recherche a besoin d'une
+  bonne valeur ; et il est optimiste pour le joueur au trait (v(t)+v(t+1) ≈ +0,09 contre +0,01). La
+  famille A vient de parties de gen 29, ce qui l'avantage un peu sur ce banc, mais le match, lui, est
+  neutre et confirme l'écart.
+- Interprétation : ses progrès portent sur des positions que la recherche (tactiques, solveur) tranche
+  déjà ; ils ne se traduisent donc pas en force de jeu. Les exemples difficiles (positions exactes
+  « faciles à prouver, difficiles à sentir ») et les parties entamées tirent l'entraînement vers ces
+  positions.
+- **Non mis dans l'appli.**
+
 ### Suite (créneaux suivants)
 
-1. Après la fusion : `git pull` dans le dépôt principal, puis `./gradlew :selfplay:installDist`.
-2. Reprendre `tools/nn/v3_selfplay.bat --until 07:30` (la course repart de la génération 45 dans
-   `runs/v3/selfplay`). Juger régulièrement une génération (`judge … sims=0,64,256
-   root_solve=30000`) et suivre la colonne `elo_score` de `metrics.csv` (match contre gen 29).
-3. Si le temps le permet : ré-étiqueter `runs/big` gen 0–107, reprendre l'ablation du contexte global
-   sur un entraînement plus long, puis § 5.7.
+1. Trouver ce qui bride la recherche, à partir de `runs/v3/selfplay/checkpoints/gen_0100.pt`, par
+   des courses courtes (≈ 30 générations chacune, match tous les 5) : `--hard-frac 0`, puis
+   `--win-spread 0`, puis `--human-share 0.15`. Garder le réglage qui fait remonter le match.
+2. Ajouter au banc une famille A' tirée de parties d'auto-jeu v3, pour ne plus juger sur les seules
+   parties de gen 29.
+3. Si aucun réglage ne passe gen 29 : garder v3 pour l'analyse rapide (réseau seul, peu de
+   simulations) et gen 29 pour le jeu, après une mesure à temps égal sur téléphone.
+4. Toujours possibles : ré-étiqueter `runs/big` gen 0–107, ablation longue du contexte global, § 5.7.
