@@ -661,9 +661,11 @@ Match contre gen 29 (200 parties toutes les 5 générations, 64 simulations chac
 
 ### Suite (créneaux suivants)
 
-1. Trouver ce qui bride la recherche, à partir de `runs/v3/selfplay/checkpoints/gen_0100.pt`, par
-   des courses courtes (≈ 30 générations chacune, match tous les 5) : `--hard-frac 0`, puis
-   `--win-spread 0`, puis `--human-share 0.15`. Garder le réglage qui fait remonter le match.
+1. Trouver ce qui bride la recherche en continuant la course un réglage à la fois, ≈ 30 générations
+   (5 h) chacun, et en suivant `elo_score` dans `metrics.csv` (les options de la ligne de commande
+   remplacent celles de `config.json`) : `v3_selfplay.bat --hard-frac 0`, puis
+   `--hard-frac 0 --win-spread 0`, puis `--human-share 0.15`. Garder le réglage qui fait remonter le
+   match au-dessus de 0,47 ; copier `runs/v3/selfplay` avant pour pouvoir revenir en arrière.
 2. Ajouter au banc une famille A' tirée de parties d'auto-jeu v3, pour ne plus juger sur les seules
    parties de gen 29.
 3. Si aucun réglage ne passe gen 29 : garder v3 pour l'analyse rapide (réseau seul, peu de
